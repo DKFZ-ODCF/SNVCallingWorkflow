@@ -84,7 +84,7 @@ then
 	[[ "$?" != 0 ]] && echo "There was a non-zero exit code in making the MAF input file" && exit 6
 
 	# count the obtained SNVs to output their number in the plot: < 50 will not be reliable!
-	snvnum=`grep -v "#" ${filenameSomaticSnvs} | wc -l`
+	snvnum=`grep -v "^#" ${filenameSomaticSnvs} | wc -l`
 	snvindbSNP=` awk '{FS="\t"}{if(NR==2)print $5}'	${filenameSomaticSnvsIndbSNP}`
 
 	# make MAF plot - from Natalie
