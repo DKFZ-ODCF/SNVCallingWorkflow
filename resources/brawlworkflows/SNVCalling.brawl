@@ -1,0 +1,26 @@
+# Override the execute method of a workflow
+# The method is automatically chosen with things like parameter count and names.
+input bamControlMerged
+input bamTumorMerged
+
+runflag runSNVMetaCallingStep
+runflag runDeepAnnotation
+runflag runFilter
+
+set rawVCFFile
+if runSNVMetaCallingStep; then
+  set vcfFilesForSNVs = call bamTumorMerged.callSNVs(bamControlMerged)
+  rawVCFFile = call vcfFilesForSNVs.join()
+else
+  rawVCFFile = call "snvCallingMetaScript"(bamTumorMerged, bamControlMerged)
+fi
+
+set annotationFile = call "snvAnnotation"(rawVCFFile, bamTumorMerged)
+
+if runDeepAnnotation; then
+  annotationFile = call "snvDeepAnnotation"(annotationFile.getVCFFile(), "PIPENAME=SNV_DEEPANNOTATION")
+fi
+
+if runFilter; then
+  annotationFile = call "snvFilter"(annotationFile.getVCFFile(), rawVCFFile, bamTumorMerged, "SNVFILE_PREFIX=snvs_")
+fi
