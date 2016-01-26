@@ -37,6 +37,7 @@
         <cvalue name="MINCOV" value="0" type="integer" description="minimal coverage for somatic SNVs (MAF plot)"/>
         <cvalue name="ALLELE_FREQ" value="0" type="integer" description="ignore SNVs with MAF below that value (rainfall plot)"/>
         <cvalue name="CLINICALANNO" value='""' type="string" description="tab separated file with fields in the following order: ID, decoded PID, gender, age, subgroup"/>
+        <cvalue name="NUMBER_OF_MISMACTHES_THRESHOLD" value="-1" type="integer"/>
 
         <!--### Bias filter parameters-->
         <!--## Thresholds to determine if a field is biased. A field is biased if (and only if) its p value is smaller then biasPVal. If that is the case the bias ratio determines if it is a weak bias (ratio smaller biasRatioThreshold) or a strong bias (ratio larger biasRatioThreshold)-->
