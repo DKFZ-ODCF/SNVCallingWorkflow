@@ -161,7 +161,7 @@ then
     # If this is for the pancancer workflow, then also create a DKFZ specific file.
 	if [[ ${runArtifactFilter-true} == true ]]
 	then
-		cat ${filenameSNVVCF} | python ${TOOL_FILTER_PE_OVERLAP} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred \
+		cat ${filenameSNVVCF} | python ${TOOL_FILTER_PE_OVERLAP} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD} \
 							  | perl ${TOOL_CONFIDENCE_RE_ANNOTATION} -i - ${CONFIDENCE_OPTS} -a 0 -f ${filenameSomaticSNVsTmp} > ${filenameSNVVCFTemp}.tmp
 
 		[[ $? != 0 ]] && echo "Error in first iteration of confidence annotation" && exit 2
