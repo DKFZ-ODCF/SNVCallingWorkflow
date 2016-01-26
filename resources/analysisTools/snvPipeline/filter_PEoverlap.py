@@ -73,6 +73,20 @@ def getIndexACGTNacgtn(is_reverse, is_read1, base):
             elif(base == "n"):
                 return ["minus", 4]
 
+def decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar):
+    if remove_base == REF:
+        if remove_is_reverse:
+            # check if none of the 4 DP4 values are < 0 now, which can happen due to BAQ values instead of original base qualities, which are not part of the BAM file
+            if DP4rr > 0: DP4rr -= 1
+        else:
+            if DP4rf > 0: DP4rf -= 1
+    elif remove_base == ALT:
+        if remove_is_reverse:
+            if DP4ar > 0: DP4ar -= 1
+        else:
+            if DP4af > 0: DP4af -= 1   
+    return(DP4rf, DP4rr, DP4af, DP4ar)
+
 
 # MAIN ANALYSIS PROCEDURE
 def performAnalysis(options):
@@ -129,6 +143,29 @@ def performAnalysis(options):
                             # http://wwwfgu.anat.ox.ac.uk/~andreas/documentation/samtools/api.html   USE qqual
                             try:
                                 if transformQualStr(pileupread.alignment.qqual[pileupread.qpos])[0] >= options.baseq:
+                                    # check if we consider this read as a proper read in terms of number of mismatches
+                                    if options.allowedNumberOfMismatches > -1:
+                                        numberOfMismatches = None
+                                        for tag in pileupread.alignment.tags:
+                                            if tag[0] == "NM":
+                                                numberOfMismatches = tag[1]
+                                                break 
+                                            else:
+                                                continue                                    
+                                        
+                                        if numberOfMismatches is not None:
+                                            if numberOfMismatches > options.allowedNumberOfMismatches:
+                                                remove_base = pileupread.alignment.seq[pileupread.qpos]
+                                                remove_is_reverse = pileupread.alignment.is_reverse
+                                                (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)                                         
+                                                # after decreasing the respective DP4 value, go directly to the next read
+                                                # without remembering the current read
+                                                # This will lead to an unknown read name when the paired read occurs at the same
+                                                # position. As we have already discarded the current high-mismatch read, we do not
+                                                # have to decrease DP4 values again, when the read partner occurs at the same SNV.
+                                                # We also do not increase ANCGTNacgtn for the discarded read.
+                                                continue 
+                                                                            
                                     # Check if pileupread.alignment is proper pair
                                     if(pileupread.alignment.is_proper_pair):
                                         # count to ACGTNacgtn list
@@ -151,43 +188,20 @@ def performAnalysis(options):
                                             current_is_reverse = pileupread.alignment.is_reverse
                                             # if read name occurs twice for one variant, then due to overlapping PE reads, then subtract variant count from DP4 field
                                             # if old_base is not equal to new_base remove the one with the smaller base quality
+                                            remove_base = None
+                                            remove_is_reverse = None
                                             if(not(old_base == current_base)):
-                                                remove_base = None
-                                                remove_is_reverse = None
                                                 if(old_qual <= current_qual):
                                                     remove_base = old_base
                                                     remove_is_reverse = old_is_reverse
                                                 else:
                                                     remove_base = current_base
                                                     remove_is_reverse = current_is_reverse
-    
-                                                if remove_base == REF:
-                                                    if remove_is_reverse:
-                                                        # check if none of the 4 DP4 values are < 0 now, which can happen due to BAQ values instead of original base qualities, which are not part of the BAM file
-                                                        if DP4rr > 0: DP4rr -= 1
-                                                    else:
-                                                        if DP4rf > 0: DP4rf -= 1
-                                                elif remove_base == ALT:
-                                                    if remove_is_reverse:
-                                                        if DP4ar > 0: DP4ar -= 1
-                                                    else:
-                                                        if DP4af > 0: DP4af -= 1
                                             else:
                                                 remove_base = current_base
                                                 remove_is_reverse = current_is_reverse
-    
-                                                if remove_base == REF:
-                                                    if remove_is_reverse:
-                                                        # check if none of the 4 DP4 values are < 0 now, which can happen due to BAQ values instead of original base qualities, which are not part of the BAM file
-                                                        if DP4rr > 0: DP4rr -= 1
-                                                    else:
-                                                        if DP4rf > 0: DP4rf -= 1
-                                                elif remove_base == ALT:
-                                                    if remove_is_reverse:
-                                                        if DP4ar > 0: DP4ar -= 1
-                                                    else:
-                                                        if DP4af > 0: DP4af -= 1
-                                            
+                                                
+                                            (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)
                                         else:
                                             # Store base quality, base, and read direction in readNameHash
                                             readNameHash[pileupread.alignment.qname] = [transformQualStr(pileupread.alignment.qqual[pileupread.qpos])[0], pileupread.alignment.seq[pileupread.qpos], pileupread.alignment.is_reverse]
@@ -248,6 +262,7 @@ if __name__ == '__main__':
     parser.add_option('--mapq',action='store',type='int',dest='mapq',help='Specify the minimum mapping quality of bwa used for mpileup as parameter -q (default: 30 )',default=30)
     parser.add_option('--baseq',action='store',type='int',dest='baseq',help='Specify the minimum base quality scores used for mpileup as parameter -Q (default: 13)',default=13)
     parser.add_option('--qualityScore',action='store',type='string',dest='qualityScore',help='Specify whether the per base  quality score is given in phred or illumina format (default is Illumina score: ASCII offset of 64, while PHRED scores have an ASCII offset of 33)',default='phred')
+    parser.add_option('--maxNumberOfMismatchesInRead',action='store',type='int',dest='allowedNumberOfMismatches',help='Specify the number of mismatches that are allowed per read in order to consider this read. Value of -1 (default) turns this filter off.',default=-1)
     
     
     (options,args) = parser.parse_args()

@@ -17,6 +17,11 @@ runDeepAnnotation           true    Run the deep annotation step or stop the wor
 runFilter                   true    Run the filter step or stop the workflow before it.
 runOnPancan                 false   Run a special analysis type for pancancer type projects.
 
+== Workflow Options
+Option					Default	Description
+NUMBER_OF_MISMACTHES_THRESHOLD		-1	resources/analysisTools/snvPipeline/snvAnnotation.sh: Number of mismatches that are allowed per read in order to consider this read.
+
+
 == Changelist
 
 * Version update to 1.0.166
