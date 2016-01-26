@@ -161,7 +161,7 @@ then
     # If this is for the pancancer workflow, then also create a DKFZ specific file.
 	if [[ ${runArtifactFilter-true} == true ]]
 	then
-		cat ${filenameSNVVCF} | python ${TOOL_FILTER_PE_OVERLAP} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD} \
+		cat ${filenameSNVVCF} | python ${TOOL_FILTER_PE_OVERLAP} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} \
 							  | perl ${TOOL_CONFIDENCE_RE_ANNOTATION} -i - ${CONFIDENCE_OPTS} -a 0 -f ${filenameSomaticSNVsTmp} > ${filenameSNVVCFTemp}.tmp
 
 		[[ $? != 0 ]] && echo "Error in first iteration of confidence annotation" && exit 2
@@ -219,7 +219,7 @@ then
 
 		[[ $? != 0 ]] && echo "Error in moving the vcf file and index or in removing the temporary files" && exit 10
 	else
-		cat ${filenameSNVVCF} | python ${TOOL_FILTER_PE_OVERLAP} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred | perl ${TOOL_CONFIDENCE_RE_ANNOTATION} -i - ${CONFIDENCE_OPTS_PANCAN} > ${filenameSNVVCFTemp}
+		cat ${filenameSNVVCF} | python ${TOOL_FILTER_PE_OVERLAP} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} | perl ${TOOL_CONFIDENCE_RE_ANNOTATION} -i - ${CONFIDENCE_OPTS_PANCAN} > ${filenameSNVVCFTemp}
 		
 		exitCode=$?
 		[[ $exitCode == 0 ]] && [[ -f ${filenameSNVVCFTemp} ]] && mv ${filenameSNVVCFTemp} ${filenameSNVVCF}
