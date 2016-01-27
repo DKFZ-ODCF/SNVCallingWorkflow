@@ -43,21 +43,19 @@ chrLength <- data.frame(data)
 rownames(chrLength) <- chrLength$V1
 xtotal <- sum(chrLength[c.array,2]/10)
 xoffsets <- c(0)
-    
-headset <- read.delim(pipe(paste0("grep -v '^##' ",mutationFile)), 
-header = TRUE, nrow=500)
+
+headset <- read.delim(pipe(paste0("grep -v '^##' ",opt$mutationFile)), header = TRUE)
 headset.classes = sapply(headset, class)
 headset.classes[names(headset.classes) %in% c("REF", "ALT")] = "character"
 
-dat <- read.delim(pipe(paste0("grep -v '^##' ",mutationFile)), header = TRUE, colClasses = headset.classes)
-
+dat <- read.delim(pipe(paste0("grep -v '^##' ",opt$mutationFile)), header = TRUE, colClasses = headset.classes)
 dat <- dat[which(dat$REF != 'N'),]    
 dat$diff <- c(-1,diff(dat$POS))
 
 complement <- c('A' = 'T', 'C' = 'G','G' = 'C', 'T' = 'A', 'N' = 'N')
 
 sel <- which(dat$REF == 'C' | dat$REF == 'T')
-dat[sel,'change'] <- paste0(as.character(dat[sel, 'REF']),as.character(dat[sel, 'ALT']))
+dat[sel,'change'] <- paste0(dat[sel, 'REF'],dat[sel, 'ALT'])
 
 sel <- which(dat$REF == 'A' | dat$REF == 'G')
 dat[sel, 'change'] <- paste0(complement[dat[sel, 'REF']],complement[dat[sel, 'ALT']])
