@@ -10,7 +10,7 @@ my $outfile = $ARGV[1];
 
 open(IN, "<$ARGV[0]");
 
-my $count;
+my $count=0;
 my @head;
 while(<IN>){
 	print $_;

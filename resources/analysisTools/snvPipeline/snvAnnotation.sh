@@ -78,11 +78,6 @@ perl ${TOOL_VCF_TO_ANNOVAR} ${CHR_PREFIX} ${CHR_SUFFIX} | tee ${filenameSNVForAn
 
 [[ "$?" != 0 ]] && echo "There was a non-zero exit code in the polymorphism annotation pipe; exiting..." && exit 2
 
-MAX_CONTROL_COV=0
-MAX_CONTROL_COV=`cat ${filenameControlMedian}`
-[[ ${MAX_CONTROL_COV} -lt 1 ]] && echo "Median was not calculated correctly" && exit 3
-rm ${filenameControlMedian}
-
 mv ${filenameSNVVCFTemp} ${filenameSNVVCF}
 mv ${filenameSNVForAnnovarBedTemp} ${filenameSNVForAnnovarBed}
 
@@ -139,6 +134,12 @@ exitCode=$?
 # confidence annotation with/without germline
 if [[ "$GERMLINE_AVAILABLE" == 1 ]]
 then
+
+    MAX_CONTROL_COV=0
+    MAX_CONTROL_COV=`cat ${filenameControlMedian}`
+    [[ ${MAX_CONTROL_COV} -lt 1 ]] && echo "Median was not calculated correctly" && exit 3
+    rm ${filenameControlMedian}
+
 	# for somatic SNVs only: if there are overlapping reads (same name) at the position, count the base only once;
 	# also remove counts for bases that are neither reference nor variant, and change DP4 field accordingly
 	# this needs the BAM file to perform a pileup
