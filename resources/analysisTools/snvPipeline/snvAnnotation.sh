@@ -138,7 +138,6 @@ then
     MAX_CONTROL_COV=0
     MAX_CONTROL_COV=`cat ${filenameControlMedian}`
     [[ ${MAX_CONTROL_COV} -lt 1 ]] && echo "Median was not calculated correctly" && exit 3
-    rm ${filenameControlMedian}
 
 	# for somatic SNVs only: if there are overlapping reads (same name) at the position, count the base only once;
 	# also remove counts for bases that are neither reference nor variant, and change DP4 field accordingly
@@ -235,6 +234,8 @@ else	# no germline information available
     [[ $exitCode != 0 ]] && echo "SNV confidenceAnnotation returned non-zero exit code; temp file ${filenameSNVVCFTemp} not moved back" && exit 21
 	${BGZIP_BINARY} -f ${filenameSNVVCF} && ${TABIX_BINARY} -f -p vcf ${FILENAME_VCF_OUT}
 fi
+
+rm ${filenameControlMedian}
 
 # If this is for the pancancer workflow, then also zip away the DKFZ only file.
 [[ -f ${filenameSNVVCFPancan} ]] && ${TABIX_BINARY} -f -p vcf ${filenameSNVVCFPancan}
