@@ -18,7 +18,6 @@ opt = getopt(matrix(c(
 
   ),ncol=4,byrow=TRUE));
 
-
 if (is.null(opt$mutationFile)){      # no intermutation distance File specified
   cat("Please specify a tab separated intermutation distance file"); 
   q(status=1);      # quit, status unequal 0 means error
@@ -49,8 +48,10 @@ headset.classes = sapply(headset, class)
 headset.classes[names(headset.classes) %in% c("REF", "ALT")] = "character"
 
 dat <- read.delim(pipe(paste0("grep -v '^##' ",opt$mutationFile)), header = TRUE, colClasses = headset.classes)
-dat <- dat[which(dat$REF != 'N'),]    
-dat$diff <- c(-1,diff(dat$POS))
+dat <- dat[which(dat$REF != 'N'),]
+if (nrow(dat) > 0) {
+  dat$diff <- c(-1,diff(dat$POS))
+}
 
 complement <- c('A' = 'T', 'C' = 'G','G' = 'C', 'T' = 'A', 'N' = 'N')
 
