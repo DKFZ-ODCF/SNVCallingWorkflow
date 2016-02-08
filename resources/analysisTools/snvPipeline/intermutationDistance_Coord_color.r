@@ -55,10 +55,15 @@ dat$diff <- c(-1,diff(dat$POS))
 complement <- c('A' = 'T', 'C' = 'G','G' = 'C', 'T' = 'A', 'N' = 'N')
 
 sel <- which(dat$REF == 'C' | dat$REF == 'T')
-dat[sel,'change'] <- paste0(dat[sel, 'REF'],dat[sel, 'ALT'])
+if (length(sel) > 0) {
+  dat[sel,'change'] <- paste0(dat[sel, 'REF'],dat[sel, 'ALT'])
+}
 
 sel <- which(dat$REF == 'A' | dat$REF == 'G')
-dat[sel, 'change'] <- paste0(complement[dat[sel, 'REF']],complement[dat[sel, 'ALT']])
+if (length(sel) > 0) {
+  dat[sel, 'change'] <- paste0(complement[dat[sel, 'REF']],complement[dat[sel, 'ALT']])
+}
+
 
 ##chrX <- which(dat$chromosome == "X")
 ##chrXmean <- round(mean(dat$intermutationDistance[chrX])/1000)  # in kb
