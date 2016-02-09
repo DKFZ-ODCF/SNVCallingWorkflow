@@ -170,7 +170,7 @@ then
 
 		[[ $? != 0 ]] && echo "Error in first iteration of confidence annotation" && exit 2
 
-		NRSOMSNV=`grep -v "#" ${filenameSomaticSNVsTmp} | wc -l`
+		NRSOMSNV=`grep -v "^#" ${filenameSomaticSNVsTmp} | wc -l`
 		echo -e "SOMATIC_SNVS_UNFILTERED\t${NRSOMSNV}">> ${filenameQCValues}
 
 		mv ${filenameSNVVCFTemp}.tmp ${filenameSNVVCFTemp}
