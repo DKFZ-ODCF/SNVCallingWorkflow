@@ -96,7 +96,9 @@ def performAnalysis(options):
     
     #vcfInFile = open(options.inf, "r")
     #outFile = open(options.outf, "w")
-    
+
+    REF_baseQualities=[]
+    ALT_baseQualities=[]
     
     for line in sys.stdin:           #   vcfInFile
         if line[0]=="#": 
@@ -138,6 +140,11 @@ def performAnalysis(options):
                     #print 'coverage at base %s = %s' % (pileupcolumn.pos , pileupcolumn.n)
                     for pileupread in pileupcolumn.pileups:
                         #print '\tbase in read %s = %s' % (pileupread.alignment.qname, pileupread.alignment.seq[pileupread.qpos])
+                        baseScore = transformQualStr(pileupread.alignment.qual[pileupread.qpos])[0]
+                        if pileupread.alignment.seq[pileupread.qpos].lower()  == ALT.lower():
+                            ALT_baseQualities.append(baseScore)
+                        if pileupread.alignment.seq[pileupread.qpos].lower()  == REF.lower():
+                            REF_baseQualities.append(baseScore)
                         if pileupread.alignment.mapq >= options.mapq:
 
                             # http://wwwfgu.anat.ox.ac.uk/~andreas/documentation/samtools/api.html   USE qqual
@@ -214,7 +221,6 @@ def performAnalysis(options):
                                 if pileupread.alignment.seq[pileupread.qpos] == ALT:
                                     ALTcount += 1
                                 
-                                
                                 # samtools mpileup sometimes counts bases as variants which are neither REF nor ALT
                                 if (pileupread.alignment.seq[pileupread.qpos] != REF) and (pileupread.alignment.seq[pileupread.qpos] != ALT):
                                     if pileupread.alignment.is_reverse:
@@ -244,10 +250,21 @@ def performAnalysis(options):
             
             #if int(lineSplitPlain[28]) > 7:         #  filter only used in testing phase
             sys.stdout.write(listToTabsep(lineSplitPlain[0:7]) +'\t'+ DP4filtered +'\t'+ listToTabsep(lineSplitPlain[8:len(lineSplitPlain)]) +'\n')
-            
+
         else:
             sys.stdout.write(line)   # write germline and somatic-multiallelic SNVs as is
-                
+
+    if options.altBQF != '':
+        ALT_baseQualities_file = open(options.altBQF, 'w')
+        for score in ALT_baseQualities:
+            ALT_baseQualities_file.write("%s\n" % score)
+        ALT_baseQualities_file.close()
+
+    if options.refBQF != '':
+        REF_baseQualities_file = open(options.refBQF, 'w')
+        for score in REF_baseQualities:
+            REF_baseQualities_file.write("%s\n" % score)
+        REF_baseQualities_file.close()
     #vcfInFile.close()
     #outFile.close()
     
@@ -263,7 +280,8 @@ if __name__ == '__main__':
     parser.add_option('--baseq',action='store',type='int',dest='baseq',help='Specify the minimum base quality scores used for mpileup as parameter -Q (default: 13)',default=13)
     parser.add_option('--qualityScore',action='store',type='string',dest='qualityScore',help='Specify whether the per base  quality score is given in phred or illumina format (default is Illumina score: ASCII offset of 64, while PHRED scores have an ASCII offset of 33)',default='phred')
     parser.add_option('--maxNumberOfMismatchesInRead',action='store',type='int',dest='allowedNumberOfMismatches',help='Specify the number of mismatches that are allowed per read in order to consider this read. Value of -1 (default) turns this filter off.',default=-1)
-    
+    parser.add_option('--altBaseQualFile',action='store',type='string',dest='altBQF',help='Specify the name of the output file for alternative allele base qualities.',default='')
+    parser.add_option('--refBaseQualFile',action='store',type='string',dest='refBQF',help='Specify the name of the output file for reference allele base qualities.',default='')
     
     (options,args) = parser.parse_args()
     if len(options.alignmentFile) < 1:

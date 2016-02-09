@@ -54,6 +54,10 @@ declare -r filenameSequencingErrorPlotPreFilter=${outputDirectory}/`basename ${f
 declare -r filenameSequenceErrorPlotTmp=${outputDirectory}/`basename ${filenameSNVVCF} .vcf`_sequence_specific_error_plot_after_filter_once.pdf
 declare -r filenameSequencingErrorPlotTmp=${outputDirectory}/`basename ${filenameSNVVCF} .vcf`_sequencing_specific_error_plot_after_filter_once.pdf
 declare -r filenameQCValues=${outputDirectory}/`basename ${filenameSNVVCF} .vcf`_QC_values.tsv
+outputFilenamePrefix=${outputDirectory}/${SNVFILE_PREFIX}${PID}
+declare -r filenameReferenceAlleleBaseScores=${outputFilenamePrefix}_reference_allele_base_qualities.txt
+declare -r filenameAlternativeAlleleBaseScores=${outputFilenamePrefix}_alternative_allele_base_qualities.txt
+
 
 declare -r filenamePCRerrorMatrixFirst=${outputDirectory}/`basename ${filenameSNVVCF} .vcf`_sequence_error_matrix_first.txt
 declare -r filenameSequencingErrorMatrixFirst=${outputDirectory}/`basename ${filenameSNVVCF} .vcf`_sequencing_error_matrix_first.txt
@@ -161,7 +165,7 @@ then
     # If this is for the pancancer workflow, then also create a DKFZ specific file.
 	if [[ ${runArtifactFilter-true} == true ]]
 	then
-		cat ${filenameSNVVCF} | python ${TOOL_FILTER_PE_OVERLAP} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} \
+		cat ${filenameSNVVCF} | python ${TOOL_FILTER_PE_OVERLAP} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1}  --altBaseQualFile=${filenameAlternativeAlleleBaseScores} --refBaseQualFile=${filenameReferenceAlleleBaseScores} \
 							  | perl ${TOOL_CONFIDENCE_RE_ANNOTATION} -i - ${CONFIDENCE_OPTS} -a 0 -f ${filenameSomaticSNVsTmp} > ${filenameSNVVCFTemp}.tmp
 
 		[[ $? != 0 ]] && echo "Error in first iteration of confidence annotation" && exit 2
@@ -219,7 +223,7 @@ then
 
 		[[ $? != 0 ]] && echo "Error in moving the vcf file and index or in removing the temporary files" && exit 10
 	else
-		cat ${filenameSNVVCF} | python ${TOOL_FILTER_PE_OVERLAP} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} | perl ${TOOL_CONFIDENCE_RE_ANNOTATION} -i - ${CONFIDENCE_OPTS_PANCAN} > ${filenameSNVVCFTemp}
+		cat ${filenameSNVVCF} | python ${TOOL_FILTER_PE_OVERLAP} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} --altBaseQualFile=${filenameAlternativeAlleleBaseScores} --refBaseQualFile=${filenameReferenceAlleleBaseScores} | perl ${TOOL_CONFIDENCE_RE_ANNOTATION} -i - ${CONFIDENCE_OPTS_PANCAN} > ${filenameSNVVCFTemp}
 		
 		exitCode=$?
 		[[ $exitCode == 0 ]] && [[ -f ${filenameSNVVCFTemp} ]] && mv ${filenameSNVVCFTemp} ${filenameSNVVCF}
