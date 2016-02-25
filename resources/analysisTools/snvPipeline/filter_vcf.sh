@@ -120,11 +120,14 @@ then
 	[[ "$?" != 0 ]] && echo "There was a non-zero exit code in making the PCR bias files" && exit 11
 
     # make base score distribution plots - by Gregor Warsow
-	basequal=`echo ${MPILEUP_OPTS} | perl -ne '($qual) = $_ =~ /\-Q\s*(\d+)/;print $qual'`
-	# really use base score threshold of 13 if variable is not set pr empty? We should expect to get a proper value here...
-	basequal=${basequal:-13}
-    ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_DISTRIBUTION} -r ${filenameReferenceAlleleBaseQualities} -a ${filenameAlternativeAlleleBaseQualities} -o ${filenameBaseScoreDistributions} -d "for somatic SNVs for PID ${PID}" -t ${basequal}
-
+    if [[ -f ${filenameReferenceAlleleBaseQualities} ]] && [[ -f ${filenameAlternativeAlleleBaseQualities} ]]; then
+        basequal=`echo ${MPILEUP_OPTS} | perl -ne '($qual) = $_ =~ /\-Q\s*(\d+)/;print $qual'`
+        # really use base score threshold of 13 if variable is not set pr empty? We should expect to get a proper value here...
+        basequal=${basequal:-13}
+        ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_DISTRIBUTION} -r ${filenameReferenceAlleleBaseQualities} -a ${filenameAlternativeAlleleBaseQualities} -o ${filenameBaseScoreDistributions} -d "for somatic SNVs for PID ${PID}" -t ${basequal}
+    else
+        filenameBaseScoreDistributions=''
+    fi
 
 	# make a pdf containing all plots
 	biasplots=""
