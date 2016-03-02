@@ -99,7 +99,8 @@ def performAnalysis(options):
 
     REF_baseQualities=[]
     ALT_baseQualities=[]
-    
+
+    samfile = pysam.Samfile(options.alignmentFile, "rb" ) # This should work for BAM file only (with random access).
     for line in sys.stdin:           #   vcfInFile
         if line[0]=="#": 
             sys.stdout.write(line)
@@ -130,7 +131,6 @@ def performAnalysis(options):
             ALT=lineSplitPlain[4]
             
             readNameHash={}
-            samfile = pysam.Samfile(options.alignmentFile, "rb" )
 
             ACGTNacgtn1 = [0]*10
             ACGTNacgtn2 = [0]*10
@@ -229,14 +229,8 @@ def performAnalysis(options):
                                     else:
                                         nonREFnonALTfwd += 1
                                         #if DP4af > 0: DP4af -= 1
+                    break # only one pileup for a position
 
-
-
-
-
-
-            samfile.close()
-            
             if (DP4[2] + DP4[3]) > ALTcount:    # that the ALTcount is larger  happens often due to BAQ during samtools mpileup which doesn't change the base qual in the BAM file, but decreases base qual during calling
                 #print line
                 #print ALTcount
@@ -253,6 +247,7 @@ def performAnalysis(options):
 
         else:
             sys.stdout.write(line)   # write germline and somatic-multiallelic SNVs as is
+    samfile.close()
 
     if options.altBQF != '':
         ALT_baseQualities_file = open(options.altBQF, 'w')
