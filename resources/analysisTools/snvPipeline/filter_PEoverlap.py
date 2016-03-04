@@ -97,10 +97,16 @@ def performAnalysis(options):
     #vcfInFile = open(options.inf, "r")
     #outFile = open(options.outf, "w")
 
-    REF_baseQualities=[]
-    ALT_baseQualities=[]
 
     samfile = pysam.Samfile(options.alignmentFile, "rb" ) # This should work for BAM file only (with random access).
+
+    if options.altBQF != '':
+        ALT_baseQualities_file = open(options.altBQF, 'w')
+
+    if options.refBQF != '':
+        REF_baseQualities_file = open(options.refBQF, 'w')
+
+
     for line in sys.stdin:           #   vcfInFile
         if line[0]=="#": 
             sys.stdout.write(line)
@@ -112,6 +118,9 @@ def performAnalysis(options):
         nonREFnonALTfwd=0
         nonREFnonALTrev=0
         ALTcount=0
+
+        REF_baseQualities=[]
+        ALT_baseQualities=[]
         
         if (lineSplitPlain[12].find("somatic") >= 0)  and (len(lineSplitPlain[4]) == 1):         # how to treat multiallelic SNVs? Skipped in this current version...
             # DP=13;AF1=0.5;AC1=1;DP4=2,3,3,4;MQ=37;FQ=75;PV4=1,1,1,1
@@ -231,6 +240,17 @@ def performAnalysis(options):
                                         #if DP4af > 0: DP4af -= 1
                     break # only one pileup for a position
 
+                    if options.altBQF != '':
+                        scoreString = ",".join([str(score) for score in ALT_baseQualities])
+                        if scoreString != '':
+                            ALT_baseQualities_file.write("%s\t%s\t%s\n" % (chrom, pos, scoreString))
+
+                    if options.refBQF != '':
+                        scoreString = ",".join([str(score) for score in REF_baseQualities])
+                        if scoreString != '':
+                            REF_baseQualities_file.write("%s\t%s\t%s\n" % (chrom, pos, scoreString))
+
+
             if (DP4[2] + DP4[3]) > ALTcount:    # that the ALTcount is larger  happens often due to BAQ during samtools mpileup which doesn't change the base qual in the BAM file, but decreases base qual during calling
                 #print line
                 #print ALTcount
@@ -250,15 +270,9 @@ def performAnalysis(options):
     samfile.close()
 
     if options.altBQF != '':
-        ALT_baseQualities_file = open(options.altBQF, 'w')
-        for score in ALT_baseQualities:
-            ALT_baseQualities_file.write("%s\n" % score)
         ALT_baseQualities_file.close()
 
     if options.refBQF != '':
-        REF_baseQualities_file = open(options.refBQF, 'w')
-        for score in REF_baseQualities:
-            REF_baseQualities_file.write("%s\n" % score)
         REF_baseQualities_file.close()
     #vcfInFile.close()
     #outFile.close()
