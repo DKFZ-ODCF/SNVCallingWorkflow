@@ -36,8 +36,8 @@ if (is.null(opt$outFile)){      # no vcf file specified
   q(status=2);      # quit, status unequal 0 means error
 }
 
-
-locations = try( read.table(pipe(paste0("cut -f 1-2 ",opt$vcfInputFile)), comment.char = '', sep = "\t", stringsAsFactors = F, header = T) )
+options(stringsAsFactors = FALSE)
+locations = try( read.table(pipe(paste0("cut -f 1-2 ",opt$vcfInputFile)), comment.char = '', sep = "\t", header = T) )
 colnames(locations) = c("CHROM", "POS")
 
 refScores = read.table(opt$refScores)
@@ -50,14 +50,14 @@ altScores = read.table(opt$altScores)
 # filter base score entries for SNVs in input vcf file
 wantedRefScores = refScores
 wantedRefScores = merge(refScores, locations, by = c("CHROM","POS"))  
-wantedRefScores = as.data.frame(unlist(strsplit(wantedRefScores[,3], ',')), stringsAsFactors = F)
+wantedRefScores = as.data.frame(unlist(strsplit(wantedRefScores[,3], ',')))
 colnames(wantedRefScores) = "Base Score"
 wantedRefScores$`Base Score` = as.integer(wantedRefScores$`Base Score`)
 wantedRefScores$type="REF"
 
 wantedAltScores = altScores
 wantedAltScores = merge(altScores, locations, by = c("CHROM","POS"))  
-wantedAltScores = as.data.frame(unlist(strsplit(wantedAltScores[,3], ',')), stringsAsFactors = F)
+wantedAltScores = as.data.frame(unlist(strsplit(wantedAltScores[,3], ',')))
 colnames(wantedAltScores) = "Base Score"
 wantedAltScores$`Base Score` = as.integer(wantedAltScores$`Base Score`)
 wantedAltScores$type="ALT"
@@ -79,6 +79,8 @@ pdf(file = paste0(opt$outFile), paper = "a4")
   # binned base quality scores?
   # if (nrow(numbers) < 10) {
     numbers.m = melt(numbers, id.vars='Base Score')  
+    colnames(numbers.m) = c("Base Score","type","value") # has to be set for reshape2 v 1.2
+    numbers.m$`Base Score` = as.integer(levels(numbers.m$`Base Score`))
 
     density = ggplot(numbers.m, aes(`Base Score`, value )) + geom_bar(aes(fill = type), width = 0.65, position = "dodge", stat="identity", alpha = 0.9)
     density = density + scale_fill_manual(values=cbPalette)
