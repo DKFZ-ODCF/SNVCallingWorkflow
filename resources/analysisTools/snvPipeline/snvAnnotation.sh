@@ -88,6 +88,9 @@ mv ${filenameSNVForAnnovarBedTemp} ${filenameSNVForAnnovarBed}
 
 ###### Basic annotation with Annovar
 # Gene annotation with annovar
+ANNOVAR_FILE=${ANNOVAR_BUILDVER}_`eval echo $ANNOVAR_DBTYPE | cut -d " " -f 2`.txt
+ANNOVAR_DBFILEPATH=${ANNOVAR_DBPATH}/${ANNOVAR_FILE}
+[[ ! -f ${ANNOVAR_DBFILEPATH} ]]  && echo "Gene annotation database not found. Check ANNOVAR_DBTYPE." && exit -16
 [[ ${runGeneAnnovar-true} == "true" ]] && ${ANNOVAR_BINARY} --buildver=${ANNOVAR_BUILDVER} ${ANNOVAR_DBTYPE} ${filenameSNVForAnnovarBed} ${ANNOVAR_DBPATH}
 
 # segdup annotation with annovar
