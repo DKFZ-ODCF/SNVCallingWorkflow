@@ -1,10 +1,7 @@
 package de.dkfz.b080.co.snvpipeline;
 
 import de.dkfz.b080.co.common.WorkflowUsingMergedBams;
-import de.dkfz.b080.co.files.BamFile;
-import de.dkfz.b080.co.files.SNVAnnotationFile;
-import de.dkfz.b080.co.files.VCFFileGroupForSNVs;
-import de.dkfz.b080.co.files.VCFFileWithCheckpointFile;
+import de.dkfz.b080.co.files.*;
 import de.dkfz.roddy.core.ExecutionContext;
 
 /**
@@ -12,7 +9,10 @@ import de.dkfz.roddy.core.ExecutionContext;
 public class SNVCallingWorkflow extends WorkflowUsingMergedBams {
 
     @Override
-    public boolean execute(ExecutionContext context, BamFile bamControlMerged, BamFile bamTumorMerged) {
+    public boolean execute(ExecutionContext context, BasicBamFile _bamControlMerged, BasicBamFile _bamTumorMerged) {
+
+        BamFile bamControlMerged = new BamFile(_bamControlMerged);
+        BamFile bamTumorMerged = new BamFile(_bamTumorMerged);
 
         boolean runMetaCallingStep = context.getConfiguration().getConfigurationValues().getBoolean("runSNVMetaCallingStep", false);
         boolean runDeepAnnotation = context.getConfiguration().getConfigurationValues().getBoolean("runDeepAnnotation", true);
@@ -20,11 +20,12 @@ public class SNVCallingWorkflow extends WorkflowUsingMergedBams {
 
         SNVAnnotationFile rawVCFFile = null;
         if(!runMetaCallingStep) {
-            VCFFileGroupForSNVs vcfFilesForSNVs = bamTumorMerged.callSNVs(bamControlMerged);
+            VCFFileGroupForSNVs vcfFilesForSNVs = Methods.callSNVs(bamControlMerged, bamTumorMerged);
             rawVCFFile = vcfFilesForSNVs.join();
         } else {
-            rawVCFFile = bamTumorMerged.callSNVsMeta(bamControlMerged);
+            rawVCFFile = Methods.callSNVsMeta(bamControlMerged, bamTumorMerged);
         }
+
         VCFFileWithCheckpointFile annotationFile = rawVCFFile.annotate();
         if (runDeepAnnotation)
             annotationFile = annotationFile.getVCFFile().deepAnnotate();

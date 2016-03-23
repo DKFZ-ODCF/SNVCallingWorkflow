@@ -1,5 +1,6 @@
 <configuration name='snvCallingAnalysis' description='SNV Calling for NGS data.'
                configurationType='analysis' class='de.dkfz.roddy.core.Analysis' workflowClass='de.dkfz.b080.co.snvpipeline.SNVCallingWorkflow'
+               runtimeServiceClass='de.dkfz.b080.co.common.BasicCOProjectsRuntimeService'
                imports="commonCOWorkflowsSettings"
                canCreateTestdata='true'
                listOfUsedTools="snvCalling,snvJoinVcfFiles,snvAnnotation,snvDeepAnnotation,snvFilter"
@@ -10,7 +11,6 @@
         <cvalue name='BCFTOOLS_OPTS' value='"-vcgN -p 2.0"' type="string"/>
         <cvalue name='MPILEUPCONTROL_OPTS' value='"-ABRI -Q 0 -q 1"' type="string"/>
         <cvalue name='MPILEUPOUT_PREFIX' value='mp_' type="string"/>
-        <cvalue name='INDELFILE_PREFIX' value='indel_' type="string"/>
         <cvalue name='SNVFILE_PREFIX' value='snvs_' type="string"/>
         <!--<cvalue name='analysisMethodNameOnInput' value='whole_genome_analysis' type='string' />-->
         <cvalue name='GHOSTSCRIPT_BINARY' value='/usr/bin/gs' type='path'/>

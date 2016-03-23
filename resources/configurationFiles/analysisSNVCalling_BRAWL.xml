@@ -1,6 +1,7 @@
 <configuration name='snvCallingBrawlAnalysis' description='SNV Calling for NGS data as a brawl workflow.'
                configurationType='analysis'
                class='de.dkfz.roddy.core.Analysis'
+               runtimeServiceClass='de.dkfz.b080.co.common.BasicCOProjectsRuntimeService'
                brawlWorkflow="SNVCalling"
                brawlBaseWorkflow="WorkflowUsingMergedBams"
                imports="commonCOWorkflowsSettings"
