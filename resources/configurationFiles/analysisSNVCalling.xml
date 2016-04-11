@@ -106,8 +106,8 @@
                 <rset size="l" memory="12" cores="12" nodes="1" walltime="8"/>
                 <rset size="xl" memory="12" cores="12" nodes="1" walltime="16"/>
             </resourcesets>
-            <input type="file" typeof="de.dkfz.b080.co.files.BamFile" scriptparameter="TUMOR_BAMFILE_FULLPATH_BP"/>
-            <input type="file" typeof="de.dkfz.b080.co.files.BamFile" scriptparameter="CONTROL_BAMFILE_FULLPATH_BP"/>
+            <input type="file" typeof="de.dkfz.b080.co.files.TumorBamFile" scriptparameter="TUMOR_BAMFILE_FULLPATH_BP"/>
+            <input type="file" typeof="de.dkfz.b080.co.files.ControlBamFile" scriptparameter="CONTROL_BAMFILE_FULLPATH_BP"/>
             <!--<input type="filegroup" typeof="de.dkfz.b080.co.files.VCFFileGroupForSNVs" scriptparameter="VCF_FOR_SNV_FILES" passas="array"/>-->
             <output type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_VCF_RAW"/>
         </tool>
@@ -118,8 +118,8 @@
                 <rset size="l" memory="1" cores="1" nodes="1" walltime="24"/>
                 <rset size="xl" memory="4" cores="1" nodes="1" walltime="48"/>
             </resourcesets>
-            <input type="file" typeof="de.dkfz.b080.co.files.BamFile" scriptparameter="TUMOR_BAMFILE_FULLPATH_BP"/>
-            <input type="file" typeof="de.dkfz.b080.co.files.BamFile" scriptparameter="CONTROL_BAMFILE_FULLPATH_BP"/>
+            <input type="file" typeof="de.dkfz.b080.co.files.TumorBamFile" scriptparameter="TUMOR_BAMFILE_FULLPATH_BP"/>
+            <input type="file" typeof="de.dkfz.b080.co.files.ControlBamFile" scriptparameter="CONTROL_BAMFILE_FULLPATH_BP"/>
             <input type="string" setby="callingCode" scriptparameter="PARM_CHR_INDEX"/>
             <output type="tuple">
                 <output type="file" typeof="de.dkfz.b080.co.files.VCFFileForSNVs" check="false" scriptparameter="FILENAME_VCF_SNVS"/>
@@ -133,7 +133,7 @@
                 <rset size="l" memory="1" cores="1" nodes="1" walltime="4"/>
                 <rset size="xl" memory="6" cores="1" nodes="1" walltime="4"/>
             </resourcesets>
-            <input type="file" typeof="de.dkfz.b080.co.files.BamFile" scriptparameter="TUMOR_BAMFILE_FULLPATH_BP"/>
+            <input type="file" typeof="de.dkfz.b080.co.files.TumorBamFile" scriptparameter="TUMOR_BAMFILE_FULLPATH_BP"/>
             <input type="filegroup" typeof="de.dkfz.b080.co.files.VCFFileGroupForSNVs" scriptparameter="VCF_FOR_SNV_FILES" passas="array"/>
             <output type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_VCF_RAW"/>
         </tool>
@@ -145,7 +145,7 @@
                 <rset size="xl" memory="4" cores="2" nodes="1" walltime="180"/>
             </resourcesets>
             <input type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_VCF_IN"/>
-            <input type="file" typeof="de.dkfz.b080.co.files.BamFile" scriptparameter="TUMOR_BAMFILE_FULLPATH_BP"/>
+            <input type="file" typeof="de.dkfz.b080.co.files.TumorBamFile" scriptparameter="TUMOR_BAMFILE_FULLPATH_BP"/>
             <!-- TODO Think of other possibilities for passas, so i.e. passas="indexedParameters" -->
             <output type="filegroup" typeof="de.dkfz.b080.co.files.VCFFileWithCheckpointFile">
                 <output type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_VCF_OUT"/>
@@ -174,7 +174,7 @@
             </resourcesets>
             <input type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_VCF"/>
             <input type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_RAW_VCF"/>
-            <input type="file" typeof="de.dkfz.b080.co.files.BamFile" scriptparameter="TUMOR_BAMFILE_FULLPATH_BP"/>
+            <input type="file" typeof="de.dkfz.b080.co.files.TumorBamFile" scriptparameter="TUMOR_BAMFILE_FULLPATH_BP"/>
             <input type="string" setby="callingCode" scriptparameter="SNVFILE_PREFIX"/>
             <output type="filegroup" typeof="de.dkfz.b080.co.files.VCFFileWithCheckpointFile">
                 <output type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_VCF_SNVS"/>
@@ -218,12 +218,12 @@
     </processingTools>
     <filenames package='de.dkfz.b080.co.files' filestagesbase='de.dkfz.b080.co.files.COFileStage'>
         <!--<filename class='VCFFileForSNVs' derivedFrom="BamFile" pattern="${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvs_${pid}.${RODDY_JOBARRAYINDEX}.vcf" />-->
-        <filename class='VCFFileForSNVs' derivedFrom="BamFile" pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvs_${pid}.${jobParameter,name="PARM_CHR_INDEX"}.vcf'/>
-        <filename class='TextFile' derivedFrom="BamFile" pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/.snvs_${pid}.${jobParameter,name="PARM_CHR_INDEX"}.vcf_checkpoint'/>
+        <filename class='VCFFileForSNVs' derivedFrom="ControlBamFile" pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvs_${pid}.${jobParameter,name="PARM_CHR_INDEX"}.vcf'/>
+        <filename class='TextFile' derivedFrom="TumorBamFile" pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/.snvs_${pid}.${jobParameter,name="PARM_CHR_INDEX"}.vcf_checkpoint'/>
 
         <filename class="TextFile" derivedFrom="SNVAnnotationFile" pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvCallingCheckPoint_${jobParameter,name="TOOL_ID"}'/>
         <!--<filename class="TextFile" onMethod="deepAnnotate" selectiontag="snvCallingCheckpoint" pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvCallingCheckPoint_${jobParameter,name="TOOL_ID"}' />-->
-        <filename class='SNVAnnotationFile' derivedFrom="BamFile" pattern="${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvs_${pid}_raw.vcf.gz"/>
+        <filename class='SNVAnnotationFile' derivedFrom="TumorBamFile" pattern="${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvs_${pid}_raw.vcf.gz"/>
         <filename class='SNVAnnotationFile' derivedFrom="SNVAnnotationFile" pattern="${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvs_${pid}.vcf.gz"/>
     </filenames>
 </configuration>

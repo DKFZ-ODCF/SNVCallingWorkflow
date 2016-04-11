@@ -16,7 +16,7 @@ import java.util.List;
 public class Methods {
 
     @ScriptCallingMethod
-    public static VCFFileGroupForSNVs callSNVs(BamFile tumorBam, BamFile controlBam) {
+    public static VCFFileGroupForSNVs callSNVs(ControlBamFile controlBam, TumorBamFile tumorBam) {
         IndexedFileObjects<Tuple2<VCFFileForSNVs, TextFile>> indexedFileObjects = ParallelizationHelper.runParallel(COConstants.CVALUE_CHROMOSOME_INDICES, COConstants.TOOL_SNV_CALLING, tumorBam, controlBam, "PARM_CHR_INDEX=");
 
         for (String chromosome : indexedFileObjects.getIndices()) {
@@ -33,10 +33,6 @@ public class Methods {
         }
         VCFFileGroupForSNVs vcfFilesForSNVs = new VCFFileGroupForSNVs(vcfFileForSNVsList);
         return vcfFilesForSNVs;
-    }
-
-    public static SNVAnnotationFile callSNVsMeta(BamFile bamControlMerged, BamFile bamTumorMerged) {
-        return GenericMethod.callGenericTool("snvCallingMetaScript", bamTumorMerged, bamControlMerged);
     }
 
 }

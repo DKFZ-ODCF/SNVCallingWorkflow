@@ -7,14 +7,14 @@ import de.dkfz.roddy.knowledge.files.BaseFile;
 /**
  * Created by heinold on 15.01.16.
  */
-public class BamFile extends BasicBamFile {
+public class ControlBamFile extends BasicBamFile {
 
-    public BamFile(ConstructionHelperForBaseFiles helper) {
+    public ControlBamFile(ConstructionHelperForBaseFiles helper) {
         super(helper);
     }
 
     /** "Copy" constructor */
-    public BamFile(BaseFile parent) {
+    public ControlBamFile(BaseFile parent) {
         super(parent);
     }
 }

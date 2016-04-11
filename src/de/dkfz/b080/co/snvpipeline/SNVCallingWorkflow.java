@@ -11,8 +11,8 @@ public class SNVCallingWorkflow extends WorkflowUsingMergedBams {
     @Override
     public boolean execute(ExecutionContext context, BasicBamFile _bamControlMerged, BasicBamFile _bamTumorMerged) {
 
-        BamFile bamControlMerged = new BamFile(_bamControlMerged);
-        BamFile bamTumorMerged = new BamFile(_bamTumorMerged);
+        ControlBamFile bamControlMerged = new ControlBamFile(_bamControlMerged);
+        TumorBamFile bamTumorMerged = new TumorBamFile(_bamTumorMerged);
 
         boolean runMetaCallingStep = context.getConfiguration().getConfigurationValues().getBoolean("runSNVMetaCallingStep", false);
         boolean runDeepAnnotation = context.getConfiguration().getConfigurationValues().getBoolean("runDeepAnnotation", true);
@@ -23,7 +23,7 @@ public class SNVCallingWorkflow extends WorkflowUsingMergedBams {
             VCFFileGroupForSNVs vcfFilesForSNVs = Methods.callSNVs(bamControlMerged, bamTumorMerged);
             rawVCFFile = vcfFilesForSNVs.join();
         } else {
-            rawVCFFile = Methods.callSNVsMeta(bamControlMerged, bamTumorMerged);
+            rawVCFFile = (SNVAnnotationFile) call("snvCallingMetaScript", bamTumorMerged, bamControlMerged);
         }
 
         VCFFileWithCheckpointFile annotationFile = rawVCFFile.annotate();
