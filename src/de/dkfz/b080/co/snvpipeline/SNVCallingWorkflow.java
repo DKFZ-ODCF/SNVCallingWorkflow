@@ -14,7 +14,7 @@ public class SNVCallingWorkflow extends WorkflowUsingMergedBams {
         BamFile bamControlMerged = new BamFile(_bamControlMerged);
         BamFile bamTumorMerged = new BamFile(_bamTumorMerged);
 
-        boolean runMetaCallingStep = context.getConfiguration().getConfigurationValues().getBoolean("runSNVMetaCallingStep", false);
+        boolean runMetaCallingStep =  context.getConfiguration().getConfigurationValues().getBoolean("runSNVMetaCallingStep", false);
         boolean runDeepAnnotation = context.getConfiguration().getConfigurationValues().getBoolean("runDeepAnnotation", true);
         boolean runFilter = context.getConfiguration().getConfigurationValues().getBoolean("runFilter", true);
 
