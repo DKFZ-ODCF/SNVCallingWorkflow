@@ -26,7 +26,7 @@ public class SNVAnnotationFile extends BaseFile {
         return file;
     }
 
-    public VCFFileWithCheckpointFile filter(SNVAnnotationFile rawVCFFile, BamFile tumorBamFile) {
+    public VCFFileWithCheckpointFile filter(SNVAnnotationFile rawVCFFile, TumorBamFile tumorBamFile) {
         VCFFileWithCheckpointFile file = GenericMethod.callGenericTool(COConstants.TOOL_SNV_FILTER, this, rawVCFFile, tumorBamFile, "SNVFILE_PREFIX=snvs_");
         return file;
     }

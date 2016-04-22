@@ -240,14 +240,23 @@ def performAnalysis(options):
                                         #if DP4af > 0: DP4af -= 1
                     break # only one pileup for a position
 
+                    if (len(REF_baseQualities) > 0):
+                        VAF =  1.0 * len(ALT_baseQualities) / (len(REF_baseQualities) + len(ALT_baseQualities))
+                    elif (len(ALT_baseQualities) > 0):
+                        VAF = 1.0
+                    else:
+                        VAF = 0.0
+
                     if options.altBQF != '':
                         scoreString = ",".join([str(score) for score in ALT_baseQualities])
                         if scoreString != '':
+                            scoreString = ";".join([scoreString , str(VAF)])
                             ALT_baseQualities_file.write("%s\t%s\t%s\n" % (chrom, pos, scoreString))
 
                     if options.refBQF != '':
                         scoreString = ",".join([str(score) for score in REF_baseQualities])
                         if scoreString != '':
+                            scoreString = ";".join([scoreString , str(VAF)])
                             REF_baseQualities_file.write("%s\t%s\t%s\n" % (chrom, pos, scoreString))
 
 

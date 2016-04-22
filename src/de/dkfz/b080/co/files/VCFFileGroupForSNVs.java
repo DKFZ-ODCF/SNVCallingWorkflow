@@ -21,7 +21,7 @@ public class VCFFileGroupForSNVs extends FileGroup<VCFFileForSNVs> {
     }
 
     public SNVAnnotationFile join() {
-        BamFile bf = (BamFile) filesInGroup.get(0).getParentFiles().get(0); //Should be merged tumor bam file
+        TumorBamFile bf = (TumorBamFile) filesInGroup.get(0).getParentFiles().get(0); //Should be merged tumor bam file
         SNVAnnotationFile file = GenericMethod.callGenericTool(COConstants.TOOL_JOIN_SNV_VCF_FILES, bf, this);
         return file;
 //    }
