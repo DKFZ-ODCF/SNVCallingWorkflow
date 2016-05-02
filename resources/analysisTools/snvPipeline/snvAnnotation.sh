@@ -55,8 +55,8 @@ declare -r filenameSequenceErrorPlotTmp=${outputDirectory}/`basename ${filenameS
 declare -r filenameSequencingErrorPlotTmp=${outputDirectory}/`basename ${filenameSNVVCF} .vcf`_sequencing_specific_error_plot_after_filter_once.pdf
 declare -r filenameQCValues=${outputDirectory}/`basename ${filenameSNVVCF} .vcf`_QC_values.tsv
 outputFilenamePrefix=${outputDirectory}/${SNVFILE_PREFIX}${PID}
-declare -r filenameReferenceAlleleBaseScores=${outputFilenamePrefix}_reference_allele_base_qualities.txt
-declare -r filenameAlternativeAlleleBaseScores=${outputFilenamePrefix}_alternative_allele_base_qualities.txt
+declare -r filenameReferenceAlleleBaseScores=${outputFilenamePrefix}_reference_allele_base_qualities.txt.gz
+declare -r filenameAlternativeAlleleBaseScores=${outputFilenamePrefix}_alternative_allele_base_qualities.txt.gz
 
 
 declare -r filenamePCRerrorMatrixFirst=${outputDirectory}/`basename ${filenameSNVVCF} .vcf`_sequence_error_matrix_first.txt
@@ -112,7 +112,7 @@ ${ANNOVAR_BINARY} --buildver=${ANNOVAR_BUILDVER} -regionanno -dbtype segdup --ou
 av_segdup=`ls ${filenameSNVForAnnovarSeqDup}*genomicSuperDups`
 
 # cytoband annotation with annovar
-if [[ ${runCytoband-true} == "true" ]] 
+if [[ ${runCytoband-true} == "true" ]]
 then
 	${ANNOVAR_BINARY} --buildver=$ANNOVAR_BUILDVER -regionanno -dbtype band --outfile=${filenameSNVForAnnovarCytoband} ${filenameSNVForAnnovarBed} ${ANNOVAR_DBPATH}
 	av_cytoband=`ls ${filenameSNVForAnnovarCytoband}*cytoBand`
@@ -178,9 +178,9 @@ basequal=`echo $MPILEUP_OPTS | perl -ne '($qual) = $_ =~ /\-Q\s*(\d+)/;print $qu
 basequal=${basequal:-13}
 
 if [[ ${runOnPancan-false} == true ]]; then
-	CONFIDENCE_OPTS_PANCAN=${CONFIDENCE_OPTS}" -o ${filenameSNVVCFPancan}"
+    CONFIDENCE_OPTS_PANCAN=${CONFIDENCE_OPTS}" -o ${filenameSNVVCFPancan}"
 else
-	CONFIDENCE_OPTS_PANCAN=${CONFIDENCE_OPTS}
+    CONFIDENCE_OPTS_PANCAN=${CONFIDENCE_OPTS}
 fi
 
 npConfidence=${RODDY_SCRATCH}/snvAnnotationFIFO
@@ -212,6 +212,20 @@ if [[ ${runArtifactFilter-true} == true ]]
 then
 	cat ${npConfidence} | ${TOOL_COPYSAM_WRAPPER} ${PYPY_LOCAL_LIBPATH} ${PYPY_BINARY} -u ${TOOL_FILTER_PE_OVERLAP} ${noControlFlag} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1}  --altBaseQualFile=${filenameAlternativeAlleleBaseScores} --refBaseQualFile=${filenameReferenceAlleleBaseScores} \
 						| ${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 0 -f ${filenameSomaticSNVsTmp} > ${filenameSNVVCFTemp}.tmp
+
+    mkfifo NP_${filenameAlternativeAlleleBaseScores} NP_${filenameReferenceAlleleBaseScores}
+    cat NP_${filenameAlternativeAlleleBaseScores} | ${BGZIP_BINARY} -f >${filenameAlternativeAlleleBaseScores} & zipAlternativeAlleleBaseScores=$!
+    cat NP_${filenameReferenceAlleleBaseScores} | ${BGZIP_BINARY} -f >${filenameReferenceAlleleBaseScores} & zipReferenceAlleleBaseScores=$!
+    cat ${filenameSNVVCF} | python ${TOOL_FILTER_PE_OVERLAP} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1}  --altBaseQualFile=NP_${filenameAlternativeAlleleBaseScores} --refBaseQualFile=NP_${filenameReferenceAlleleBaseScores} \
+                          | perl ${TOOL_CONFIDENCE_RE_ANNOTATION} -i - ${CONFIDENCE_OPTS} -a 0 -f ${filenameSomaticSNVsTmp} > ${filenameSNVVCFTemp}.tmp
+
+    wait $zipAlternativeAlleleBaseScores ; [[ $? -gt 0 ]] && echo "Error from zipAlternativeAlleleBaseScores" && exit 31
+    wait $zipReferenceAlleleBaseScores ; [[ $? -gt 0 ]] && echo "Error from zipReferenceAlleleBaseScores" && exit 32
+    rm NP_${filenameAlternativeAlleleBaseScores} NP_${filenameReferenceAlleleBaseScores}
+
+    NRSOMSNV=`grep -v "^#" ${filenameSomaticSNVsTmp} | wc -l`
+    echo -e "SOMATIC_SNVS_UNFILTERED\t${NRSOMSNV}">> ${filenameQCValues}
+
 
 	[[ $? != 0 ]] && echo "Error in first iteration of confidence annotation" && exit 2
 
