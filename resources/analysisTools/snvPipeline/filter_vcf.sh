@@ -17,6 +17,24 @@ getRefGenomeAndChrPrefixFromHeader ${TUMOR_BAMFILE_FULLPATH_BP} # Sets CHR_PREFI
 numberOfChromosomes=${CHROMOSOME_INDICES[@]}
 outputFilenamePrefix=${mpileupDirectory}/${SNVFILE_PREFIX}${PID}
 
+if [[ "$GERMLINE_AVAILABLE" == 0 ]]; then
+    FILTER_VALUES=""
+    [[ ${FILTER_ExAC} == 'true' ]]             && FILTER_VALUES="${FILTER_VALUES} ExAC AF ${CRIT_ExAC_maxMAF}+"
+    [[ ${FILTER_EVS} == 'true' ]]              && FILTER_VALUES="${FILTER_VALUES} EVS MAF ${CRIT_EVS_maxMAF}+"
+    [[ ${FILTER_1KGENOMES} == 'true' ]]        && FILTER_VALUES="${FILTER_VALUES} 1K_GENOMES AF,ASN_AF,AMR_AF,AFR_AF,EUR_AF ${CRIT_1KGENOMES_maxMAF}+"
+    [[ ${FILTER_NON_CLINIC} == 'true' ]]       && FILTER_VALUES="${FILTER_VALUES} DBSNP CLN nonexist"
+    [[ ${FILTER_RECURRENCE} == 'true' ]]       && FILTER_VALUES="${FILTER_VALUES} RecurrenceInPIDs . ${CRIT_RECURRENCE}+"
+    [[ ${FILTER_LOCALCONTROL} == 'true' ]]  && FILTER_VALUES="${FILTER_VALUES} CountInLocalControl . ${CRIT_LOCALCONTROL_maxMAF}+"
+
+    if [[ ${FILTER_VALUES} != "" ]]; then
+        outputFilenamePrefix="${outputFilenamePrefix}_nocontrol"
+        FILTERED_VCF="${outputFilenamePrefix}.vcf"
+        ${PYPY_BINARY} -u ${TOOL_VCF_FILTER_BY_CRIT} ${FILENAME_VCF} ${FILTERED_VCF}${FILTER_VALUES}
+        ${BGZIP_BINARY} -f ${FILTERED_VCF} && ${TABIX_BINARY} -f -p vcf ${FILTERED_VCF}.gz
+        FILENAME_VCF=${FILTERED_VCF}.gz
+    fi
+fi
+
 # file paths
 filenameSomaticSnvs=${outputFilenamePrefix}_somatic_snvs_conf_${MIN_CONFIDENCE_SCORE}_to_10.vcf
 filenameSomaticSnvsIndbSNP=${outputFilenamePrefix}_somatic_in_dbSNP_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt

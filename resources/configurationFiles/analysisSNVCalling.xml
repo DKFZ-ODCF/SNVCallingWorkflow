@@ -28,7 +28,38 @@
         <cvalue name="ANNOVAR_GENEANNO_COLS" value='"ANNOVAR_FUNCTION,GENE,EXONIC_CLASSIFICATION,ANNOVAR_TRANSCRIPTS"' type="string"/>
         <cvalue name="ANNOVAR_SEGDUP_COL" value="SEGDUP" type="string"/>
         <cvalue name="ANNOVAR_CYTOBAND_COL" value="CYTOBAND" type="string"/>
+
+        <!--## If GERMLINE_AVAILABLE is set, then the extra annotation & filtering step will be omitted -->
         <cvalue name="GERMLINE_AVAILABLE" value="1" type="string"/>
+
+        <!--#### EXTRA ANNOTATION AND FILTERING -->
+        <!--#### BELOW VALUES WILL BE NEGLECTED WHEN GERMLINE_AVAILABLE IS SET -->
+            <!--## Recurrence file -->
+            <!-- If the file does not exist, then skipped -->
+            <cvalue name="RECURRENCE" value="${outputAnalysisBaseDirectory}/../Recurrence/recurrent_SNVs_among_allPIDs_withoutMultiAlt.vcf.gz" type="path" />
+
+            <!--## Databases -->
+            <cvalue name="ExAC" value="/icgc/ngs_share/assemblies/hg19_GRCh37_1000genomes/databases/ExAC/ExAC.r0.1.sites.vep.vcf.gz" type="path" />
+            <cvalue name="EVS" value="/icgc/ngs_share/assemblies/hg19_GRCh37_1000genomes/databases/EVS/ESP6500SI-V2-SSA137.updatedProteinHgvs.ALL.snps_indels.vcf.gz" type="path" />
+            <cvalue name="LOCALCONTROL" value="/icgc/dkfzlsdf/analysis/UniExome/GermlineAnnotation/annotationInfo/LocalControls/LocalControlConsolidated_SNP.vcf.gz" type="path" />
+
+            <!--## Filter switch -->
+            <cvalue name="FILTER_ExAC" value="true" type="boolean" />
+            <cvalue name="FILTER_EVS" value="true" type="boolean" />
+            <cvalue name="FILTER_1KGENOMES" value="true" type="boolean" />
+            <cvalue name="FILTER_RECURRENCE" value="false" type="boolean" />
+            <cvalue name="FILTER_LOCALCONTROL" value="true" type="boolean" />
+            <cvalue name="FILTER_NON_CLINIC" value="true" type="boolean" />
+
+            <!--## Filter criteria -->
+            <!--## The rows with corresponding values larger than below criteria will be filtered out. -->
+            <cvalue name="CRIT_ExAC_maxMAF" value="0.01" type="float" />
+            <cvalue name="CRIT_EVS_maxMAF" value="0.01" type="float" />
+            <cvalue name="CRIT_1KGENOMES_maxMAF" value="0.01" type="float" />
+            <cvalue name="CRIT_RECURRENCE" value="7" type="integer" />
+            <cvalue name="CRIT_LOCALCONTROL_maxMAF" value="0.01" type="float" />
+        <!--#### END EXTRA ANNOTATION AND FILTERING -->
+
         <cvalue name="CONFIDENCE_OPTS" value='"-t 500 -c 0 -p 0"' type="string"
                 description="max read depth in control (-t INT default 150 for genomes, set to 500 for exomes) can now be ommited to avoid depth dependent punishing by setting -c 0. It is also possible to get a justification for the confidence score by setting the -p 1 flag"/>
 
@@ -55,7 +86,6 @@
         <cvalue name="maxNumOppositeReadsSequencingStrongBias" value="1" type="integer"/>
         <cvalue name="maxNumOppositeReadsSequenceStrongBias" value="1" type="integer"/>
         <cvalue name="rVcf" value="0.1" type="float" description="max fraction of reads (reads/total reads) we tolerate in the direction opposite to the bias for it to be called an artefact"/>
-
 
         <configurationValueBundle name='PIPE_CONFIG:SNV_RELIABILITY'>
             <cvalue name='MAPABILITY' value='${hg19DatabaseUCSCDirectory}/wgEncodeCrgMapabilityAlign100mer_chr.bedGraph.gz' type="path"/>
@@ -213,7 +243,8 @@
         <tool name="processAnnovar" value="processAnnovarOutput.pl" basepath="tools"/>
         <tool name="newColsToVcf" value="newCols2vcf.pl" basepath="tools"/>
         <tool name="plotBaseScoreDistribution" value="plotBaseScoreDistribution.R" basepath="snvPipeline"/>
-
+        <tool name="onlyExtractMatch" value="extract_match_only.py" basepath="snvPipeline"/>
+        <tool name="vcfFilterByCrit" value="vcf_filter_by_crit.py" basepath="snvPipeline"/>
         <tool name="analyzeBamHeader" value="analyzeBamHeader.sh" basepath="tools"/>
     </processingTools>
     <filenames package='de.dkfz.b080.co.files' filestagesbase='de.dkfz.b080.co.files.COFileStage'>

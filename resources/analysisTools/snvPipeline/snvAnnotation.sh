@@ -207,42 +207,58 @@ then
 		[[ $? != 0 ]] && echo "Error in second creation of error matrix and plot (sequence/PCR)" && exit 7
 
 		cat ${filenameSNVVCFTemp} | ${PYTHON_BINARY} ${TOOL_FLAG_BIAS} --vcfFile="/dev/stdin" --referenceFile=${REFERENCE_GENOME} --sequence_specificFile=${filenamePCRerrorMatrix} --sequencing_specificFile=${filenameSequencingErrorMatrix} --numReads=${nReads} --numMuts=${nMuts} --biasPValThreshold=${biasPValThreshold} --biasRatioThreshold=${biasRatioThreshold} --biasRatioMinimum=${biasRatioMinimum} --maxNumOppositeReadsSequencingWeakBias=${maxNumOppositeReadsSequencingWeakBias} --maxNumOppositeReadsSequenceWeakBias=${maxNumOppositeReadsSequenceWeakBias} --maxNumOppositeReadsSequencingStrongBias=${maxNumOppositeReadsSequencingStrongBias} --maxNumOppositeReadsSequenceStrongBias=${maxNumOppositeReadsSequenceStrongBias} --ratioVcf=${rVcf} --bias_matrixSeqFile=${filenameBiasMatrixSeqFile} --bias_matrixSeqingFile=${filenameBiasMatrixSeqingFile} --vcfFileFlagged="/dev/stdout" | \
-		perl ${TOOL_CONFIDENCE_RE_ANNOTATION} -i - ${CONFIDENCE_OPTS_PANCAN} -a 2 | ${BGZIP_BINARY} > ${filenameSNVVCFTemp}.tmp
+		${PERL_BINARY} ${TOOL_CONFIDENCE_RE_ANNOTATION} -i - ${CONFIDENCE_OPTS_PANCAN} -a 2 > ${filenameSNVVCF}
 
 		[[ $? != 0 ]] && echo "Error in second filtering and/or third iteration of confidence annotation" && exit 8
 
-		mv ${filenameSNVVCFTemp}.tmp ${filenameSNVVCFTemp} && tabix -f -p vcf ${filenameSNVVCFTemp}
-
-		[[ $? != 0 ]] && echo "Error in creation of tabix index for vcf file" && exit 9
+        #${BGZIP_BINARY} -f ${filenameSNVVCF} && ${TABIX_BINARY} -f -p vcf ${FILENAME_VCF_OUT}
+		#[[ $? != 0 ]] && echo "Error in creation of tabix index for vcf file" && exit 9
 
 		mv ${filenamePCRerrorMatrix} ${filenamePCRerrorMatrixSecond}
 		mv ${filenameSequencingErrorMatrix} ${filenameSequencingErrorMatrixSecond}
 		mv ${filenameBiasMatrixSeqFile} ${filenameBiasMatrixSeqFileSecond}
 		mv ${filenameBiasMatrixSeqingFile} ${filenameBiasMatrixSeqingFileSecond}
 
-		mv ${filenameSNVVCFTemp} ${FILENAME_VCF_OUT} &&\
-		mv ${filenameSNVVCFTemp}.tbi ${FILENAME_VCF_OUT}.tbi
 		rm ${filenameSomaticSNVsTmp}
 
-		[[ $? != 0 ]] && echo "Error in moving the vcf file and index or in removing the temporary files" && exit 10
+		[[ $? != 0 ]] && echo "Error in moving the vcf file and index or in removing the temporary files" && exit 9
 	else
 		cat ${filenameSNVVCF} | python ${TOOL_FILTER_PE_OVERLAP} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} --altBaseQualFile=${filenameAlternativeAlleleBaseScores} --refBaseQualFile=${filenameReferenceAlleleBaseScores} | perl ${TOOL_CONFIDENCE_RE_ANNOTATION} -i - ${CONFIDENCE_OPTS_PANCAN} > ${filenameSNVVCFTemp}
 		
 		exitCode=$?
 		[[ $exitCode == 0 ]] && [[ -f ${filenameSNVVCFTemp} ]] && mv ${filenameSNVVCFTemp} ${filenameSNVVCF}
 		[[ $exitCode != 0 ]] && echo "SNV confidenceAnnotation with germline pipe returned non-zero exit code; temp file ${filenameSNVVCFTemp} not moved back" && exit 21
-		${BGZIP_BINARY} -f ${filenameSNVVCF} && ${TABIX_BINARY} -f -p vcf ${FILENAME_VCF_OUT}
+		#${BGZIP_BINARY} -f ${filenameSNVVCF} && ${TABIX_BINARY} -f -p vcf ${FILENAME_VCF_OUT}
 	fi
 
 else	# no germline information available
-
 	${PERL_BINARY} ${TOOL_CONFIDENCE_ANNOTATION_NO_GERMLINE} ${filenameSNVVCF} ${CONFIG_FILE} > ${filenameSNVVCFTemp}
 	[[ $exitCode == 0 ]] && [[ -f ${filenameSNVVCFTemp} ]] && mv ${filenameSNVVCFTemp} ${filenameSNVVCF}
     [[ $exitCode != 0 ]] && echo "SNV confidenceAnnotation returned non-zero exit code; temp file ${filenameSNVVCFTemp} not moved back" && exit 21
-	${BGZIP_BINARY} -f ${filenameSNVVCF} && ${TABIX_BINARY} -f -p vcf ${FILENAME_VCF_OUT}
+
+    cmdFilter="cat ${filenameSNVVCF} | \
+        ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} -a - -b ${ExAC} --columnName ExAC --bFileType vcf | \
+        ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} -a - -b ${EVS} --columnName EVS --bFileType vcf | \
+        ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} -a - -b ${LOCALCONTROL} --columnName CountInLocalControl --bReportColumn 5 --reportMatchType --minOverlapFraction 1 --bFileType vcf | \
+        ${PYPY_BINARY} -u ${TOOL_ONLY_EXTRACT_MATCH}"
+
+    if [[ -f ${RECURRENCE} ]]; then
+        cmdFilter="${cmdFilter} | ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} -a - -b ${RECURRENCE} --columnName RecurrenceInPIDs --bFileType vcf"
+    fi
+    cmdFilter="${cmdFilter} > ${filenameSNVVCFTemp}"
+
+    eval ${cmdFilter}
+
+    exitCode=$?
+    [[ $exitCode == 0 ]] && mv ${filenameSNVVCFTemp} ${filenameSNVVCF}
+    [[ $exitCode != 0 ]] && echo "There was a non-zero exit code in ExAC, EVS, lowMAF, LocalControl, or Recurrence annotation; temp file ${filenameSNVVCFTemp} not moved back" && exit 31
+    ###### Extra annotation end
 fi
 
 rm ${filenameControlMedian}
+
+${BGZIP_BINARY} -f ${filenameSNVVCF} && ${TABIX_BINARY} -f -p vcf ${FILENAME_VCF_OUT}
+[[ $? != 0 ]] && echo "Error in creation of bgzipped vcf file and tabix index for it" && exit 41
 
 # If this is for the pancancer workflow, then also zip away the DKFZ only file.
 [[ -f ${filenameSNVVCFPancan} ]] && ${TABIX_BINARY} -f -p vcf ${filenameSNVVCFPancan}
