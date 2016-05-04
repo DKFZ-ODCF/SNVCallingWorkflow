@@ -86,6 +86,7 @@ def decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, D
 # MAIN ANALYSIS PROCEDURE
 def performAnalysis(args):
     global qualScoreOffset
+<<<<<<< HEAD
 
     # http://stackoverflow.com/questions/881696/unbuffered-stdout-in-python-as-in-python-u-from-within-the-program
     unbuffered = os.fdopen(sys.stdout.fileno(), 'w', 0)
@@ -106,6 +107,13 @@ def performAnalysis(args):
 
     ALT_baseQualities_file = args.altBQF
     REF_baseQualities_file = args.refBQF
+
+    if args.altBQF != '':
+        ALT_baseQualities_file = open(args.altBQF, 'w')
+
+    if args.refBQF != '':
+        REF_baseQualities_file = open(args.refBQF, 'w')
+
 
     for line in sys.stdin:  #   vcfInFile
         if line[0] == "#":
