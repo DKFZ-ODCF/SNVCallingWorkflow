@@ -248,6 +248,7 @@
         <tool name="plotBaseScoreDistribution" value="plotBaseScoreDistribution.R" basepath="snvPipeline"/>
         <tool name="onlyExtractMatch" value="extract_match_only.py" basepath="snvPipeline"/>
         <tool name="vcfFilterByCrit" value="vcf_filter_by_crit.py" basepath="snvPipeline"/>
+        <tool name="plotBaseScoreBias" value="tripletBased_BQRatio_plotter.R" basepath="snvPipeline"/>
         <tool name="analyzeBamHeader" value="analyzeBamHeader.sh" basepath="tools"/>
         <tool name="copysamWrapper" value="copysam_wrapper.sh" basepath="snvPipeline"/>
     </processingTools>

@@ -46,8 +46,8 @@ filenameSomaticSnvsIndbSNP=${outputFilenamePrefix}_somatic_in_dbSNP_conf_${MIN_C
 filenameIntermutationDistance=${outputFilenamePrefix}_somatic_mutation_dist_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt.tmp
 filenamePCRerrorMatrix=${outputFilenamePrefix}_sequence_specific_error_Matrix_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt
 filenameSequencingErrorMatrix=${outputFilenamePrefix}_sequencing_specific_error_Matrix_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt
-filenameReferenceAlleleBaseQualities=${outputFilenamePrefix}_reference_allele_base_qualities.txt
-filenameAlternativeAlleleBaseQualities=${outputFilenamePrefix}_alternative_allele_base_qualities.txt
+filenameReferenceAlleleBaseQualities=${outputFilenamePrefix}_reference_allele_base_qualities.txt.gz
+filenameAlternativeAlleleBaseQualities=${outputFilenamePrefix}_alternative_allele_base_qualities.txt.gz
 
 # plot paths
 filenamePerChromFreq=${outputFilenamePrefix}_perChromFreq_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf
@@ -59,6 +59,9 @@ filenameSequenceErrorPlotPreFilter=${outputFilenamePrefix}_sequence_specific_err
 filenameSequencingErrorPlotPreFilter=${outputFilenamePrefix}_sequencing_specific_error_plot_before_filter.pdf
 filenameSequenceErrorPlotFilterOnce=${outputFilenamePrefix}_sequence_specific_error_plot_after_filter_once.pdf
 filenameSequencingErrorPlotFilterOnce=${outputFilenamePrefix}_sequencing_specific_error_plot_after_filter_once.pdf
+filenameBaseScoreBiasPreFilter=${outputFilenamePrefix}_base_score_bias_before_filter.pdf
+filenameBaseScoreBiasFilterOnce=${outputFilenamePrefix}_base_score_bias_after_filter_once.pdf
+filenameBaseScoreBiasPlot=${outputFilenamePrefix}_base_score_bias_plot_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf
 filenameBaseScoreDistributions=${outputFilenamePrefix}_base_score_distribution.pdf
 
 # maf plots
@@ -142,8 +145,10 @@ then
 
 	[[ "$?" != 0 ]] && echo "There was a non-zero exit code in making the PCR bias files" && exit 11
 
-    # make base score distribution plots - by Gregor Warsow
+    # make base score bias and base score distribution plots - by Gregor Warsow
     if [[ -f ${filenameReferenceAlleleBaseQualities} ]] && [[ -f ${filenameAlternativeAlleleBaseQualities} ]]; then
+        ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_BIAS} -v ${filenameSomaticSnvs} -r ${filenameReferenceAlleleBaseQualities} -a ${filenameAlternativeAlleleBaseQualities} -o ${filenameBaseScoreBiasPlot} -d "Base Quality Bias Plot for PID ${PID} before guanine oxidation filter"
+
         basequal=`echo ${MPILEUP_OPTS} | perl -ne '($qual) = $_ =~ /\-Q\s*(\d+)/;print $qual'`
         # really use base score threshold of 13 if variable is not set pr empty? We should expect to get a proper value here...
         basequal=${basequal:-13}

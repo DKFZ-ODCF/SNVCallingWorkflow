@@ -51,8 +51,10 @@ declare -r filenameBiasMatrixSeqingFile=${outputDirectory}/`basename ${filenameS
 declare -r filenameSomaticSNVsTmp=${outputDirectory}/`basename ${filenameSNVVCF} .vcf`_somatic_snvs_for_bias.vcf
 declare -r filenameSequenceErrorPlotPreFilter=${outputDirectory}/`basename ${filenameSNVVCF} .vcf`_sequence_specific_error_plot_before_filter.pdf
 declare -r filenameSequencingErrorPlotPreFilter=${outputDirectory}/`basename ${filenameSNVVCF} .vcf`_sequencing_specific_error_plot_before_filter.pdf
+declare -r filenameBaseScoreBiasPreFilter=${outputDirectory}/`basename ${filenameSNVVCF} .vcf`_base_score_bias_before_filter.pdf
 declare -r filenameSequenceErrorPlotTmp=${outputDirectory}/`basename ${filenameSNVVCF} .vcf`_sequence_specific_error_plot_after_filter_once.pdf
 declare -r filenameSequencingErrorPlotTmp=${outputDirectory}/`basename ${filenameSNVVCF} .vcf`_sequencing_specific_error_plot_after_filter_once.pdf
+declare -r filenameBaseScoreBiasTmp=${outputDirectory}/`basename ${filenameSNVVCF} .vcf`_base_score_bias_after_filter_once.pdf
 declare -r filenameQCValues=${outputDirectory}/`basename ${filenameSNVVCF} .vcf`_QC_values.tsv
 outputFilenamePrefix=${outputDirectory}/${SNVFILE_PREFIX}${PID}
 declare -r filenameReferenceAlleleBaseScores=${outputFilenamePrefix}_reference_allele_base_qualities.txt.gz
@@ -213,34 +215,38 @@ then
 	cat ${npConfidence} | ${TOOL_COPYSAM_WRAPPER} ${PYPY_LOCAL_LIBPATH} ${PYPY_BINARY} -u ${TOOL_FILTER_PE_OVERLAP} ${noControlFlag} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1}  --altBaseQualFile=${filenameAlternativeAlleleBaseScores} --refBaseQualFile=${filenameReferenceAlleleBaseScores} \
 						| ${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 0 -f ${filenameSomaticSNVsTmp} > ${filenameSNVVCFTemp}.tmp
 
+
     mkfifo NP_${filenameAlternativeAlleleBaseScores} NP_${filenameReferenceAlleleBaseScores}
     cat NP_${filenameAlternativeAlleleBaseScores} | ${BGZIP_BINARY} -f >${filenameAlternativeAlleleBaseScores} & zipAlternativeAlleleBaseScores=$!
     cat NP_${filenameReferenceAlleleBaseScores} | ${BGZIP_BINARY} -f >${filenameReferenceAlleleBaseScores} & zipReferenceAlleleBaseScores=$!
     cat ${filenameSNVVCF} | python ${TOOL_FILTER_PE_OVERLAP} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1}  --altBaseQualFile=NP_${filenameAlternativeAlleleBaseScores} --refBaseQualFile=NP_${filenameReferenceAlleleBaseScores} \
                           | perl ${TOOL_CONFIDENCE_RE_ANNOTATION} -i - ${CONFIDENCE_OPTS} -a 0 -f ${filenameSomaticSNVsTmp} > ${filenameSNVVCFTemp}.tmp
 
-    wait $zipAlternativeAlleleBaseScores ; [[ $? -gt 0 ]] && echo "Error from zipAlternativeAlleleBaseScores" && exit 31
-    wait $zipReferenceAlleleBaseScores ; [[ $? -gt 0 ]] && echo "Error from zipReferenceAlleleBaseScores" && exit 32
-    rm NP_${filenameAlternativeAlleleBaseScores} NP_${filenameReferenceAlleleBaseScores}
-
-    NRSOMSNV=`grep -v "^#" ${filenameSomaticSNVsTmp} | wc -l`
-    echo -e "SOMATIC_SNVS_UNFILTERED\t${NRSOMSNV}">> ${filenameQCValues}
-
-
-	[[ $? != 0 ]] && echo "Error in first iteration of confidence annotation" && exit 2
+    [[ $? != 0 ]] && echo "Error in first iteration of confidence annotation" && exit 2
 
 	NRSOMSNV=`grep -v "^#" ${filenameSomaticSNVsTmp} | wc -l`
 	echo -e "SOMATIC_SNVS_UNFILTERED\t${NRSOMSNV}">> ${filenameQCValues}
 
 	mv ${filenameSNVVCFTemp}.tmp ${filenameSNVVCFTemp}
 
+    wait $zipAlternativeAlleleBaseScores ; [[ $? -gt 0 ]] && echo "Error from zipAlternativeAlleleBaseScores" && exit 31
+    wait $zipReferenceAlleleBaseScores ; [[ $? -gt 0 ]] && echo "Error from zipReferenceAlleleBaseScores" && exit 32
+    rm NP_${filenameAlternativeAlleleBaseScores} NP_${filenameReferenceAlleleBaseScores}
+
 	${PYTHON_BINARY} ${TOOL_CREATE_ERROR_PLOTS} --vcfFile=${filenameSomaticSNVsTmp} --referenceFile=NA --outputFile=${filenameSequencingErrorPlotPreFilter} --errorType=sequencing_specific --errorFile=${filenameSequencingErrorMatrix} --plot_title='Sequencing strand bias before guanine oxidation filter'
 
 	[[ $? != 0 ]] && echo "Error in first creation of error matrix and plot (sequencing)" && exit 3
 
+
 	${PYTHON_BINARY} ${TOOL_CREATE_ERROR_PLOTS} --vcfFile=${filenameSomaticSNVsTmp} --referenceFile=NA --outputFile=${filenameSequenceErrorPlotPreFilter} --errorType=sequence_specific --errorFile=${filenamePCRerrorMatrix} --plot_title='PCR strand bias before guanine oxidation filter'
 
 	[[ $? != 0 ]] && echo "Error in first creation of error matrix and plot (sequence/PCR)" && exit 4
+
+    ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_BIAS} -v ${filenameSomaticSNVsTmp} -r ${filenameReferenceAlleleBaseScores} -a ${filenameAlternativeAlleleBaseScores} -o ${filenameBaseScoreBiasPreFilter} -d "Base Quality Bias Plot for PID ${PID} before guanine oxidation filter"
+    [[ $? != 0 ]] && echo "Error in first creation of base score bias plot" && exit 33
+
+    cat ${filenameSNVVCFTemp} | ${PYTHON_BINARY} ${TOOL_FLAG_BIAS} --vcfFile="/dev/stdin" --referenceFile=${REFERENCE_GENOME} --sequence_specificFile=${filenamePCRerrorMatrix} --sequencing_specificFile=${filenameSequencingErrorMatrix} --numReads=${nReads} --numMuts=${nMuts} --biasPValThreshold=${biasPValThreshold} --biasRatioThreshold=${biasRatioThreshold} --biasRatioMinimum=${biasRatioMinimum} --maxNumOppositeReadsSequencingWeakBias=${maxNumOppositeReadsSequencingWeakBias} --maxNumOppositeReadsSequenceWeakBias=${maxNumOppositeReadsSequenceWeakBias} --maxNumOppositeReadsSequencingStrongBias=${maxNumOppositeReadsSequencingStrongBias} --maxNumOppositeReadsSequenceStrongBias=${maxNumOppositeReadsSequenceStrongBias} --ratioVcf=${rVcf} --bias_matrixSeqFile=${filenameBiasMatrixSeqFile} --bias_matrixSeqingFile=${filenameBiasMatrixSeqingFile} --vcfFileFlagged="/dev/stdout" | \
+    perl ${TOOL_CONFIDENCE_RE_ANNOTATION} -i - ${CONFIDENCE_OPTS} -a 1 -f ${filenameSomaticSNVsTmp} > ${filenameSNVVCFTemp}.tmp
 
 	cat ${filenameSNVVCFTemp} | ${PYTHON_BINARY} ${TOOL_FLAG_BIAS} --vcfFile="/dev/stdin" --referenceFile=${REFERENCE_GENOME} --sequence_specificFile=${filenamePCRerrorMatrix} --sequencing_specificFile=${filenameSequencingErrorMatrix} --numReads=${nReads} --numMuts=${nMuts} --biasPValThreshold=${biasPValThreshold} --biasRatioThreshold=${biasRatioThreshold} --biasRatioMinimum=${biasRatioMinimum} --maxNumOppositeReadsSequencingWeakBias=${maxNumOppositeReadsSequencingWeakBias} --maxNumOppositeReadsSequenceWeakBias=${maxNumOppositeReadsSequenceWeakBias} --maxNumOppositeReadsSequencingStrongBias=${maxNumOppositeReadsSequencingStrongBias} --maxNumOppositeReadsSequenceStrongBias=${maxNumOppositeReadsSequenceStrongBias} --ratioVcf=${rVcf} --bias_matrixSeqFile=${filenameBiasMatrixSeqFile} --bias_matrixSeqingFile=${filenameBiasMatrixSeqingFile} --vcfFileFlagged="/dev/stdout" | \
 	${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 1 -f ${filenameSomaticSNVsTmp} > ${filenameSNVVCFTemp}.tmp
@@ -261,6 +267,12 @@ then
 	${PYTHON_BINARY} ${TOOL_CREATE_ERROR_PLOTS} --vcfFile=${filenameSomaticSNVsTmp} --referenceFile=NA --outputFile=${filenameSequenceErrorPlotTmp} --errorType=sequence_specific --errorFile=${filenamePCRerrorMatrix} --plot_title='PCR strand bias after first round of guanine oxidation filter'
 
 	[[ $? != 0 ]] && echo "Error in second creation of error matrix and plot (sequence/PCR)" && exit 7
+
+    ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_BIAS} -v ${filenameSomaticSNVsTmp} -r ${filenameReferenceAlleleBaseScores} -a ${filenameAlternativeAlleleBaseScores} -o ${filenameBaseScoreBiasTmp} -d "Base Quality Bias Plot for PID ${PID} after first round of guanine oxidation filter"
+    [[ $? != 0 ]] && echo "Error in second creation of base score bias plot" && exit 34
+
+    cat ${filenameSNVVCFTemp} | ${PYTHON_BINARY} ${TOOL_FLAG_BIAS} --vcfFile="/dev/stdin" --referenceFile=${REFERENCE_GENOME} --sequence_specificFile=${filenamePCRerrorMatrix} --sequencing_specificFile=${filenameSequencingErrorMatrix} --numReads=${nReads} --numMuts=${nMuts} --biasPValThreshold=${biasPValThreshold} --biasRatioThreshold=${biasRatioThreshold} --biasRatioMinimum=${biasRatioMinimum} --maxNumOppositeReadsSequencingWeakBias=${maxNumOppositeReadsSequencingWeakBias} --maxNumOppositeReadsSequenceWeakBias=${maxNumOppositeReadsSequenceWeakBias} --maxNumOppositeReadsSequencingStrongBias=${maxNumOppositeReadsSequencingStrongBias} --maxNumOppositeReadsSequenceStrongBias=${maxNumOppositeReadsSequenceStrongBias} --ratioVcf=${rVcf} --bias_matrixSeqFile=${filenameBiasMatrixSeqFile} --bias_matrixSeqingFile=${filenameBiasMatrixSeqingFile} --vcfFileFlagged="/dev/stdout" | \
+    perl ${TOOL_CONFIDENCE_RE_ANNOTATION} -i - ${CONFIDENCE_OPTS_PANCAN} -a 2 | ${BGZIP_BINARY} > ${filenameSNVVCFTemp}.tmp
 
 	cat ${filenameSNVVCFTemp} | ${PYTHON_BINARY} -u ${TOOL_FLAG_BIAS} --vcfFile="/dev/stdin" --referenceFile=${REFERENCE_GENOME} --sequence_specificFile=${filenamePCRerrorMatrix} --sequencing_specificFile=${filenameSequencingErrorMatrix} --numReads=${nReads} --numMuts=${nMuts} --biasPValThreshold=${biasPValThreshold} --biasRatioThreshold=${biasRatioThreshold} --biasRatioMinimum=${biasRatioMinimum} --maxNumOppositeReadsSequencingWeakBias=${maxNumOppositeReadsSequencingWeakBias} --maxNumOppositeReadsSequenceWeakBias=${maxNumOppositeReadsSequenceWeakBias} --maxNumOppositeReadsSequencingStrongBias=${maxNumOppositeReadsSequencingStrongBias} --maxNumOppositeReadsSequenceStrongBias=${maxNumOppositeReadsSequenceStrongBias} --ratioVcf=${rVcf} --bias_matrixSeqFile=${filenameBiasMatrixSeqFile} --bias_matrixSeqingFile=${filenameBiasMatrixSeqingFile} --vcfFileFlagged="/dev/stdout" | \
 	${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS_PANCAN} -a 2 > ${filenameSNVVCF}
