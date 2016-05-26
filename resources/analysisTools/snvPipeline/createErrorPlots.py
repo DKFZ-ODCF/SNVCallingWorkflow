@@ -189,6 +189,9 @@ def calculateErrorMatrix(vcfFilename, referenceFilename, errorType):
 		else:
 			split_line = line.rstrip().split("\t")
 
+			# 23.05.2016 JB: Excluded multiallelic SNVs
+			if ',' in split_line[header.index("ALT")]: continue
+
 			chrom = split_line[header.index("CHROM")]
 			pos = int(split_line[header.index("POS")])
 			context = "" 

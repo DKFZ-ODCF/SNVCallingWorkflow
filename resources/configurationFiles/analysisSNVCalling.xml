@@ -17,32 +17,34 @@
         <cvalue name="RAW_SNV_FILTER_OPTIONS" value='" --minVac=3 --minVaf=0.03 --minVacPS=2"' type="string"/>
         <!--<cvalue name='REFERENCE_GENOME' value="${referenceGenome_hg19_chr}" type="string"/>-->
 
-        <cvalue name="DBSNP" value="${hg19DatabasesDirectory}/dbSNP/dbSNP_141/00-All.SNV.vcf.gz" type="path"/>
+        <!--## Databases -->
+        <!-- hg19DatabasesDirectory=/icgc/ngs_share/assemblies/hg19_GRCh37_1000genomes/databases -->
+        <cvalue name="DBSNP" value="${hg19DatabasesDirectory}/dbSNP/dbSNP_147/common_all_20160408.SNV.vcf.gz" type="path"/>
         <cvalue name="DBSNP_COL" value="DBSNP" type="string"/>
         <cvalue name="KGENOME" value="${hg19DatabasesDirectory}/1000genomes/ALL.wgs.phase1_integrated_calls.20101123.snps_chr.vcf.gz" type="path"/>
         <cvalue name="KGENOMES_COL" value="1K_GENOMES" type="string"/>
-        <cvalue name='ANNOVAR_BINARY' value='${sharedFilesBaseDirectory}/annovar/annovar_Nov2014/annotate_variation.pl' type='path'/>
+        <cvalue name="ExAC" value="${hg19DatabasesDirectory}/ExAC/ExAC.r0.1.sites.vep.vcf.gz" type="path" />
+        <cvalue name="ExAC_COL" value="ExAC" type="string"/>
+        <cvalue name="EVS" value="${hg19DatabasesDirectory}/EVS/ESP6500SI-V2-SSA137.updatedProteinHgvs.ALL.snps_indels.vcf.gz" type="path" />
+        <cvalue name="EVS_COL" value="EVS" type="string"/>
+        <cvalue name="LOCALCONTROL" value="/icgc/dkfzlsdf/analysis/UniExome/GermlineAnnotation/annotationInfo/LocalControls/LocalControlConsolidated_SNP.vcf.gz" type="path" />
+        <cvalue name="LOCALCONTROL_COL" value="LocalControlAF" type="string"/>
+        <cvalue name='ANNOVAR_BINARY' value='${sharedFilesBaseDirectory}/annovar/annovar_Feb2016/annotate_variation.pl' type='path'/>
         <cvalue name='ANNOVAR_BUILDVER' value='hg19' type='string'/>
-        <cvalue name='ANNOVAR_DBPATH' value='${sharedFilesBaseDirectory}/annovar/annovar_Nov2014/humandb/' type='path'/>
+        <cvalue name='ANNOVAR_DBPATH' value='${sharedFilesBaseDirectory}/annovar/annovar_Feb2016/humandb/' type='path'/>
         <cvalue name='ANNOVAR_DBTYPE' value="'-dbtype wgEncodeGencodeCompV19'" type='string'/>
         <cvalue name="ANNOVAR_GENEANNO_COLS" value='"ANNOVAR_FUNCTION,GENE,EXONIC_CLASSIFICATION,ANNOVAR_TRANSCRIPTS"' type="string"/>
         <cvalue name="ANNOVAR_SEGDUP_COL" value="SEGDUP" type="string"/>
         <cvalue name="ANNOVAR_CYTOBAND_COL" value="CYTOBAND" type="string"/>
+        <!-- Recurrence file among PIDs. If the file does not exist, then skipped -->
+        <cvalue name="RECURRENCE" value="${outputAnalysisBaseDirectory}/../Recurrence/recurrent_SNVs_among_allPIDs_withoutMultiAlt.vcf.gz" type="path" />
+        <cvalue name="RECURRENCE_COL" value="RecurrenceInPIDs" type="string"/>
 
-        <!--## If GERMLINE_AVAILABLE is set, then the extra annotation & filtering step will be omitted -->
+        <!--## If GERMLINE_AVAILABLE is set, then the extra filtering step will be omitted -->
         <cvalue name="GERMLINE_AVAILABLE" value="1" type="string"/>
 
-        <!--#### EXTRA ANNOTATION AND FILTERING -->
+        <!--#### EXTRA FILTERING -->
         <!--#### BELOW VALUES WILL BE NEGLECTED WHEN GERMLINE_AVAILABLE IS SET -->
-            <!--## Recurrence file -->
-            <!-- If the file does not exist, then skipped -->
-            <cvalue name="RECURRENCE" value="${outputAnalysisBaseDirectory}/../Recurrence/recurrent_SNVs_among_allPIDs_withoutMultiAlt.vcf.gz" type="path" />
-
-            <!--## Databases -->
-            <cvalue name="ExAC" value="/icgc/ngs_share/assemblies/hg19_GRCh37_1000genomes/databases/ExAC/ExAC.r0.1.sites.vep.vcf.gz" type="path" />
-            <cvalue name="EVS" value="/icgc/ngs_share/assemblies/hg19_GRCh37_1000genomes/databases/EVS/ESP6500SI-V2-SSA137.updatedProteinHgvs.ALL.snps_indels.vcf.gz" type="path" />
-            <cvalue name="LOCALCONTROL" value="/icgc/dkfzlsdf/analysis/UniExome/GermlineAnnotation/annotationInfo/LocalControls/LocalControlConsolidated_SNP.vcf.gz" type="path" />
-
             <!--## Filter switch -->
             <cvalue name="FILTER_ExAC" value="true" type="boolean" />
             <cvalue name="FILTER_EVS" value="true" type="boolean" />
@@ -53,14 +55,14 @@
 
             <!--## Filter criteria -->
             <!--## The rows with corresponding values larger than below criteria will be filtered out. -->
-            <cvalue name="CRIT_ExAC_maxMAF" value="0.01" type="float" />
-            <cvalue name="CRIT_EVS_maxMAF" value="0.01" type="float" />
-            <cvalue name="CRIT_1KGENOMES_maxMAF" value="0.01" type="float" />
-            <cvalue name="CRIT_RECURRENCE" value="7" type="integer" />
-            <cvalue name="CRIT_LOCALCONTROL_maxMAF" value="0.01" type="float" />
-        <!--#### END EXTRA ANNOTATION AND FILTERING -->
+            <cvalue name="CRIT_ExAC_maxMAF" value="0.1" type="string" />
+            <cvalue name="CRIT_EVS_maxMAF" value="0.1" type="string" />
+            <cvalue name="CRIT_1KGENOMES_maxMAF" value="0.1" type="string" />
+            <cvalue name="CRIT_RECURRENCE" value="7" type="string" />
+            <cvalue name="CRIT_LOCALCONTROL_maxMAF" value="0.1" type="string" />
+        <!--#### END EXTRA FILTERING -->
 
-        <cvalue name="CONFIDENCE_OPTS" value='"-t 500 -c 0 -p 0"' type="string"
+        <cvalue name="CONFIDENCE_OPTS" value="-t 500" type="string"
                 description="max read depth in control (-t INT default 150 for genomes, set to 500 for exomes) can now be ommited to avoid depth dependent punishing by setting -c 0. It is also possible to get a justification for the confidence score by setting the -p 1 flag"/>
 
         <cvalue name="MIN_CONFIDENCE_SCORE" value="8" type="integer"/>
@@ -169,10 +171,10 @@
         </tool>
         <tool name="snvAnnotation" value="snvAnnotation.sh" basepath="snvPipeline">
             <resourcesets>
-                <rset size="s" memory="3" cores="2" nodes="1" walltime="4"/>
-                <rset size="m" memory="3" cores="1" nodes="1" walltime="12"/>
-                <rset size="l" memory="3" cores="2" nodes="1" walltime="120"/>
-                <rset size="xl" memory="4" cores="2" nodes="1" walltime="180"/>
+                <rset size="s" memory="5" cores="3" nodes="1" walltime="4"/>
+                <rset size="m" memory="5" cores="3" nodes="1" walltime="12"/>
+                <rset size="l" memory="5" cores="3" nodes="1" walltime="120"/>
+                <rset size="xl" memory="5" cores="3" nodes="1" walltime="180"/>
             </resourcesets>
             <input type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_VCF_IN"/>
             <input type="file" typeof="de.dkfz.b080.co.files.TumorBamFile" scriptparameter="TUMOR_BAMFILE_FULLPATH_BP"/>
@@ -218,7 +220,7 @@
         <tool name="vcfToAnnovar" value="vcf_to_annovar.pl" basepath="tools"/>
         <tool name="convertNewcolsToVcf" value="newCols2vcf.pl" basepath="tools"/>
         <tool name="createpipes" value="createpipes.pl" basepath="tools"/>
-        <tool name="confidenceAnnotationNoGermline" value="confidenceAnnotation_SNVsNoGermline.pl" basepath="snvPipeline"/>
+        <tool name="confidenceAnnotation" value="confidenceAnnotation_SNVs.py" basepath="snvPipeline"/>
         <tool name="confidenceReAnnotation" value="confidenceREAnnotation_SNVs.pl" basepath="snvPipeline"/>
         <tool name="filterPeOverlap" value="filter_PEoverlap.py" basepath="snvPipeline"/>
         <tool name="flagBias" value="filterVcfForBias.py" basepath="snvPipeline"/>

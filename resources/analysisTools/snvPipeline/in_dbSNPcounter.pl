@@ -41,6 +41,9 @@ chomp $header;
 my $DBSBP = 13;
 my $KG = 14;
 my $CONFIDENCE = 28;
+my $CANNOTATION = -1;
+my $RECLASSIFICATION = -1;
+my $CLASSIFICATION;
 
 @help = split(/\t/, $header);
 for (my $c = 0; $c < @help; $c++)
@@ -61,6 +64,22 @@ for (my $c = 0; $c < @help; $c++)
 		$DBSBP = $c;
 		print STDERR "DBSNP_COL in column $c\n";
 	}
+	if ($help[$c] eq "ANNOTATION_control")
+    {
+    	$CANNOTATION = $c;
+    	print STDERR "ANNOTATION_control in column $c\n";
+    }
+    if ($help[$c] eq "RECLASSIFICATION")
+    {
+        $RECLASSIFICATION = $c;
+        print STDERR "RECLASSIFICATION in column $c\n";
+    }
+}
+
+if ($CANNOTATION > 0) {
+    $CLASSIFICATION = $CANNOTATION;
+} else {
+    $CLASSIFICATION = $RECLASSIFICATION;
 }
 
 # I know that it's evilly hardcoded!
@@ -72,7 +91,7 @@ while (<FH>)
 	}
 	$all++;
 	@help = split ("\t", $_);
-	if ($help[12] =~ /somatic/)
+	if ($help[$CLASSIFICATION] =~ /somatic/)
 	{
 		$somatic++;
 		if ($help[$CONFIDENCE] >= $minscore)

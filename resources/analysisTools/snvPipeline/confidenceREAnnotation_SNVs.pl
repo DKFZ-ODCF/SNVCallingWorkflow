@@ -146,7 +146,7 @@ $pancanhead .= "##INFO=<ID=SOMATIC,Number=0,Type=Flag,Description=\"Indicates if
 
 if ($makehead == 1 && defined $panCanOut)
 {
-    print PANOUT $pancanhead;
+print PANOUT $pancanhead;
 }
 
 my $header = "";
