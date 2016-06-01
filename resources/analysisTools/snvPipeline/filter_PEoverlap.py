@@ -4,7 +4,8 @@
 # more snvs_108031.vcf | python /home/jaegern/pyWorkspace/NGS_Read_Processing/src/filter_PEoverlap.py --alignmentFile=/icgc/lsdf/mb/analysis/medullo/adultMB/results_per_pid/108031/alignment/tumor_108031_merged.bam.rmdup.bam --outf=snvs_108031_PEoverlapFiltered_nonALT_FINAL.vcf
 
 
-import pysam
+import copysam as pysam
+#import pysam
 import sys, os
 from vcfparser import *
 
@@ -88,12 +89,11 @@ def performAnalysis(args):
 
     # http://stackoverflow.com/questions/881696/unbuffered-stdout-in-python-as-in-python-u-from-within-the-program
     unbuffered = os.fdopen(sys.stdout.fileno(), 'w', 0)
-    sys.stdout.close()
     sys.stdout = unbuffered
 
     if args.qualityScore == 'illumina': qualScoreOffset = 64
     elif args.qualityScore == 'phred': qualScoreOffset = 33
-    
+
     #vcfInFile = open(args.inf, "r")
     #outFile = open(args.outf, "w")
 
@@ -121,7 +121,7 @@ def performAnalysis(args):
 
         entries = line.strip().split('\t')
         parsed_line = LineParser(entries, header_indices)
-        
+
         nonREFnonALTfwd=0
         nonREFnonALTrev=0
         ALTcount=0
@@ -154,6 +154,9 @@ def performAnalysis(args):
                 if pileupcolumn.pos == (pos-1):
                     #print 'coverage at base %s = %s' % (pileupcolumn.pos , pileupcolumn.n)
                     for pileupread in pileupcolumn.pileups:
+                        if pileupread.is_del:
+                            # 31 May 2016 JB: deletion at the pileup position
+                            continue
                         #print '\tbase in read %s = %s' % (pileupread.alignment.qname, pileupread.alignment.seq[pileupread.qpos])
                         baseScore = transformQualStr(pileupread.alignment.qual[pileupread.qpos])[0]
                         if pileupread.alignment.seq[pileupread.qpos].lower()  == ALT.lower():
