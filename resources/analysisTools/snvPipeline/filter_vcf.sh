@@ -2,6 +2,8 @@
 
 source ${CONFIG_FILE}
 
+PLOT_TYPE=${BASE_SCORE_BIAS_PLOT_TYPE:-Differences}
+
 set -o pipefail
 
 [[ -f ${FILENAME_CHECKPOINT} ]] && rm ${FILENAME_CHECKPOINT}
@@ -48,6 +50,7 @@ filenamePCRerrorMatrix=${outputFilenamePrefix}_sequence_specific_error_Matrix_co
 filenameSequencingErrorMatrix=${outputFilenamePrefix}_sequencing_specific_error_Matrix_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt
 filenameReferenceAlleleBaseQualities=${outputFilenamePrefix}_reference_allele_base_qualities.txt.gz
 filenameAlternativeAlleleBaseQualities=${outputFilenamePrefix}_alternative_allele_base_qualities.txt.gz
+filenameAlternativeAlleleReadPositions=${outputFilenamePrefix}_alternative_allele_read_positions.txt.gz
 
 # plot paths
 filenamePerChromFreq=${outputFilenamePrefix}_perChromFreq_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf
@@ -59,9 +62,9 @@ filenameSequenceErrorPlotPreFilter=${outputFilenamePrefix}_sequence_specific_err
 filenameSequencingErrorPlotPreFilter=${outputFilenamePrefix}_sequencing_specific_error_plot_before_filter.pdf
 filenameSequenceErrorPlotFilterOnce=${outputFilenamePrefix}_sequence_specific_error_plot_after_filter_once.pdf
 filenameSequencingErrorPlotFilterOnce=${outputFilenamePrefix}_sequencing_specific_error_plot_after_filter_once.pdf
-filenameBaseScoreBiasPreFilter=${outputFilenamePrefix}_base_score_bias_before_filter.pdf
-filenameBaseScoreBiasFilterOnce=${outputFilenamePrefix}_base_score_bias_after_filter_once.pdf
-filenameBaseScoreBiasPlot=${outputFilenamePrefix}_base_score_bias_plot_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf
+filenameBaseScoreBiasPlotPreFilter=${outputFilenamePrefix}_base_score_bias_before_filter.pdf
+filenameBaseScoreBiasPlotOnce=${outputFilenamePrefix}_base_score_bias_after_filter_once.pdf
+filenameBaseScoreBiasPlotFinal=${outputFilenamePrefix}_base_score_bias_plot_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf
 filenameBaseScoreDistributions=${outputFilenamePrefix}_base_score_distribution.pdf
 
 # maf plots
@@ -147,14 +150,19 @@ then
 
     # make base score bias and base score distribution plots - by Gregor Warsow
     if [[ -f ${filenameReferenceAlleleBaseQualities} ]] && [[ -f ${filenameAlternativeAlleleBaseQualities} ]]; then
-        ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_BIAS} -v ${filenameSomaticSnvs} -r ${filenameReferenceAlleleBaseQualities} -a ${filenameAlternativeAlleleBaseQualities} -o ${filenameBaseScoreBiasPlot} -d "Base Quality Bias Plot for PID ${PID} before guanine oxidation filter"
-
         basequal=`echo ${MPILEUP_OPTS} | perl -ne '($qual) = $_ =~ /\-Q\s*(\d+)/;print $qual'`
         # really use base score threshold of 13 if variable is not set pr empty? We should expect to get a proper value here...
         basequal=${basequal:-13}
+
+#        ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_BIAS} -v ${filenameSomaticSnvs} -r ${filenameReferenceAlleleBaseQualities} -a ${filenameAlternativeAlleleBaseQualities} -o ${filenameBaseScoreBiasPlot} -d "Final Base Quality Bias Plot for PID ${PID}"
+        ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_BIAS} -v ${filenameSomaticSnvs} -r ${filenameReferenceAlleleBaseQualities} -a ${filenameAlternativeAlleleBaseQualities} -t ${basequal} -p ${PLOT_TYPE} -o ${filenameBaseScoreBiasPlotFinal} -d "Final Base Quality Bias Plot for PID ${PID}"
+
         ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_DISTRIBUTION} -v ${filenameSomaticSnvs} -r ${filenameReferenceAlleleBaseQualities} -a ${filenameAlternativeAlleleBaseQualities} -o ${filenameBaseScoreDistributions} -d "for somatic SNVs for PID ${PID}" -t ${basequal}
     else
         filenameBaseScoreDistributions=''
+        filenameBaseScoreBiasPlotPreFilter=''
+        filenameBaseScoreBiasPlotOnce=''
+        filenameBaseScoreBiasPlotFinal=''
     fi
 
 	# make a pdf containing all plots
@@ -165,6 +173,9 @@ then
 	[[ -f ${filenameSequenceErrorPlot} ]] && biasplots="${filenameSequenceErrorPlot} ${biasplots}"
 	[[ -f ${filenameSequenceErrorPlotFilterOnce} ]] && biasplots="${filenameSequenceErrorPlotFilterOnce} ${biasplots}"
 	[[ -f ${filenameSequenceErrorPlotPreFilter} ]] && biasplots="${filenameSequenceErrorPlotPreFilter} ${biasplots}"
+	[[ -f ${filenameBaseScoreBiasPlotPreFilter} ]] && biasplots="${biasplots} ${filenameBaseScoreBiasPlotPreFilter}"
+	[[ -f ${filenameBaseScoreBiasPlotOnce} ]] && biasplots="${biasplots} ${filenameBaseScoreBiasPlotOnce}"
+	[[ -f ${filenameBaseScoreBiasPlotFinal} ]] && biasplots="${biasplots} ${filenameBaseScoreBiasPlotFinal}"
 	
 	${GHOSTSCRIPT_BINARY} -dBATCH -dNOPAUSE -dAutoRotatePages=false -q -sDEVICE=pdfwrite -sOutputFile=${filenameSnvDiagnosticsPlot} ${filenameIntermutationDistancePlot} ${filenameBaseScoreDistributions} ${filenameMAFconfPlot} ${filenamePerChromFreq} ${filenameSnvsWithContext} ${biasplots}
 fi
