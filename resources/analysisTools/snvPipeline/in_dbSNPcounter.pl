@@ -98,11 +98,11 @@ while (<FH>)
 		{
 			$scored++;
 			#print STDERR $_;
-			if ($help[$DBSBP] ne ".")
+			if ($help[$DBSBP] =~ /MATCH=exact/)
 			{
 				$dbSNP++;
 			}
-			if ($help[$KG] ne ".")
+			if ($help[$KG] =~ /MATCH=exact/)
 			{
 				$oneKG++;
 			}

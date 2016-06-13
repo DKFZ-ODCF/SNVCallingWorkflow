@@ -21,8 +21,12 @@ if [[ "$GERMLINE_AVAILABLE" == 0 ]]; then
     FILTER_VALUES=""
     [[ ${FILTER_ExAC} == 'true' ]]          && FILTER_VALUES="${FILTER_VALUES} ${ExAC_COL} AF ${CRIT_ExAC_maxMAF}+"
     [[ ${FILTER_EVS} == 'true' ]]           && FILTER_VALUES="${FILTER_VALUES} ${EVS_COL} MAF ${CRIT_EVS_maxMAF}+"
-    [[ ${FILTER_1KGENOMES} == 'true' ]]     && FILTER_VALUES="${FILTER_VALUES} ${KGENOMES_COL} AF,ASN_AF,AMR_AF,AFR_AF,EUR_AF ${CRIT_1KGENOMES_maxMAF}+"
-    [[ ${FILTER_NON_CLINIC} == 'true' ]]    && FILTER_VALUES="${FILTER_VALUES} ${DBSNP_COL} CLN nonexist"
+    #[[ ${FILTER_1KGENOMES} == 'true' ]]     && FILTER_VALUES="${FILTER_VALUES} ${KGENOMES_COL} AF ${CRIT_1KGENOMES_maxMAF}+"
+    #[[ ${FILTER_1KGENOMES} == 'true' ]]     && FILTER_VALUES="${FILTER_VALUES} ${KGENOMES_COL} ASN_AF ${CRIT_1KGENOMES_maxMAF}+"
+    #[[ ${FILTER_1KGENOMES} == 'true' ]]     && FILTER_VALUES="${FILTER_VALUES} ${KGENOMES_COL} AMR_AF ${CRIT_1KGENOMES_maxMAF}+"
+    #[[ ${FILTER_1KGENOMES} == 'true' ]]     && FILTER_VALUES="${FILTER_VALUES} ${KGENOMES_COL} AFR_AF ${CRIT_1KGENOMES_maxMAF}+"
+    [[ ${FILTER_1KGENOMES} == 'true' ]]     && FILTER_VALUES="${FILTER_VALUES} ${KGENOMES_COL} EUR_AF ${CRIT_1KGENOMES_maxMAF}+"
+    [[ ${FILTER_NON_CLINIC} == 'true' ]]    && FILTER_VALUES="${FILTER_VALUES} ${DBSNP_COL} CLN,COMMON nonexist,exist"
     [[ ${FILTER_LOCALCONTROL} == 'true' ]]  && FILTER_VALUES="${FILTER_VALUES} ${LOCALCONTROL_COL} AF ${CRIT_LOCALCONTROL_maxMAF}+"
     [[ ${FILTER_RECURRENCE} == 'true' ]]    && FILTER_VALUES="${FILTER_VALUES} ${RECURRENCE_COL} . ${CRIT_RECURRENCE}+"
 
@@ -62,7 +66,7 @@ filenameSeqContextTab=${outputFilenamePrefix}_snvs_with_context_conf_${MIN_CONFI
 filenameMAFconfPlot=${outputFilenamePrefix}_MAF_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf
 filenameSnvDiagnosticsPlot=${outputFilenamePrefix}_allSNVdiagnosticsPlots.pdf
 
-${PERL_BINARY} ${TOOL_SNV_EXTRACTOR} --germline_available=${GERMLINE_AVAILABLE} --infile=${FILENAME_VCF} --minconf=${MIN_CONFIDENCE_SCORE} --pid=${outputFilenamePrefix} --bgzip=${BGZIP_BINARY} --tabix=${TABIX_BINARY} ${SNV_FILTER_OPTIONS}
+${PERL_BINARY} ${TOOL_SNV_EXTRACTOR} --infile=${FILENAME_VCF} --minconf=${MIN_CONFIDENCE_SCORE} --pid=${outputFilenamePrefix} --bgzip=${BGZIP_BINARY} --tabix=${TABIX_BINARY} ${SNV_FILTER_OPTIONS}
 [[ "$?" != 0 ]] && echo "There was a non-zero exit code in the somatic file and dbSNP counting pipe" && exit 1
 
 if [ ${RUN_PLOTS} == 1 ]

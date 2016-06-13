@@ -6,9 +6,9 @@
 # Usage: python -u confidenceAnnotation_SNVs.py --options > output.vcf
 # Explanation:
 
+import argparse
 import sys
 import time
-import argparse
 
 from vcfparser import *  # BGZFType, LineParser, get_header_indices
 
@@ -150,6 +150,7 @@ def main(args):
         in1KG_AF = False
         indbSNP = False
 
+        is_commonSNP = False
         is_precious = False
         is_clinic = False
         is_repeat = False # true if SNP conicides with any of the suspicious repeat classes simple, low and satellite,
@@ -198,6 +199,8 @@ def main(args):
                 is_clinic = True
             if ";PM;" in help["DBSNP_COL"]:
                 is_precious = True
+            if "COMMON=1" in help["DBSNP_COL"]:
+                is_commonSNP = True
 
         if args.no_control:
             if help["ExAC_COL_VALID"] and any(af > 0.01 for af in map(float, extract_info(help["ExAC_COL"], "AF").split(','))):
@@ -312,7 +315,7 @@ def main(args):
             filterfield["MAP"] = 1
         else:
             reduce = 0
-            mapability = float(help["MAPABILITY"])
+            mapability = min(map(float, help["MAPABILITY"].split("&")))
             if mapability < 0.5:
                 # 0.5 does not seem to be that bad: region appears another time in
                 # the genome and we have paired end data!
@@ -350,7 +353,7 @@ def main(args):
 
         if (args.no_control):
             # an SNV that is in dbSNP but not "clinic" or/and in 1 KG with high frequency is probably germline
-            if (in1KG_AF or (indbSNP and not is_clinic) or inExAC or inEVS or inLocalControl):
+            if (in1KG_AF or (indbSNP and is_commonSNP and not is_clinic) or inExAC or inEVS or inLocalControl):
                 classification = "SNP_support_germline"
 
         # 3) information from the calls and germline comparisons: coverage, strand bias, variant support, ..

@@ -45,44 +45,43 @@ def main(argv=sys.argv):
                         sys.exit(1)
                 filters = zip(header_idxs, argv[4::3], argv[5::3])
             else:
-                filtered = False
-                for header_idx, filter_keys, crit in filters:
+                for header_idx, filter_keys, crits in filters:
                     entry = entries[header_idx]
                     if entry == '.': continue
-
-                    if crit == "nonexist":
-                        for filter_key in filter_keys.split(','):
+                    filter_keys, crits = filter_keys.split(','), crits.split(',')
+                    filtered_per_crit = [ False ] * len(filter_keys)
+                    for idx, (filter_key, crit) in enumerate(zip(filter_keys, crits)):
+                        if crit == "nonexist" or crit == "exist":
                             keys = [splitted_value.split('=')[0] for splitted_value in entry.split(';')]
-                            if not filter_key in keys:
-                                filtered = True
-                                break
-                    else: # Numeric
-                        crit_type = crit[-1]
-                        if crit_type == '+' or crit_type == '-':
-                            crit_value = crit[:-1]
-                            crit_value = float(crit_value) if '.' in crit_value else int(crit_value)
-                        else:
-                            print("Error: not supported criterion %s."%crit)
-                            sys.exit(1)
+                            is_exist = filter_key in keys
+                            if (not is_exist and crit == "nonexist") or (is_exist and crit == "exist"):
+                                filtered_per_crit[idx] = True
+                        else: # Numeric
+                            crit_type = crit[-1]
+                            if crit_type == '+' or crit_type == '-':
+                                crit_value = crit[:-1]
+                                crit_value = float(crit_value) if '.' in crit_value else int(crit_value)
+                            else:
+                                print("Error: not supported criterion %s."%crit)
+                                sys.exit(1)
 
-                        if filter_keys == '.':
-                            value = entries[header_idx]
-                            if compare_numeric_value(value, crit_type, crit_value):
-                                filtered = True
-                                break
-                        else:
-                            filter_key_list= filter_keys.split(',')
-                            for key, values in filter(lambda e: len(e) == 2, [entry.split('=') for entry in entries[header_idx].split(';')]):
-                                if key in filter_key_list:
-                                    for value in values.split(','): # There could be multiple values assigned for one key
-                                        if compare_numeric_value(value, crit_type, crit_value):
-                                            filtered = True
-                                            break
-                                    if filtered:
+                            if filter_keys == '.':
+                                value = entries[header_idx]
+                                if compare_numeric_value(value, crit_type, crit_value):
+                                    filtered_per_crit[idx] = True
+                            else:
+                                for key, values in filter(lambda e: len(e) == 2, [entry.split('=') for entry in entries[header_idx].split(';')]):
+                                    if key in filter_keys:
+                                        for value in values.split(','): # There could be multiple values assigned for one key
+                                            if compare_numeric_value(value, crit_type, crit_value):
+                                                filtered_per_crit[idx] = True
+                                                break
+                                        else:
+                                            continue
                                         break
-                    if filtered:
+                    if all(filtered_per_crit):
                         break
-                if not filtered:
+                else:
                     fo.write(line)
 
 if __name__ == '__main__':

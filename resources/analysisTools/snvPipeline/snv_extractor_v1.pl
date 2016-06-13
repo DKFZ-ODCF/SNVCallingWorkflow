@@ -18,7 +18,6 @@ my $extractsyn = 0;
 my $extractNcRNA = 0;
 my $bgzip = "bgzip";
 my $tabix = "tabix";
-my $germline_available = 1;
 GetOptions (	"infile=s"	 		=> \$infile,		# vcf file, can be bgzipped
 				"minconf=i"			=> \$minconf,		# minimum confidence score
 				"region=s"			=> \$region,		# file with the region when only a region should be extracted
@@ -27,7 +26,6 @@ GetOptions (	"infile=s"	 		=> \$infile,		# vcf file, can be bgzipped
 				"synonymous=i"		=> \$extractsyn,
 				"bgzip=s"			=> \$bgzip,
 				"tabix=s"			=> \$tabix,
-				"germline_available=i"     => \$germline_available
 ) or die "Could not get the options!\n";
 
 if($region ne "0" && (!-f $region || $infile !~ /\.gz$/ || !-f $infile.".tbi")){die "region-file: $region is not a valid file or, infile: $infile is not zipped or there is no index for the infile $infile.tbi\n";}
@@ -73,6 +71,16 @@ while($i < @head)
 	$i++;
 }
 
+my $CLASSIFICATION;
+my $GERMLINE_STR;
+if (exists $col{"ANNOTATION_control"}){
+    $CLASSIFICATION = $col{"ANNOTATION_control"};
+    $GERMLINE_STR = "germline";
+} else {
+    $CLASSIFICATION = $col{"RECLASSIFICATION"};
+    $GERMLINE_STR = "SNP_support_germline";
+}
+
 print SOM $head, "\n";
 print COD $head, "\n";
 print GER $head, "\n";
@@ -83,30 +91,26 @@ if($region ne "0"){open(IN, "$tabix $infile -B $region |") or die "Could not ope
 elsif($infile =~ /\.gz$/){open(IN, "zcat $infile |");}
 else{open(IN, "<$infile");}
 
-if($germline_available == 0) {
-    $col{"ANNOTATION_control"} = $col{"RECLASSIFICATION"};
-}
-
 while(<IN>)
 {
 	chomp;
 	next if($_ =~ /^#/);
 	my @line = split("\t", $_);
 	next if($line[$col{"CONFIDENCE"}] < $minconf);
-	if($line[$col{"ANNOTATION_control"}] eq "somatic" && $line[$col{"RECLASSIFICATION"}] !~ /lowCov_SNP_support_germline/){
+	if($line[$CLASSIFICATION] eq "somatic" && $line[$CLASSIFICATION] !~ /lowCov_SNP_support_germline/){
 	    print SOM $_, "\n";
 	}
-	if($line[$col{"ANNOTATION_control"}] eq "somatic" && $line[$col{"RECLASSIFICATION"}] !~ /lowCov_SNP_support_germline/ && $line[$col{"ANNOVAR_FUNCTION"}] !~ /ncRNA/ && ($line[$col{"EXONIC_CLASSIFICATION"}] =~ /nonsynonymous/ || $line[$col{"EXONIC_CLASSIFICATION"}] =~ /stopgain/ ||$line[$col{"EXONIC_CLASSIFICATION"}] =~ /stoploss/ || $line[$col{"ANNOVAR_FUNCTION"}] =~ /splicing/)){
+	if($line[$CLASSIFICATION] eq "somatic" && $line[$CLASSIFICATION] !~ /lowCov_SNP_support_germline/ && $line[$col{"ANNOVAR_FUNCTION"}] !~ /ncRNA/ && ($line[$col{"EXONIC_CLASSIFICATION"}] =~ /nonsynonymous/ || $line[$col{"EXONIC_CLASSIFICATION"}] =~ /stopgain/ ||$line[$col{"EXONIC_CLASSIFICATION"}] =~ /stoploss/ || $line[$col{"ANNOVAR_FUNCTION"}] =~ /splicing/)){
 		print COD $_, "\n";
 	}
-	if($extractNcRNA == 1 && $line[$col{"ANNOTATION_control"}] eq "somatic" && $line[$col{"RECLASSIFICATION"}] !~ /lowCov_SNP_support_germline/ && ($line[$col{"ANNOVAR_FUNCTION"}] =~ /ncRNA_exonic/ || $line[$col{"ANNOVAR_FUNCTION"}] =~ /ncRNA_splicing/)){
+	if($extractNcRNA == 1 && $line[$CLASSIFICATION] eq "somatic" && $line[$CLASSIFICATION] !~ /lowCov_SNP_support_germline/ && ($line[$col{"ANNOVAR_FUNCTION"}] =~ /ncRNA_exonic/ || $line[$col{"ANNOVAR_FUNCTION"}] =~ /ncRNA_splicing/)){
 		print NCRNA $_, "\n";
 	}
-	if($extractsyn == 1 && $line[$col{"ANNOTATION_control"}] eq "somatic" && $line[$col{"RECLASSIFICATION"}] !~ /lowCov_SNP_support_germline/ && ($line[$col{"EXONIC_CLASSIFICATION"}] =~ /^synonymous/ )){
+	if($extractsyn == 1 && $line[$CLASSIFICATION] eq "somatic" && $line[$CLASSIFICATION] !~ /lowCov_SNP_support_germline/ && ($line[$col{"EXONIC_CLASSIFICATION"}] =~ /^synonymous/ )){
 		print SYN $_, "\n";
 	}
-	
-	if($line[$col{"ANNOTATION_control"}] eq "germline" && $line[$col{"ANNOVAR_FUNCTION"}] !~ /ncRNA/ && ($line[$col{"EXONIC_CLASSIFICATION"}] =~ /nonsynonymous/ || $line[$col{"EXONIC_CLASSIFICATION"}] =~ /stopgain/ ||$line[$col{"EXONIC_CLASSIFICATION"}]  =~ /stoploss/ || $line[$col{"ANNOVAR_FUNCTION"}] =~ /splicing/)){
+
+	if($line[$CLASSIFICATION] eq $GERMLINE_STR && $line[$col{"ANNOVAR_FUNCTION"}] !~ /ncRNA/ && ($line[$col{"EXONIC_CLASSIFICATION"}] =~ /nonsynonymous/ || $line[$col{"EXONIC_CLASSIFICATION"}] =~ /stopgain/ ||$line[$col{"EXONIC_CLASSIFICATION"}]  =~ /stoploss/ || $line[$col{"ANNOVAR_FUNCTION"}] =~ /splicing/)){
 		print GER $_, "\n";
 	}
 }
