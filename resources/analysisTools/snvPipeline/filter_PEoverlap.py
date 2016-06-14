@@ -4,8 +4,8 @@
 # more snvs_108031.vcf | python /home/jaegern/pyWorkspace/NGS_Read_Processing/src/filter_PEoverlap.py --alignmentFile=/icgc/lsdf/mb/analysis/medullo/adultMB/results_per_pid/108031/alignment/tumor_108031_merged.bam.rmdup.bam --outf=snvs_108031_PEoverlapFiltered_nonALT_FINAL.vcf
 
 
-import copysam as pysam
-#import pysam
+#import copysam as pysam
+import pysam
 import sys, os
 from vcfparser import *
 
@@ -105,13 +105,13 @@ def performAnalysis(args):
     samfile = pysam.Samfile(args.alignmentFile, mode)  # This should work for BAM file only (with random access).
 
     if args.altPosF != '':
-        ALT_basePositions_file = open(args.altPosF, 'w')
+        ALT_basePositions_file = args.altPosF
 
     if args.altBQF != '':
-        ALT_baseQualities_file = open(args.altBQF, 'w')
+        ALT_baseQualities_file = args.altBQF
 
     if args.refBQF != '':
-        REF_baseQualities_file = open(args.refBQF, 'w')
+        REF_baseQualities_file = args.refBQF
 
 
     for line in sys.stdin:  #   vcfInFile
@@ -312,7 +312,7 @@ def performAnalysis(args):
     if args.refBQF is not None:
         REF_baseQualities_file.close()
 
-    if args.altPosF != '':
+    if args.altPosF is not None:
         ALT_basePositions_file.close()
 
     #vcfInFile.close()
