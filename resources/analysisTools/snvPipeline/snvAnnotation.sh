@@ -239,15 +239,12 @@ then
 
 	[[ $? != 0 ]] && echo "Error in first creation of error matrix and plot (sequencing)" && exit 3
 
-    ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_BIAS} -v ${filenameSomaticSNVsTmp} -r ${filenameReferenceAlleleBaseScores} -a ${filenameAlternativeAlleleBaseScores} -t ${basequal} -p ${PLOT_TYPE} -o ${filenameBaseScoreBiasPreFilter} -d "Base Quality Bias Plot for PID ${PID} before guanine oxidation filter"  & plotBaseScoreBiasBeforeFiltering=$!
-#        wait ${plotBaseScoreBiasBeforeFiltering} ; [[ $? -gt 0 ]] && echo "Error in first creation of base score bias plot" && exit 37
-
 	${PYTHON_BINARY} ${TOOL_CREATE_ERROR_PLOTS} --vcfFile=${filenameSomaticSNVsTmp} --referenceFile=NA --outputFile=${filenameSequenceErrorPlotPreFilter} --errorType=sequence_specific --errorFile=${filenamePCRerrorMatrix} --plot_title='PCR strand bias before guanine oxidation filter'
 
 	[[ $? != 0 ]] && echo "Error in first creation of error matrix and plot (sequence/PCR)" && exit 4
 
-    ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_BIAS} -v ${filenameSomaticSNVsTmp} -r ${filenameReferenceAlleleBaseScores} -a ${filenameAlternativeAlleleBaseScores} -o ${filenameBaseScoreBiasPreFilter} -d "Base Quality Bias Plot for PID ${PID} before guanine oxidation filter"
-    [[ $? != 0 ]] && echo "Error in first creation of base score bias plot" && exit 33
+    ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_BIAS} -v ${filenameSomaticSNVsTmp} -r ${filenameReferenceAlleleBaseScores} -a ${filenameAlternativeAlleleBaseScores} -t ${basequal} -p ${PLOT_TYPE} -o ${filenameBaseScoreBiasPreFilter} -d "Base Quality Bias Plot for PID ${PID} before guanine oxidation filter"  & plotBaseScoreBiasBeforeFiltering=$!
+#        wait ${plotBaseScoreBiasBeforeFiltering} ; [[ $? -gt 0 ]] && echo "Error in first creation of base score bias plot" && exit 37
 
 	cat ${filenameSNVVCFTemp} | ${PYTHON_BINARY} ${TOOL_FLAG_BIAS} --vcfFile="/dev/stdin" --referenceFile=${REFERENCE_GENOME} --sequence_specificFile=${filenamePCRerrorMatrix} --sequencing_specificFile=${filenameSequencingErrorMatrix} --numReads=${nReads} --numMuts=${nMuts} --biasPValThreshold=${biasPValThreshold} --biasRatioThreshold=${biasRatioThreshold} --biasRatioMinimum=${biasRatioMinimum} --maxNumOppositeReadsSequencingWeakBias=${maxNumOppositeReadsSequencingWeakBias} --maxNumOppositeReadsSequenceWeakBias=${maxNumOppositeReadsSequenceWeakBias} --maxNumOppositeReadsSequencingStrongBias=${maxNumOppositeReadsSequencingStrongBias} --maxNumOppositeReadsSequenceStrongBias=${maxNumOppositeReadsSequenceStrongBias} --ratioVcf=${rVcf} --bias_matrixSeqFile=${filenameBiasMatrixSeqFile} --bias_matrixSeqingFile=${filenameBiasMatrixSeqingFile} --vcfFileFlagged="/dev/stdout" | \
 	${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 1 -f ${filenameSomaticSNVsTmp} > ${filenameSNVVCFTemp}.tmp
@@ -265,16 +262,12 @@ then
 
     [[ $? != 0 ]] && echo "Error in second creation of error matrix and plot (sequencing)" && exit 6
 
-    ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_BIAS} -v ${filenameSomaticSNVsTmp} -r ${filenameReferenceAlleleBaseScores} -a ${filenameAlternativeAlleleBaseScores} -t ${basequal} -p ${PLOT_TYPE} -o ${filenameBaseScoreBiasTmp} -d "Base Quality Bias Plot for PID ${PID} after first round of guanine oxidation filter"  & plotBaseScoreBiasAfterFirstFiltering=$!
-#    wait ${plotBaseScoreBiasAfterFirstFiltering} ; [[ $? -gt 0 ]] && echo "Error in second creation of base score bias plot" && exit 38
-
-
 	${PYTHON_BINARY} ${TOOL_CREATE_ERROR_PLOTS} --vcfFile=${filenameSomaticSNVsTmp} --referenceFile=NA --outputFile=${filenameSequenceErrorPlotTmp} --errorType=sequence_specific --errorFile=${filenamePCRerrorMatrix} --plot_title='PCR strand bias after first round of guanine oxidation filter'
 
 	[[ $? != 0 ]] && echo "Error in second creation of error matrix and plot (sequence/PCR)" && exit 7
 
-    ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_BIAS} -v ${filenameSomaticSNVsTmp} -r ${filenameReferenceAlleleBaseScores} -a ${filenameAlternativeAlleleBaseScores} -o ${filenameBaseScoreBiasTmp} -d "Base Quality Bias Plot for PID ${PID} after first round of guanine oxidation filter"
-    [[ $? != 0 ]] && echo "Error in second creation of base score bias plot" && exit 34
+    ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_BIAS} -v ${filenameSomaticSNVsTmp} -r ${filenameReferenceAlleleBaseScores} -a ${filenameAlternativeAlleleBaseScores} -t ${basequal} -p ${PLOT_TYPE} -o ${filenameBaseScoreBiasTmp} -d "Base Quality Bias Plot for PID ${PID} after first round of guanine oxidation filter"  & plotBaseScoreBiasAfterFirstFiltering=$!
+#    wait ${plotBaseScoreBiasAfterFirstFiltering} ; [[ $? -gt 0 ]] && echo "Error in second creation of base score bias plot" && exit 38
 
 
 	cat ${filenameSNVVCFTemp} | ${PYTHON_BINARY} -u ${TOOL_FLAG_BIAS} --vcfFile="/dev/stdin" --referenceFile=${REFERENCE_GENOME} --sequence_specificFile=${filenamePCRerrorMatrix} --sequencing_specificFile=${filenameSequencingErrorMatrix} --numReads=${nReads} --numMuts=${nMuts} --biasPValThreshold=${biasPValThreshold} --biasRatioThreshold=${biasRatioThreshold} --biasRatioMinimum=${biasRatioMinimum} --maxNumOppositeReadsSequencingWeakBias=${maxNumOppositeReadsSequencingWeakBias} --maxNumOppositeReadsSequenceWeakBias=${maxNumOppositeReadsSequenceWeakBias} --maxNumOppositeReadsSequencingStrongBias=${maxNumOppositeReadsSequencingStrongBias} --maxNumOppositeReadsSequenceStrongBias=${maxNumOppositeReadsSequenceStrongBias} --ratioVcf=${rVcf} --bias_matrixSeqFile=${filenameBiasMatrixSeqFile} --bias_matrixSeqingFile=${filenameBiasMatrixSeqingFile} --vcfFileFlagged="/dev/stdout" | \

@@ -175,7 +175,9 @@ def performAnalysis(args):
                         if pileupread.alignment.seq[pileupread.qpos].lower()  == REF.lower():
                             if args.refBQF != '':
                                 REF_baseQualities.append(baseScore)
+
                         if pileupread.alignment.mapq >= args.mapq:
+                            # http://wwwfgu.anat.ox.ac.uk/~andreas/documentation/samtools/api.html   USE qqual
                             try:
                                 if transformQualStr(pileupread.alignment.qual[pileupread.qpos])[0] >= args.baseq:
                                     # check if we consider this read as a proper read in terms of number of mismatches
@@ -339,5 +341,5 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     performAnalysis(args)
-    #print "\nProgram successfully terminating...."  
+    #print "\nProgram successfully terminating...."
 
