@@ -437,7 +437,7 @@ def main(args):
         if not args.no_control:
             found_dp5 = found_tsr = False
             varsuppC = 0
-            DP5control, TSR = extract_info(help["INFO_control"], "DP5", "TSR")
+            DP5control, TSR = extract_info(help["INFO_control"], ["DP5", "TSR"])
 
             # number of reference and variant reads on forward and reverse complement strand for control
             DP = [int(e) for e in DP5control.split(',')][:4]

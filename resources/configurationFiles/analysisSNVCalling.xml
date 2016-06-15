@@ -172,9 +172,9 @@
         <tool name="snvAnnotation" value="snvAnnotation.sh" basepath="snvPipeline">
             <resourcesets>
                 <rset size="s" memory="5" cores="3" nodes="1" walltime="4"/>
-                <rset size="m" memory="5" cores="3" nodes="1" walltime="12"/>
-                <rset size="l" memory="5" cores="3" nodes="1" walltime="120"/>
-                <rset size="xl" memory="5" cores="3" nodes="1" walltime="180"/>
+                <rset size="m" memory="5" cores="3" nodes="1" walltime="6"/>
+                <rset size="l" memory="5" cores="3" nodes="1" walltime="10"/>
+                <rset size="xl" memory="5" cores="3" nodes="1" walltime="20"/>
             </resourcesets>
             <input type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_VCF_IN"/>
             <input type="file" typeof="de.dkfz.b080.co.files.TumorBamFile" scriptparameter="TUMOR_BAMFILE_FULLPATH_BP"/>
@@ -248,6 +248,7 @@
         <tool name="onlyExtractMatch" value="extract_match_only.py" basepath="snvPipeline"/>
         <tool name="vcfFilterByCrit" value="vcf_filter_by_crit.py" basepath="snvPipeline"/>
         <tool name="analyzeBamHeader" value="analyzeBamHeader.sh" basepath="tools"/>
+        <tool name="copysamWrapper" value="copysam_wrapper.sh" basepath="snvPipeline"/>
     </processingTools>
     <filenames package='de.dkfz.b080.co.files' filestagesbase='de.dkfz.b080.co.files.COFileStage'>
         <!--<filename class='VCFFileForSNVs' derivedFrom="BamFile" pattern="${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvs_${pid}.${RODDY_JOBARRAYINDEX}.vcf" />-->

@@ -289,10 +289,10 @@ def performAnalysis(args):
             sys.stdout.write(line)   # write germline and somatic-multiallelic SNVs as is
     samfile.close()
 
-    if args.altBQF != '':
+    if args.altBQF is not None:
         ALT_baseQualities_file.close()
 
-    if args.refBQF != '':
+    if args.refBQF is not None:
         REF_baseQualities_file.close()
     #vcfInFile.close()
     #outFile.close()

@@ -191,10 +191,26 @@ else
     cat ${filenameSNVVCF} | ${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 0 > ${npConfidence} &
 fi
 
+# Needed for CFFI
+suseVer=`grep -oP '(?<=VERSION \= ).*(?=$)' /etc/SuSE-release`
+export C_INCLUDE_PATH=/ibios/tbi_cluster/${suseVer}/x86_64/htslib/htslib-1.2.1/include
+
+if [[ ! -d `echo ~/.local/lib/pypy/site-packages/hts-*.egg` ]]; then
+    echo "Installing hts-python on your local directory..."
+    mkdir -p ~/.local/lib/pypy/site-packages
+
+    git clone "https://github.com/pjb7687/hts-python" ${RODDY_SCRATCH}/hts-python
+    # Below assume that 'nose' is already installed with PyPy
+    cd ${RODDY_SCRATCH}/hts-python
+    ${TOOL_COPYSAM_WRAPPER} ${PYPY_BINARY} setup.py build
+    ${TOOL_COPYSAM_WRAPPER} ${PYPY_BINARY} setup.py install --prefix=~/.local/lib/pypy
+    cd -
+fi
+
 # If this is for the pancancer workflow, then also create a DKFZ specific file.
 if [[ ${runArtifactFilter-true} == true ]]
 then
-	cat ${npConfidence} | ${PYPY_BINARY} -u ${TOOL_FILTER_PE_OVERLAP} ${noControlFlag} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1}  --altBaseQualFile=${filenameAlternativeAlleleBaseScores} --refBaseQualFile=${filenameReferenceAlleleBaseScores} \
+	cat ${npConfidence} | ${TOOL_COPYSAM_WRAPPER} ${PYPY_BINARY} -u ${TOOL_FILTER_PE_OVERLAP} ${noControlFlag} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1}  --altBaseQualFile=${filenameAlternativeAlleleBaseScores} --refBaseQualFile=${filenameReferenceAlleleBaseScores} \
 						| ${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 0 -f ${filenameSomaticSNVsTmp} > ${filenameSNVVCFTemp}.tmp
 
 	[[ $? != 0 ]] && echo "Error in first iteration of confidence annotation" && exit 2
@@ -249,7 +265,7 @@ then
 
 	[[ $? != 0 ]] && echo "Error in moving the vcf file and index or in removing the temporary files" && exit 9
 else
-	cat ${npConfidence} | ${PYPY_BINARY} -u ${TOOL_FILTER_PE_OVERLAP} ${noControlFlag} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} --altBaseQualFile=${filenameAlternativeAlleleBaseScores} --refBaseQualFile=${filenameReferenceAlleleBaseScores} | ${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS_PANCAN} > ${filenameSNVVCFTemp}
+	cat ${npConfidence} | ${TOOL_COPYSAM_WRAPPER} ${PYPY_BINARY}  -u ${TOOL_FILTER_PE_OVERLAP} ${noControlFlag} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} --altBaseQualFile=${filenameAlternativeAlleleBaseScores} --refBaseQualFile=${filenameReferenceAlleleBaseScores} | ${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS_PANCAN} > ${filenameSNVVCFTemp}
 
 	exitCode=$?
     [[ $exitCode == 0 ]] && [[ -f ${filenameSNVVCFTemp} ]] && mv ${filenameSNVVCFTemp} ${filenameSNVVCF}
