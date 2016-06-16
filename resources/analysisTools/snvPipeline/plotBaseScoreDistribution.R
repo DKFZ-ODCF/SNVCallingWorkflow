@@ -22,6 +22,16 @@ opt = getopt(matrix(c(
   'outFile', 'o', 1, "character"
 ),ncol=4,byrow=TRUE));
 
+ 
+# opt$PID = "WR"
+# opt$baseFolder = "/home/warsow/Projects/Cavathrombus/Cavathrombus/results_per_pid"
+# opt$mpileupFolder = paste0(opt$baseFolder,"/",opt$PID,"/SNV_Calling/mpileup2.3_cranialII_vs_normalErsatz/")
+# opt$vcfInputFile = paste0(opt$mpileupFolder,"snvs_",opt$PID,"_somatic_snvs_conf_8_to_10.vcf")
+# opt$refScores = paste0(opt$mpileupFolder,"snvs_",opt$PID,"_reference_allele_base_qualities.txt.gz")
+# opt$altScores = paste0(opt$mpileupFolder,"snvs_",opt$PID,"_alternative_allele_base_qualities.txt.gz")
+# opt$baseScoreThreshold =13
+# opt$outFile = paste0(opt$mpileupFolder,"snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
+
 
 if (is.null(opt$vcfInputFile)){
   cat("Please specify the file that contains the SNVs for which the base score distribution plot shall be created.\n"); 
@@ -172,8 +182,8 @@ pdf(file = paste0(opt$outFile), 8.27, 11.7) #paper = "a4"
     summedScores = dcast(scores, formula = BaseScores ~ type, value.var="Freq", fun=sum)
     scores = merge(scores, summedScores[,c("BaseScores",standardType)], by="BaseScores")
     scores$FreqNormalized = scores$Freq / scores$REF
+    scores[scores$REF==0,"FreqNormalized"] = 0.0
      
-    
     relativePlot = ggplot(scores, aes(BaseScoresSplitted, Freq )) + geom_bar(aes(fill = VAFclassOrdered), width = width, position = "fill", stat="identity", alpha = 0.9) + theme(panel.margin = unit(0.125, "lines"))
     relativePlot = relativePlot + scale_fill_manual(values=cbPalette, guide = guide_legend(title = "VAFclass\n[REF/ALT]"), limits = seq(1, 0, -0.1)) + guides(fill=FALSE)
     if (length(unique(scores$BaseScores)) < 10) {

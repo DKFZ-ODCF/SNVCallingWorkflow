@@ -229,6 +229,7 @@ then
 	echo -e "SOMATIC_SNVS_UNFILTERED\t${NRSOMSNV}">> ${filenameQCValues}
 
 	mv ${filenameSNVVCFTemp}.tmp ${filenameSNVVCFTemp}
+	cp ${filenameSNVVCFTemp} ${filenameSNVVCFTemp}.preFilter.vcf
 
     wait ${zipAlternativeAlleleBaseScores} ; [[ $? -gt 0 ]] && echo "Error from zipAlternativeAlleleBaseScores" && exit 31
     wait ${zipReferenceAlleleBaseScores} ; [[ $? -gt 0 ]] && echo "Error from zipReferenceAlleleBaseScores" && exit 32
@@ -252,6 +253,7 @@ then
 	[[ $? != 0 ]] && echo "Error in first filtering and/or second interation of confidence annotation" && exit 5
 
 	mv ${filenameSNVVCFTemp}.tmp ${filenameSNVVCFTemp}
+	cp ${filenameSNVVCFTemp} ${filenameSNVVCFTemp}.afterFilter1.vcf
 
 	mv ${filenamePCRerrorMatrix} ${filenamePCRerrorMatrixFirst}
 	mv ${filenameSequencingErrorMatrix} ${filenameSequencingErrorMatrixFirst}
@@ -302,6 +304,7 @@ else
 fi
 rm ${npConfidence}
 
+cp ${filenameSNVVCF} ${filenameSNVVCFTemp}.afterFilter2.vcf
 ${BGZIP_BINARY} -f ${filenameSNVVCF} && ${TABIX_BINARY} -f -p vcf ${FILENAME_VCF_OUT}
 [[ $? != 0 ]] && echo "Error in creation of bgzipped vcf file and tabix index for it" && exit 41
 
