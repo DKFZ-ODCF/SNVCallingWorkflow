@@ -4,8 +4,8 @@
 # more snvs_108031.vcf | python /home/jaegern/pyWorkspace/NGS_Read_Processing/src/filter_PEoverlap.py --alignmentFile=/icgc/lsdf/mb/analysis/medullo/adultMB/results_per_pid/108031/alignment/tumor_108031_merged.bam.rmdup.bam --outf=snvs_108031_PEoverlapFiltered_nonALT_FINAL.vcf
 
 
-#import copysam as pysam
-import pysam
+import copysam as pysam
+#import pysam
 import sys, os
 from vcfparser import *
 
