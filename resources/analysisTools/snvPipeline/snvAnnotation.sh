@@ -230,6 +230,7 @@ then
 
 	mv ${filenameSNVVCFTemp}.tmp ${filenameSNVVCFTemp}
 	cp ${filenameSNVVCFTemp} ${filenameSNVVCFTemp}.preFilter.vcf
+	cp ${filenameSomaticSNVsTmp} ${filenameSomaticSNVsTmp}.preFilter.vcf
 
     wait ${zipAlternativeAlleleBaseScores} ; [[ $? -gt 0 ]] && echo "Error from zipAlternativeAlleleBaseScores" && exit 31
     wait ${zipReferenceAlleleBaseScores} ; [[ $? -gt 0 ]] && echo "Error from zipReferenceAlleleBaseScores" && exit 32
@@ -254,6 +255,7 @@ then
 
 	mv ${filenameSNVVCFTemp}.tmp ${filenameSNVVCFTemp}
 	cp ${filenameSNVVCFTemp} ${filenameSNVVCFTemp}.afterFilter1.vcf
+	cp ${filenameSomaticSNVsTmp} ${filenameSomaticSNVsTmp}.afterFilter1.vcf
 
 	mv ${filenamePCRerrorMatrix} ${filenamePCRerrorMatrixFirst}
 	mv ${filenameSequencingErrorMatrix} ${filenameSequencingErrorMatrixFirst}
@@ -273,9 +275,10 @@ then
 
 
 	cat ${filenameSNVVCFTemp} | ${PYTHON_BINARY} -u ${TOOL_FLAG_BIAS} --vcfFile="/dev/stdin" --referenceFile=${REFERENCE_GENOME} --sequence_specificFile=${filenamePCRerrorMatrix} --sequencing_specificFile=${filenameSequencingErrorMatrix} --numReads=${nReads} --numMuts=${nMuts} --biasPValThreshold=${biasPValThreshold} --biasRatioThreshold=${biasRatioThreshold} --biasRatioMinimum=${biasRatioMinimum} --maxNumOppositeReadsSequencingWeakBias=${maxNumOppositeReadsSequencingWeakBias} --maxNumOppositeReadsSequenceWeakBias=${maxNumOppositeReadsSequenceWeakBias} --maxNumOppositeReadsSequencingStrongBias=${maxNumOppositeReadsSequencingStrongBias} --maxNumOppositeReadsSequenceStrongBias=${maxNumOppositeReadsSequenceStrongBias} --ratioVcf=${rVcf} --bias_matrixSeqFile=${filenameBiasMatrixSeqFile} --bias_matrixSeqingFile=${filenameBiasMatrixSeqingFile} --vcfFileFlagged="/dev/stdout" | \
-	${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS_PANCAN} -a 2 > ${filenameSNVVCF}
+	${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS_PANCAN} -a 2  -f ${filenameSomaticSNVsTmp} > ${filenameSNVVCF}
 
 	[[ $? != 0 ]] && echo "Error in second filtering and/or third iteration of confidence annotation" && exit 8
+	cp ${filenameSomaticSNVsTmp} ${filenameSomaticSNVsTmp}.afterFilter2.vcf
 
     #${BGZIP_BINARY} -f ${filenameSNVVCF} && ${TABIX_BINARY} -f -p vcf ${FILENAME_VCF_OUT}
 	#[[ $? != 0 ]] && echo "Error in creation of tabix index for vcf file" && exit 9
