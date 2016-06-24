@@ -7,7 +7,6 @@ library(grid) # for unit,gpar
 library(data.table) # for rbindlist
 
 library(Biostrings) # for reverseComplement
-1
 
 combineReverseComplement = T
 numberOfCores = 2
