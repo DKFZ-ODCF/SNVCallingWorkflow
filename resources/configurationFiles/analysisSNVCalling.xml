@@ -245,10 +245,11 @@
         <tool name="seqContextAnnotator" value="seqContext_annotator.pl" basepath="tools"/>
         <tool name="processAnnovar" value="processAnnovarOutput.pl" basepath="tools"/>
         <tool name="newColsToVcf" value="newCols2vcf.pl" basepath="tools"/>
-        <tool name="plotBaseScoreDistribution" value="plotBaseScoreDistribution.R" basepath="snvPipeline"/>
         <tool name="onlyExtractMatch" value="extract_match_only.py" basepath="snvPipeline"/>
         <tool name="vcfFilterByCrit" value="vcf_filter_by_crit.py" basepath="snvPipeline"/>
+        <tool name="plotBaseScoreDistribution" value="plotBaseScoreDistribution.R" basepath="snvPipeline"/>
         <tool name="plotBaseScoreBias" value="tripletBased_BQRatio_plotter.R" basepath="snvPipeline"/>
+        <tool name="plotTripletSpecificBaseScoreDistribution" value="tripletBased_BQDistribution_plotter.R" basepath="snvPipeline"/>
         <tool name="analyzeBamHeader" value="analyzeBamHeader.sh" basepath="tools"/>
         <tool name="copysamWrapper" value="copysam_wrapper.sh" basepath="snvPipeline"/>
     </processingTools>

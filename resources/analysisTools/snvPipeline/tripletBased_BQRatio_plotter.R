@@ -8,7 +8,7 @@ library(data.table) # for rbindlist
 
 library(Biostrings) # for reverseComplement
 
-combineReverseComplement = T
+combineReverseComplement = F
 numberOfCores = 2
 library(doParallel)
 registerDoParallel(numberOfCores)
@@ -35,15 +35,15 @@ opt = getopt(matrix(c(
 # PID=4115001
 # PID=4163639
 # PID=4100636
-# PID=4104893
+# PID="BW"
 # mpileupFolder="mpileup"
 # mpileupFolder="mpileup_TRASH"
-# opt$vcfInputFile=paste0("/home/warsow/Projects/Cavathrombus/Cavathrombus/results_per_pid/WR/SNV_Calling/mpileup2.3_AllTumor_vs_normalErsatz/snvs_WR_somatic_snvs_for_bias.vcf")
+# opt$vcfInputFile=paste0("/icgc/dkfzlsdf/analysis/B080/warsow/Cavathrombus/results_per_pid/BW/SNV_Calling/mpileup2.3_VRenalisAdjacent_vs_NormalKidney/snvs_BW_somatic_snvs_conf_8_to_10.vcf")
 # opt$vcfInputFile=paste0("/icgc/dkfzlsdf/analysis/mmml/whole_genome_pcawg/results_per_pid/",PID,"/",mpileupFolder,"/snvs_",PID,"_somatic_snvs_conf_8_to_10.vcf")
-# opt$refScores=paste0("/home/warsow/Projects/Cavathrombus/Cavathrombus/results_per_pid/WR/SNV_Calling/mpileup2.3_AllTumor_vs_normalErsatz/snvs_WR_reference_allele_base_qualities.txt.gz")
-# opt$altScores=paste0("/home/warsow/Projects/Cavathrombus/Cavathrombus/results_per_pid/WR/SNV_Calling/mpileup2.3_AllTumor_vs_normalErsatz/snvs_WR_alternative_allele_base_qualities.txt.gz")
-# opt$outFile=paste0("/icgc/dkfzlsdf/analysis/mmml/whole_genome_pcawg/results_per_pid/",PID,"/",mpileupFolder,"/snvs_",PID,"_base_score_bias_plot.pdf")
-# opt$descriptionForMainTitle=paste0("Base Quality Bias Plot for ","PID")
+# opt$refScores=paste0("/icgc/dkfzlsdf/analysis/B080/warsow/Cavathrombus/results_per_pid/BW/SNV_Calling/mpileup2.3_VRenalisAdjacent_vs_NormalKidney/snvs_BW_reference_allele_base_qualities.txt.gz")
+# opt$altScores=paste0("/icgc/dkfzlsdf/analysis/B080/warsow/Cavathrombus/results_per_pid/BW/SNV_Calling/mpileup2.3_VRenalisAdjacent_vs_NormalKidney/snvs_BW_alternative_allele_base_qualities.txt.gz")
+# opt$outFile=paste0("/icgc/dkfzlsdf/analysis/B080/warsow/Cavathrombus/results_per_pid/BW/SNV_Calling/mpileup2.3_VRenalisAdjacent_vs_NormalKidney/snvs_BW_base_score_bias_plot.pdf")
+# opt$descriptionForMainTitle=paste0("Base Quality Bias Plot for ",PID)
 # opt$baseScoreThreshold=13
 # opt$plotType="Differences"
 
