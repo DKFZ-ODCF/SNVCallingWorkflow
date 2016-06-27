@@ -229,8 +229,8 @@ then
 	echo -e "SOMATIC_SNVS_UNFILTERED\t${NRSOMSNV}">> ${filenameQCValues}
 
 	mv ${filenameSNVVCFTemp}.tmp ${filenameSNVVCFTemp}
-	cp ${filenameSNVVCFTemp} ${filenameSNVVCFTemp}.preFilter.vcf
-	cp ${filenameSomaticSNVsTmp} ${filenameSomaticSNVsTmp}.preFilter.vcf
+#	cp ${filenameSNVVCFTemp} ${filenameSNVVCFTemp}.preFilter.vcf
+#	cp ${filenameSomaticSNVsTmp} ${filenameSomaticSNVsTmp}.preFilter.vcf
 
     wait ${zipAlternativeAlleleBaseScores} ; [[ $? -gt 0 ]] && echo "Error from zipAlternativeAlleleBaseScores" && exit 31
     wait ${zipReferenceAlleleBaseScores} ; [[ $? -gt 0 ]] && echo "Error from zipReferenceAlleleBaseScores" && exit 32
@@ -245,13 +245,9 @@ then
 
 	[[ $? != 0 ]] && echo "Error in first creation of error matrix and plot (sequence/PCR)" && exit 4
 
-    NR_RBS_lines=`zcat ${filenameReferenceAlleleBaseScores} | wc -l`
-    NR_ABS_lines=`zcat ${filenameAlternativeAlleleBaseScores} | wc -l`
-    cp ${filenameReferenceAlleleBaseScores} ${filenameReferenceAlleleBaseScores}.preFilter.gz
-    cp ${filenameAlternativeAlleleBaseScores} ${filenameAlternativeAlleleBaseScores}.preFilter.gz
-    ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_BIAS} -v ${filenameSomaticSNVsTmp} -r ${filenameReferenceAlleleBaseScores} -a ${filenameAlternativeAlleleBaseScores} -t ${basequal} -p ${PLOT_TYPE} -o ${filenameBaseScoreBiasPreFilter} -d "Base Quality Bias Plot for PID ${PID} before guanine oxidation filter"
-     #& plotBaseScoreBiasBeforeFiltering=$!
-#        wait ${plotBaseScoreBiasBeforeFiltering} ; [[ $? -gt 0 ]] && echo "Error in first creation of base score bias plot" && exit 37
+    cp ${filenameSomaticSNVsTmp} ${filenameSomaticSNVsTmp}.forBSBPlotsBeforeFiltering
+    ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_BIAS} -v ${filenameSomaticSNVsTmp}.forBSBPlotsBeforeFiltering -r ${filenameReferenceAlleleBaseScores} -a ${filenameAlternativeAlleleBaseScores} -t ${basequal} -p ${PLOT_TYPE} -o ${filenameBaseScoreBiasPreFilter} -d "Base Quality Bias Plot for PID ${PID} before guanine oxidation filter" & plotBaseScoreBiasBeforeFiltering=$!
+
 
 	cat ${filenameSNVVCFTemp} | ${PYTHON_BINARY} ${TOOL_FLAG_BIAS} --vcfFile="/dev/stdin" --referenceFile=${REFERENCE_GENOME} --sequence_specificFile=${filenamePCRerrorMatrix} --sequencing_specificFile=${filenameSequencingErrorMatrix} --numReads=${nReads} --numMuts=${nMuts} --biasPValThreshold=${biasPValThreshold} --biasRatioThreshold=${biasRatioThreshold} --biasRatioMinimum=${biasRatioMinimum} --maxNumOppositeReadsSequencingWeakBias=${maxNumOppositeReadsSequencingWeakBias} --maxNumOppositeReadsSequenceWeakBias=${maxNumOppositeReadsSequenceWeakBias} --maxNumOppositeReadsSequencingStrongBias=${maxNumOppositeReadsSequencingStrongBias} --maxNumOppositeReadsSequenceStrongBias=${maxNumOppositeReadsSequenceStrongBias} --ratioVcf=${rVcf} --bias_matrixSeqFile=${filenameBiasMatrixSeqFile} --bias_matrixSeqingFile=${filenameBiasMatrixSeqingFile} --vcfFileFlagged="/dev/stdout" | \
 	${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 1 -f ${filenameSomaticSNVsTmp} > ${filenameSNVVCFTemp}.tmp
@@ -259,8 +255,8 @@ then
 	[[ $? != 0 ]] && echo "Error in first filtering and/or second interation of confidence annotation" && exit 5
 
 	mv ${filenameSNVVCFTemp}.tmp ${filenameSNVVCFTemp}
-	cp ${filenameSNVVCFTemp} ${filenameSNVVCFTemp}.afterFilter1.vcf
-	cp ${filenameSomaticSNVsTmp} ${filenameSomaticSNVsTmp}.afterFilter1.vcf
+#	cp ${filenameSNVVCFTemp} ${filenameSNVVCFTemp}.afterFilter1.vcf
+#	cp ${filenameSomaticSNVsTmp} ${filenameSomaticSNVsTmp}.afterFilter1.vcf
 
 	mv ${filenamePCRerrorMatrix} ${filenamePCRerrorMatrixFirst}
 	mv ${filenameSequencingErrorMatrix} ${filenameSequencingErrorMatrixFirst}
@@ -275,21 +271,16 @@ then
 
 	[[ $? != 0 ]] && echo "Error in second creation of error matrix and plot (sequence/PCR)" && exit 7
 
-    NR_RBS=`zcat ${filenameReferenceAlleleBaseScores} | wc -l`
-    NR_ABS=`zcat ${filenameAlternativeAlleleBaseScores} | wc -l`
-    ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_BIAS} -v ${filenameSomaticSNVsTmp} -r ${filenameReferenceAlleleBaseScores} -a ${filenameAlternativeAlleleBaseScores} -t ${basequal} -p ${PLOT_TYPE} -o ${filenameBaseScoreBiasTmp} -d "Base Quality Bias Plot for PID ${PID} after first round of guanine oxidation filter"
-    #& plotBaseScoreBiasAfterFirstFiltering=$!
-#    wait ${plotBaseScoreBiasAfterFirstFiltering} ; [[ $? -gt 0 ]] && echo "Error in second creation of base score bias plot" && exit 38
+    cp ${filenameSomaticSNVsTmp} ${filenameSomaticSNVsTmp}.forBSBPlotsAfter1stFiltering
+    ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_BIAS} -v ${filenameSomaticSNVsTmp}.forBSBPlotsAfter1stFiltering -r ${filenameReferenceAlleleBaseScores} -a ${filenameAlternativeAlleleBaseScores} -t ${basequal} -p ${PLOT_TYPE} -o ${filenameBaseScoreBiasTmp} -d "Base Quality Bias Plot for PID ${PID} after first round of guanine oxidation filter" & plotBaseScoreBiasAfterFirstFiltering=$!
 
 
 	cat ${filenameSNVVCFTemp} | ${PYTHON_BINARY} -u ${TOOL_FLAG_BIAS} --vcfFile="/dev/stdin" --referenceFile=${REFERENCE_GENOME} --sequence_specificFile=${filenamePCRerrorMatrix} --sequencing_specificFile=${filenameSequencingErrorMatrix} --numReads=${nReads} --numMuts=${nMuts} --biasPValThreshold=${biasPValThreshold} --biasRatioThreshold=${biasRatioThreshold} --biasRatioMinimum=${biasRatioMinimum} --maxNumOppositeReadsSequencingWeakBias=${maxNumOppositeReadsSequencingWeakBias} --maxNumOppositeReadsSequenceWeakBias=${maxNumOppositeReadsSequenceWeakBias} --maxNumOppositeReadsSequencingStrongBias=${maxNumOppositeReadsSequencingStrongBias} --maxNumOppositeReadsSequenceStrongBias=${maxNumOppositeReadsSequenceStrongBias} --ratioVcf=${rVcf} --bias_matrixSeqFile=${filenameBiasMatrixSeqFile} --bias_matrixSeqingFile=${filenameBiasMatrixSeqingFile} --vcfFileFlagged="/dev/stdout" | \
-	${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS_PANCAN} -a 2  -f ${filenameSomaticSNVsTmp} > ${filenameSNVVCF}
+	${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS_PANCAN} -a 2  > ${filenameSNVVCF}
+#	-f ${filenameSomaticSNVsTmp}
 
 	[[ $? != 0 ]] && echo "Error in second filtering and/or third iteration of confidence annotation" && exit 8
-	cp ${filenameSomaticSNVsTmp} ${filenameSomaticSNVsTmp}.afterFilter2.vcf
-
-    #${BGZIP_BINARY} -f ${filenameSNVVCF} && ${TABIX_BINARY} -f -p vcf ${FILENAME_VCF_OUT}
-	#[[ $? != 0 ]] && echo "Error in creation of tabix index for vcf file" && exit 9
+#	cp ${filenameSomaticSNVsTmp} ${filenameSomaticSNVsTmp}.afterFilter2.vcf
 
 	mv ${filenamePCRerrorMatrix} ${filenamePCRerrorMatrixSecond}
 	mv ${filenameSequencingErrorMatrix} ${filenameSequencingErrorMatrixSecond}
@@ -299,6 +290,11 @@ then
 	rm ${filenameSomaticSNVsTmp}
 
 	[[ $? != 0 ]] && echo "Error in moving the vcf file and index or in removing the temporary files" && exit 9
+
+    wait ${plotBaseScoreBiasBeforeFiltering} ; [[ $? -gt 0 ]] && echo "Error in first creation of base score bias plot" && exit 37
+    rm ${filenameSomaticSNVsTmp}.forBSBPlotsBeforeFiltering
+    wait ${plotBaseScoreBiasAfterFirstFiltering} ; [[ $? -gt 0 ]] && echo "Error in second creation of base score bias plot" && exit 38
+    rm ${filenameSomaticSNVsTmp}.forBSBPlotsAfter1stFiltering
 else
 	cat ${npConfidence} | ${TOOL_COPYSAM_WRAPPER} ${PYPY_LOCAL_LIBPATH} ${PYPY_BINARY}  -u ${TOOL_FILTER_PE_OVERLAP} ${noControlFlag} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} --altBaseQualFile=${filenameAlternativeAlleleBaseScores}_NP --refBaseQualFile=${filenameReferenceAlleleBaseScores}_NP --altBasePositionsFile=${filenameAlternativeAlleleReadPositions}_NP | ${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS_PANCAN} > ${filenameSNVVCFTemp}
 
@@ -315,7 +311,7 @@ else
 fi
 rm ${npConfidence}
 
-cp ${filenameSNVVCF} ${filenameSNVVCFTemp}.afterFilter2.vcf
+#cp ${filenameSNVVCF} ${filenameSNVVCFTemp}.afterFilter2.vcf
 ${BGZIP_BINARY} -f ${filenameSNVVCF} && ${TABIX_BINARY} -f -p vcf ${FILENAME_VCF_OUT}
 [[ $? != 0 ]] && echo "Error in creation of bgzipped vcf file and tabix index for it" && exit 41
 

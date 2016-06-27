@@ -3,8 +3,6 @@ library(ggplot2)
 library(Biostrings) # for reverseComplement
 
 
-COMBINE_REVCOMP = T
-USE_BACKGROUND_BQs = F
 MAX_BASE_QUALITY=55
 ALT.MEDIAN.THRESHOLD = 20
 parameter.density.bandwidth = 2.00
@@ -21,6 +19,54 @@ opt = getopt(matrix(c(
   'forceRerun', 'R', 2, "integer",
   'combineRevcomp', 'c', 2, "integer"
 ),ncol=4,byrow=TRUE));
+
+if (is.null(opt$vcfInputFile)){
+  cat("Please specify the file that contains the SNVs for which the base score distribution plot shall be created.\n"); 
+  q(status=1);      # quit, status unequal 0 means error
+}
+if (is.null(opt$mpileupFolder)){
+  cat("Please specify the mpileup folder.\n"); 
+  q(status=1);      # quit, status unequal 0 means error
+}
+if (is.null(opt$alignmentFolder)){
+  cat("Please specify the alignment folder.\n"); 
+  q(status=1);      # quit, status unequal 0 means error
+}
+if (is.null(opt$PID)){
+  cat("Please specify the PID.\n"); 
+  q(status=1);      # quit, status unequal 0 means error
+}
+if (is.null(opt$background)){
+  USE_BACKGROUND_BQs = FALSE
+} else {
+  if (opt$background==1) {
+    USE_BACKGROUND_BQs = TRUE
+  } else {
+    USE_BACKGROUND_BQs = FALSE
+  }
+}
+if (is.null(opt$forceRerun)){     
+  FORCE_RERUN = FALSE
+} else {
+  if (opt$forceRerun==1) {
+    FORCE_RERUN = TRUE
+  } else {
+    FORCE_RERUN = FALSE
+  }
+}
+if (is.null(opt$combineRevcomp)){     
+  COMBINE_REVCOMP = TRUE
+} else {
+  if (opt$combineRevcomp==1) {
+    COMBINE_REVCOMP = TRUE
+  } else {
+    COMBINE_REVCOMP = FALSE
+  }
+}
+if (is.null(opt$outFile)){      # no vcf file specified
+  cat("Please specify the output pdf file.\n"); 
+  q(status=2);      # quit, status unequal 0 means error
+}
 
 
 if (COMBINE_REVCOMP) {

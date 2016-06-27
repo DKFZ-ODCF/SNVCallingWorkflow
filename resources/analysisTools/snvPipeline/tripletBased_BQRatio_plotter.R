@@ -8,10 +8,10 @@ library(data.table) # for rbindlist
 
 library(Biostrings) # for reverseComplement
 
-combineReverseComplement = F
-numberOfCores = 2
-library(doParallel)
-registerDoParallel(numberOfCores)
+combineReverseComplement = T
+# numberOfCores = 2
+# library(doParallel)
+# registerDoParallel(numberOfCores)
 Plottype.Ratio.UniColor=1
 Plottype.Differences.BiColor=2
 
@@ -214,6 +214,7 @@ if (combineReverseComplement) {
     colnames(tripletSpecificBaseQualityRatios) = "triplet"
     rownames(tripletSpecificBaseQualityRatios) = tripletSpecificBaseQualityRatios$triplet  
 } else {
+  possible_mutations = c("AC","AG","AT", "CA","CG","CT", "GA","GC","GT", "TA","TC","TG")
   tripletSpecificBaseQualityRatios = as.data.frame(tripletSpecificBaseQualities.ref$triplet)
     colnames(tripletSpecificBaseQualityRatios) = "triplet"
     rownames(tripletSpecificBaseQualityRatios) = tripletSpecificBaseQualityRatios$triplet  
