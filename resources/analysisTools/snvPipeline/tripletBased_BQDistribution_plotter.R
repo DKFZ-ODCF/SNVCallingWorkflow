@@ -4,7 +4,7 @@ library(Biostrings) # for reverseComplement
 
 
 MAX_BASE_QUALITY=55
-ALT.MEDIAN.THRESHOLD = 20
+ALT.MEDIAN.THRESHOLD = 20 # -1 means NO FILTERING
 parameter.density.bandwidth = 2.00
 
 
@@ -17,7 +17,8 @@ opt = getopt(matrix(c(
   'background', 'b', 2, "integer",
   'outFile', 'o', 1, "character",
   'forceRerun', 'R', 2, "integer",
-  'combineRevcomp', 'c', 2, "integer"
+  'combineRevcomp', 'c', 2, "integer",
+  'filterThreshold', 'f', 2, "integer"
 ),ncol=4,byrow=TRUE));
 
 if (is.null(opt$vcfInputFile)){
@@ -66,6 +67,13 @@ if (is.null(opt$combineRevcomp)){
 if (is.null(opt$outFile)){      # no vcf file specified
   cat("Please specify the output pdf file.\n"); 
   q(status=2);      # quit, status unequal 0 means error
+}
+
+if (! is.null(opt$filterThreshold)){
+  tmp = as.integer(opt$filterThreshold)
+  if (!is.na(tmp)) {
+    ALT.MEDIAN.THRESHOLD = tmp
+  }
 }
 
 
@@ -154,7 +162,14 @@ vcfInputFile = paste0(opt$vcfInputFile)
 RefAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_reference_allele_base_qualities.txt.gz", collapse = "")
 AltAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_alternative_allele_base_qualities.txt.gz", collapse = "")
 PDF_OUTPUT_FILE=paste0(opt$outFile)
-DATA_RESULTS_FILE=paste0(MPILEUP_FOLDER,"BQ_TripletSpecific.RData")
+
+if (ALT.MEDIAN.THRESHOLD > -1) {
+  DATA_RESULTS_FILE=paste0(MPILEUP_FOLDER,"BQ_TripletSpecific_MedianFiltered",ALT.MEDIAN.THRESHOLD,".RData")
+  VCF_OUTPUT_FILE.filtered = sub(".vcf", paste0("_filteredAltMedian",ALT.MEDIAN.THRESHOLD,".vcf"), vcfInputFile)  
+} else {
+  DATA_RESULTS_FILE=paste0(MPILEUP_FOLDER,"BQ_TripletSpecific.RData")
+}
+
 
 if ( file.exists(DATA_RESULTS_FILE) & ! FORCE_RERUN ) {
   load(file = DATA_RESULTS_FILE)
@@ -275,15 +290,17 @@ data.bq.triplet$REVCOMP_TRIPLET = apply(data.bq.triplet, 1, function(line) {
 
 
 # Filter SNVs by median ALT BQ
-data.bq.triplet.filtered = do.call(rbind, apply(transitions, 1, function(TRANSITION) {
-  if ( "THIS SNV IS ARTIFACTED" == "THIS SNV IS ARTIFACTED" ) {
-    # TODO: only filter channels that show artifact (criterion still has to be defined)
-    SNVs = data.bq.triplet[with(data.bq.triplet, substr(REVCOMP_TRIPLET,2,2)==TRANSITION[1] & substr(REVCOMP_TRIPLET,3,3)==TRANSITION[2]),]
-    indices = which(SNVs$MeadianBQ.alt >= ALT.MEDIAN.THRESHOLD)
-    SNVs = SNVs[indices,]    
-    return (SNVs)
-  }
-}))
+if (ALT.MEDIAN.THRESHOLD > -1) {
+  data.bq.triplet.filtered = do.call(rbind, apply(transitions, 1, function(TRANSITION) {
+    if ( "THIS SNV IS ARTIFACTED" == "THIS SNV IS ARTIFACTED" ) {
+      # TODO: only filter channels that show artifact (criterion still has to be defined)
+      SNVs = data.bq.triplet[with(data.bq.triplet, substr(REVCOMP_TRIPLET,2,2)==TRANSITION[1] & substr(REVCOMP_TRIPLET,3,3)==TRANSITION[2]),]
+      indices = which(SNVs$MeadianBQ.alt >= ALT.MEDIAN.THRESHOLD)
+      SNVs = SNVs[indices,]    
+      return (SNVs)
+    }
+  }))  
+}
 # data.bq.triplet.filtered = data.bq.triplet.filtered[order(data.bq.triplet.filtered$MeadianBQ.alt),]
 # any(is.na(data.bq.triplet.filtered$nBQ.ref))
 
@@ -393,19 +410,22 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet) {
 
 plot_BQD_to_pdf(PDF_OUTPUT_FILE = PDF_OUTPUT_FILE, data.bq.triplet = data.bq.triplet)
 
-PDF_OUTPUT_FILE.filtered = sub(".pdf", paste0("_filteredAltMedian",ALT.MEDIAN.THRESHOLD,".pdf"), PDF_OUTPUT_FILE)
-plot_BQD_to_pdf(PDF_OUTPUT_FILE = PDF_OUTPUT_FILE.filtered, data.bq.triplet = data.bq.triplet.filtered)
+if (ALT.MEDIAN.THRESHOLD > -1) {
+  # PDF_OUTPUT_FILE.filtered = sub(".pdf", paste0("_filteredAltMedian",ALT.MEDIAN.THRESHOLD,".pdf"), PDF_OUTPUT_FILE)
+  # plot_BQD_to_pdf(PDF_OUTPUT_FILE = PDF_OUTPUT_FILE.filtered, data.bq.triplet = data.bq.triplet.filtered)
+
+  VCF = read.table(vcfInputFile, comment.char = '', sep = "\t", header = T, stringsAsFactors = F, check.names = F)
+  colnames(VCF)[1] = "CHROM"
+  VCF.filtered = merge(VCF, data.bq.triplet.filtered[,c("CHROM","POS","REF","ALT")])
+  chrOrder <-c((1:22),"X","Y")
+  VCF.filtered$CHROM =  factor(VCF.filtered$CHROM, chrOrder, ordered=TRUE)
+  VCF.filtered = VCF.filtered[with(data=VCF.filtered, order(CHROM, POS)),]
+  colnames(VCF.filtered)[1] = "#CHROM"
+  ncol=ncol(VCF.filtered)
+  VCF.filtered = VCF.filtered[,c(1,2,5,3,4,6:ncol)]
+  write.table(VCF.filtered, file=VCF_OUTPUT_FILE.filtered, quote = F, row.names = F, col.names = T, sep = "\t")  
+}
 
 
-VCF_OUTPUT_FILE.filtered = sub(".vcf", paste0("_filteredAltMedian",ALT.MEDIAN.THRESHOLD,".vcf"), vcfInputFile)
-VCF = read.table(vcfInputFile, comment.char = '', sep = "\t", header = T, stringsAsFactors = F, check.names = F)
-colnames(VCF)[1] = "CHROM"
-VCF.filtered = merge(VCF, data.bq.triplet.filtered[,c("CHROM","POS","REF","ALT")])
-chrOrder <-c((1:22),"X","Y")
-VCF.filtered$CHROM =  factor(VCF.filtered$CHROM, chrOrder, ordered=TRUE)
-VCF.filtered = VCF.filtered[with(data=VCF.filtered, order(CHROM, POS)),]
-colnames(VCF.filtered)[1] = "#CHROM"
-ncol=ncol(VCF.filtered)
-VCF.filtered = VCF.filtered[,c(1,2,5,3,4,6:ncol)]
-write.table(VCF.filtered, file=VCF_OUTPUT_FILE.filtered, quote = F, row.names = F, col.names = T, sep = "\t")
+
 

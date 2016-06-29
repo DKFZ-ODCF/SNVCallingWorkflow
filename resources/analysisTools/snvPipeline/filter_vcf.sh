@@ -3,6 +3,7 @@
 source ${CONFIG_FILE}
 
 PLOT_TYPE=${BASE_SCORE_BIAS_PLOT_TYPE:-Differences}
+RERUN_FILTER_STEP=${RERUN_FILTER_STEP:-0}
 
 set -o pipefail
 
@@ -43,40 +44,56 @@ if [[ "$GERMLINE_AVAILABLE" == 0 ]]; then
     fi
 fi
 
+if [[ ${RERUN_FILTER_STEP} == 1 ]]; then
+    RERUN_SUFFIX="_filteredAltMedian${MEDIAN_FILTER_THRESHOLD}"
+else
+    RERUN_SUFFIX=""
+fi
+
 # file paths
-filenameSomaticSnvs=${outputFilenamePrefix}_somatic_snvs_conf_${MIN_CONFIDENCE_SCORE}_to_10.vcf
-filenameSomaticSnvsIndbSNP=${outputFilenamePrefix}_somatic_in_dbSNP_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt
+filenameSomaticSnvs=${outputFilenamePrefix}_somatic_snvs_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.vcf
+filenameSomaticSnvsIndbSNP=${outputFilenamePrefix}_somatic_in_dbSNP_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.txt
 filenameIntermutationDistance=${outputFilenamePrefix}_somatic_mutation_dist_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt.tmp
-filenamePCRerrorMatrix=${outputFilenamePrefix}_sequence_specific_error_Matrix_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt
-filenameSequencingErrorMatrix=${outputFilenamePrefix}_sequencing_specific_error_Matrix_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt
+filenamePCRerrorMatrix=${outputFilenamePrefix}_sequence_specific_error_Matrix_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.txt
+filenameSequencingErrorMatrix=${outputFilenamePrefix}_sequencing_specific_error_Matrix_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.txt
 filenameReferenceAlleleBaseQualities=${outputFilenamePrefix}_reference_allele_base_qualities.txt.gz
 filenameAlternativeAlleleBaseQualities=${outputFilenamePrefix}_alternative_allele_base_qualities.txt.gz
 filenameAlternativeAlleleReadPositions=${outputFilenamePrefix}_alternative_allele_read_positions.txt.gz
 
 # plot paths
-filenamePerChromFreq=${outputFilenamePrefix}_perChromFreq_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf
-filenameSnvsWithContext=${outputFilenamePrefix}_snvs_with_context_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf
-filenameIntermutationDistancePlot=${outputFilenamePrefix}_intermutation_distance_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf
-filenameSequenceErrorPlot=${outputFilenamePrefix}_sequence_specific_error_plot_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf
-filenameSequencingErrorPlot=${outputFilenamePrefix}_sequencing_specific_error_plot_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf
+filenamePerChromFreq=${outputFilenamePrefix}_perChromFreq_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.pdf
+filenameSnvsWithContext=${outputFilenamePrefix}_snvs_with_context_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.pdf
+filenameIntermutationDistancePlot=${outputFilenamePrefix}_intermutation_distance_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.pdf
+filenameSequenceErrorPlot=${outputFilenamePrefix}_sequence_specific_error_plot_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.pdf
+filenameSequencingErrorPlot=${outputFilenamePrefix}_sequencing_specific_error_plot_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.pdf
 filenameSequenceErrorPlotPreFilter=${outputFilenamePrefix}_sequence_specific_error_plot_before_filter.pdf
 filenameSequencingErrorPlotPreFilter=${outputFilenamePrefix}_sequencing_specific_error_plot_before_filter.pdf
 filenameSequenceErrorPlotFilterOnce=${outputFilenamePrefix}_sequence_specific_error_plot_after_filter_once.pdf
 filenameSequencingErrorPlotFilterOnce=${outputFilenamePrefix}_sequencing_specific_error_plot_after_filter_once.pdf
 filenameBaseScoreBiasPlotPreFilter=${outputFilenamePrefix}_base_score_bias_before_filter.pdf
 filenameBaseScoreBiasPlotOnce=${outputFilenamePrefix}_base_score_bias_after_filter_once.pdf
-filenameBaseScoreBiasPlotFinal=${outputFilenamePrefix}_base_score_bias_plot_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf
-filenameBaseScoreDistributions=${outputFilenamePrefix}_base_score_distribution.pdf
-filenameTripletSpecificBaseScoreDistributions=${outputFilenamePrefix}_tripletSpecific_base_score_distribution.pdf
+filenameBaseScoreBiasPlotFinal=${outputFilenamePrefix}_base_score_bias_plot_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.pdf
+filenameBaseScoreDistributions=${outputFilenamePrefix}_base_score_distribution${RERUN_SUFFIX}.pdf
+filenameTripletSpecificBaseScoreDistributions=${outputFilenamePrefix}_tripletSpecific_base_score_distribution${RERUN_SUFFIX}.pdf
 
 # maf plots
 filenameMafValues=${outputFilenamePrefix}_MAF_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt.tmp
 filenameSeqContextTab=${outputFilenamePrefix}_snvs_with_context_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt.tmp
-filenameMAFconfPlot=${outputFilenamePrefix}_MAF_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf
-filenameSnvDiagnosticsPlot=${outputFilenamePrefix}_allSNVdiagnosticsPlots.pdf
+filenameMAFconfPlot=${outputFilenamePrefix}_MAF_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.pdf
+filenameSnvDiagnosticsPlot=${outputFilenamePrefix}_allSNVdiagnosticsPlots${RERUN_SUFFIX}.pdf
 
-${PERL_BINARY} ${TOOL_SNV_EXTRACTOR} --infile=${FILENAME_VCF} --minconf=${MIN_CONFIDENCE_SCORE} --pid=${outputFilenamePrefix} --bgzip=${BGZIP_BINARY} --tabix=${TABIX_BINARY} ${SNV_FILTER_OPTIONS}
-[[ "$?" != 0 ]] && echo "There was a non-zero exit code in the somatic file and dbSNP counting pipe" && exit 1
+
+
+if [[ ${RERUN_FILTER_STEP} == 1 ]]; then
+    cp ${filenameSomaticSnvs} ${filenameSomaticSnvs}.forSNVExtractor
+    FILENAME_VCF=${filenameSomaticSnvs}.forSNVExtractor
+    ${PERL_BINARY} ${TOOL_SNV_EXTRACTOR} --infile=${FILENAME_VCF} --minconf=${MIN_CONFIDENCE_SCORE} --pid=${outputFilenamePrefix} --suffix=${RERUN_SUFFIX} --bgzip=${BGZIP_BINARY} --tabix=${TABIX_BINARY} ${SNV_FILTER_OPTIONS}
+    [[ "$?" != 0 ]] && echo "There was a non-zero exit code in the somatic file and dbSNP counting pipe" && exit 1
+else
+    ${PERL_BINARY} ${TOOL_SNV_EXTRACTOR} --infile=${FILENAME_VCF} --minconf=${MIN_CONFIDENCE_SCORE} --pid=${outputFilenamePrefix} --bgzip=${BGZIP_BINARY} --tabix=${TABIX_BINARY} ${SNV_FILTER_OPTIONS}
+    [[ "$?" != 0 ]] && echo "There was a non-zero exit code in the somatic file and dbSNP counting pipe" && exit 1
+fi
+
 
 if [ ${RUN_PLOTS} == 1 ]
 then
@@ -170,9 +187,25 @@ then
         plotBackgroundBaseScoreDistribution='0'
         forceRerun='0'
         combineRevComp='1'
-        ${RSCRIPT_BINARY} ${TOOL_PLOT_TRIPLET_SPECIFIC_BASE_SCORE_DISTRIBUTION} -v ${filenameSomaticSnvs} -m ${mpileupDirectory} -a ${ALIGNMENT_FOLDER} -p ${PID} -b ${plotBackgroundBaseScoreDistribution} -o ${filenameTripletSpecificBaseScoreDistributions} -R ${forceRerun} -c ${combineRevComp}
-        if [[ ! -f ${filenameTripletSpecificBaseScoreDistributions} ]]; then
+        if [[ ${RERUN_FILTER_STEP} == 1 ]]; then
+            export MEDIAN_FILTER_THRESHOLD=-1
+        else
+            export MEDIAN_FILTER_THRESHOLD=20
+        fi
+
+        ${RSCRIPT_BINARY} ${TOOL_PLOT_TRIPLET_SPECIFIC_BASE_SCORE_DISTRIBUTION} -v ${filenameSomaticSnvs} -m ${mpileupDirectory} -a ${ALIGNMENT_FOLDER} -p ${PID} -b ${plotBackgroundBaseScoreDistribution} -o ${filenameTripletSpecificBaseScoreDistributions} -R ${forceRerun} -c ${combineRevComp} -f ${MEDIAN_FILTER_THRESHOLD}
+        if [[ -f ${filenameTripletSpecificBaseScoreDistributions} ]]; then
+            if [[ ${RERUN_FILTER_STEP} == 1 ]]; then
+                export RERUN_FILTER_STEP=0
+            else
+                export RERUN_FILTER_STEP=1
+            fi
+
+        else
             filenameTripletSpecificBaseScoreDistributions=''
+            if [[ ${RERUN_FILTER_STEP} == 1 ]]; then
+                export RERUN_FILTER_STEP=0
+            fi
         fi
 
     else
@@ -203,8 +236,13 @@ then
 	# 3. purityEST - from Florian. Needs the original SNV file because it also considers germline (DP5 field)
 	# has everything hardcoded (in which fields to look and confidence 8)
 	confCol=`${PERL_BINARY} ${TOOL_FIND_CONF_COLUMN} ${FILENAME_VCF}`
-	${PYTHON_BINARY} ${TOOL_PURITY_RELOADED} ${FILENAME_VCF} ${confCol} > ${outputFilenamePrefix}_purityEST.txt
+	${PYTHON_BINARY} ${TOOL_PURITY_RELOADED} ${FILENAME_VCF} ${confCol} > ${outputFilenamePrefix}_purityEST${RERUN_SUFFIX}.txt
 	[[ "$?" != 0 ]] && echo "There was a non-zero exit code in purity estimation" && exit 7
+fi
+
+if [[ ${RERUN_FILTER_STEP} == 1 ]]; then
+    thisScript=`readlink -f $0`
+    bash ${thisScript}
 fi
 
 touch ${FILENAME_CHECKPOINT}
