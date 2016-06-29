@@ -214,6 +214,22 @@
                 <output type="file" typeof="de.dkfz.b080.co.files.TextFile" scriptparameter="FILENAME_CHECKPOINT"/>
             </output>
         </tool>
+        <tool name="snvFilterRerun" value="filter_vcf.sh" basepath="snvPipeline">
+            <resourcesets>
+                <rset size="s" memory="1" cores="1" nodes="1" walltime="1"/>
+                <rset size="m" memory="1" cores="1" nodes="1" walltime="2"/>
+                <rset size="l" memory="1" cores="1" nodes="1" walltime="3"/>
+                <rset size="xl" memory="4" cores="1" nodes="1" walltime="4"/>
+            </resourcesets>
+            <input type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_VCF"/>
+            <input type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_RAW_VCF"/>
+            <input type="file" typeof="de.dkfz.b080.co.files.TumorBamFile" scriptparameter="TUMOR_BAMFILE_FULLPATH_BP"/>
+
+            <output type="tuple" typeof="de.dkfz.b080.co.files.VCFFileWithCheckpointFile">
+                <output type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_VCF_SNVS"/>
+                <output type="file" typeof="de.dkfz.b080.co.files.TextFile" scriptparameter="FILENAME_CHECKPOINT"/>
+            </output>
+        </tool>
 
         <!--Tools for the SNV Calling workflow. Those tools are not used by Roddy directly-->
         <tool name="headeredFileConcatenator" value="headeredFileConcatenator.pl" basepath="tools"/>

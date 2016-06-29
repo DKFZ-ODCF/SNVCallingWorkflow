@@ -6,7 +6,7 @@ library(gridExtra) # for tableGrob
 library(grid) # for unit,gpar
 library(data.table) # for rbindlist
 
-numberOfCores = 2
+numberOfCores = 5
 library(doParallel)
 registerDoParallel(numberOfCores)
 
