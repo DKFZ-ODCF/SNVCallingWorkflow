@@ -3,7 +3,15 @@
 source ${CONFIG_FILE}
 
 PLOT_TYPE=${BASE_SCORE_BIAS_PLOT_TYPE:-Differences}
-RERUN_FILTER_STEP=${RERUN_FILTER_STEP:-0}
+
+if [[ ${FILENAME_CHECKPOINT_FIRST_FILTER_RUN:-0} == 0 ]]; then
+    RERUN_FILTER_STEP=0
+    MEDIAN_FILTER_THRESHOLD=-1
+    RERUN_SUFFIX=""
+else
+    RERUN_FILTER_STEP=1
+fi
+
 
 set -o pipefail
 
@@ -44,11 +52,6 @@ if [[ "$GERMLINE_AVAILABLE" == 0 ]]; then
     fi
 fi
 
-if [[ ${RERUN_FILTER_STEP} == 1 ]]; then
-    RERUN_SUFFIX="_filteredAltMedian${MEDIAN_FILTER_THRESHOLD}"
-else
-    RERUN_SUFFIX=""
-fi
 
 # file paths
 filenameSomaticSnvs=${outputFilenamePrefix}_somatic_snvs_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.vcf
@@ -187,25 +190,10 @@ then
         plotBackgroundBaseScoreDistribution='0'
         forceRerun='0'
         combineRevComp='1'
-        if [[ ${RERUN_FILTER_STEP} == 1 ]]; then
-            export MEDIAN_FILTER_THRESHOLD=-1
-        else
-            export MEDIAN_FILTER_THRESHOLD=20
-        fi
 
         ${RSCRIPT_BINARY} ${TOOL_PLOT_TRIPLET_SPECIFIC_BASE_SCORE_DISTRIBUTION} -v ${filenameSomaticSnvs} -m ${mpileupDirectory} -a ${ALIGNMENT_FOLDER} -p ${PID} -b ${plotBackgroundBaseScoreDistribution} -o ${filenameTripletSpecificBaseScoreDistributions} -R ${forceRerun} -c ${combineRevComp} -f ${MEDIAN_FILTER_THRESHOLD}
-        if [[ -f ${filenameTripletSpecificBaseScoreDistributions} ]]; then
-            if [[ ${RERUN_FILTER_STEP} == 1 ]]; then
-                export RERUN_FILTER_STEP=0
-            else
-                export RERUN_FILTER_STEP=1
-            fi
-
-        else
+        if [[ ! -f ${filenameTripletSpecificBaseScoreDistributions} ]]; then
             filenameTripletSpecificBaseScoreDistributions=''
-            if [[ ${RERUN_FILTER_STEP} == 1 ]]; then
-                export RERUN_FILTER_STEP=0
-            fi
         fi
 
     else
@@ -240,9 +228,5 @@ then
 	[[ "$?" != 0 ]] && echo "There was a non-zero exit code in purity estimation" && exit 7
 fi
 
-if [[ ${RERUN_FILTER_STEP} == 1 ]]; then
-    thisScript=`readlink -f $0`
-    bash ${thisScript}
-fi
 
 touch ${FILENAME_CHECKPOINT}
