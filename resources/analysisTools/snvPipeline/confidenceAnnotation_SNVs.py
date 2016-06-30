@@ -209,7 +209,7 @@ def main(args):
             if help["EVS_COL_VALID"] and any(af > 0.01 for af in map(float, extract_info(help["EVS_COL"], "MAF").split(','))):
                 inEVS = True
                 infofield["EVS"] = "EVS"
-            if help["LOCALCONTROL_COL_VALID"] and any(af > 0.01 for af in map(float, extract_info(help["LOCALCONTROL_COL"], "AF").split(','))):
+            if help["LOCALCONTROL_COL_VALID"] and any(af > 0.1 for af in map(float, extract_info(help["LOCALCONTROL_COL"], "AF").split(','))):
                 inLocalControl = True
                 infofield["LocalControl"] = "LocalControl"
 

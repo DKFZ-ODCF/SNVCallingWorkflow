@@ -31,7 +31,8 @@ if [[ "$GERMLINE_AVAILABLE" == 0 ]]; then
     [[ ${FILTER_RECURRENCE} == 'true' ]]    && FILTER_VALUES="${FILTER_VALUES} ${RECURRENCE_COL} . ${CRIT_RECURRENCE}+"
 
     if [[ ${FILTER_VALUES} != "" ]]; then
-        outputFilenamePrefix="${outputFilenamePrefix}_nocontrol"
+        echo ${FILTER_VALUES} > "${outputFilenamePrefix}_postFilter_criteria.txt"
+        outputFilenamePrefix="${outputFilenamePrefix}_postFiltered"
         FILTERED_VCF="${outputFilenamePrefix}.vcf"
         ${PYPY_BINARY} -u ${TOOL_VCF_FILTER_BY_CRIT} ${FILENAME_VCF} ${FILTERED_VCF}${FILTER_VALUES}
         ${BGZIP_BINARY} -f ${FILTERED_VCF} && ${TABIX_BINARY} -f -p vcf ${FILTERED_VCF}.gz

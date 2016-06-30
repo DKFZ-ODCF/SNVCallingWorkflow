@@ -52,8 +52,11 @@ def main(argv=sys.argv):
                     filtered_per_crit = [ False ] * len(filter_keys)
                     for idx, (filter_key, crit) in enumerate(zip(filter_keys, crits)):
                         if crit == "nonexist" or crit == "exist":
-                            keys = [splitted_value.split('=')[0] for splitted_value in entry.split(';')]
-                            is_exist = filter_key in keys
+                            if filter_key == ".":
+                                is_exist = entry != "."
+                            else:
+                                keys = [splitted_value.split('=')[0] for splitted_value in entry.split(';')]
+                                is_exist = filter_key in keys
                             if (not is_exist and crit == "nonexist") or (is_exist and crit == "exist"):
                                 filtered_per_crit[idx] = True
                         else: # Numeric
