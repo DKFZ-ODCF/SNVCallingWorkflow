@@ -472,7 +472,7 @@ def main(args):
             # High Seq Depth tracks (unclear if these tracks are from "normal" hg19 or 1KG reference with decoy
             # sequences!)
             # tumor could have deletion here
-            if depthC > args.cutoff:
+            if depthC > args.cutoff and not args.runexome:
                 confidence -= 2
                 if depthC > args.cutoff * 2: # >>300 reads at lego stack regions
                     confidence -= 2

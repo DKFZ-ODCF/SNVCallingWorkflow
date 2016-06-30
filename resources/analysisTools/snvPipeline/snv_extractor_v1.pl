@@ -71,15 +71,7 @@ while($i < @head)
 	$i++;
 }
 
-my $CLASSIFICATION;
-my $GERMLINE_STR;
-if (exists $col{"ANNOTATION_control"}){
-    $CLASSIFICATION = $col{"ANNOTATION_control"};
-    $GERMLINE_STR = "germline";
-} else {
-    $CLASSIFICATION = $col{"RECLASSIFICATION"};
-    $GERMLINE_STR = "SNP_support_germline";
-}
+my $control_exist = exists $col{"ANNOTATION_control"};
 
 print SOM $head, "\n";
 print COD $head, "\n";
@@ -97,20 +89,20 @@ while(<IN>)
 	next if($_ =~ /^#/);
 	my @line = split("\t", $_);
 	next if($line[$col{"CONFIDENCE"}] < $minconf);
-	if($line[$CLASSIFICATION] eq "somatic" && $line[$CLASSIFICATION] !~ /lowCov_SNP_support_germline/){
+	if((($control_exist && $line[$col{"ANNOTATION_control"}] eq "somatic") || (!$control_exist && $line[$col{"RECLASSIFICATION"}] =~ "somatic")) && $line[$col{"RECLASSIFICATION"}] !~ /lowCov_SNP_support_germline/){
 	    print SOM $_, "\n";
 	}
-	if($line[$CLASSIFICATION] eq "somatic" && $line[$CLASSIFICATION] !~ /lowCov_SNP_support_germline/ && $line[$col{"ANNOVAR_FUNCTION"}] !~ /ncRNA/ && ($line[$col{"EXONIC_CLASSIFICATION"}] =~ /nonsynonymous/ || $line[$col{"EXONIC_CLASSIFICATION"}] =~ /stopgain/ ||$line[$col{"EXONIC_CLASSIFICATION"}] =~ /stoploss/ || $line[$col{"ANNOVAR_FUNCTION"}] =~ /splicing/)){
+	if((($control_exist && $line[$col{"ANNOTATION_control"}] eq "somatic") || (!$control_exist && $line[$col{"RECLASSIFICATION"}] =~ "somatic")) && $line[$col{"RECLASSIFICATION"}] !~ /lowCov_SNP_support_germline/ && $line[$col{"ANNOVAR_FUNCTION"}] !~ /ncRNA/ && ($line[$col{"EXONIC_CLASSIFICATION"}] =~ /nonsynonymous/ || $line[$col{"EXONIC_CLASSIFICATION"}] =~ /stopgain/ ||$line[$col{"EXONIC_CLASSIFICATION"}] =~ /stoploss/ || $line[$col{"ANNOVAR_FUNCTION"}] =~ /splicing/)){
 		print COD $_, "\n";
 	}
-	if($extractNcRNA == 1 && $line[$CLASSIFICATION] eq "somatic" && $line[$CLASSIFICATION] !~ /lowCov_SNP_support_germline/ && ($line[$col{"ANNOVAR_FUNCTION"}] =~ /ncRNA_exonic/ || $line[$col{"ANNOVAR_FUNCTION"}] =~ /ncRNA_splicing/)){
+	if($extractNcRNA == 1 && (($control_exist && $line[$col{"ANNOTATION_control"}] eq "somatic") || (!$control_exist && $line[$col{"RECLASSIFICATION"}] =~ "somatic")) && $line[$col{"RECLASSIFICATION"}] !~ /lowCov_SNP_support_germline/ && ($line[$col{"ANNOVAR_FUNCTION"}] =~ /ncRNA_exonic/ || $line[$col{"ANNOVAR_FUNCTION"}] =~ /ncRNA_splicing/)){
 		print NCRNA $_, "\n";
 	}
-	if($extractsyn == 1 && $line[$CLASSIFICATION] eq "somatic" && $line[$CLASSIFICATION] !~ /lowCov_SNP_support_germline/ && ($line[$col{"EXONIC_CLASSIFICATION"}] =~ /^synonymous/ )){
+	if($extractsyn == 1 && (($control_exist && $line[$col{"ANNOTATION_control"}] eq "somatic") || (!$control_exist && $line[$col{"RECLASSIFICATION"}] =~ "somatic")) && $line[$col{"RECLASSIFICATION"}] !~ /lowCov_SNP_support_germline/ && ($line[$col{"EXONIC_CLASSIFICATION"}] =~ /^synonymous/ )){
 		print SYN $_, "\n";
 	}
 
-	if($line[$CLASSIFICATION] eq $GERMLINE_STR && $line[$col{"ANNOVAR_FUNCTION"}] !~ /ncRNA/ && ($line[$col{"EXONIC_CLASSIFICATION"}] =~ /nonsynonymous/ || $line[$col{"EXONIC_CLASSIFICATION"}] =~ /stopgain/ ||$line[$col{"EXONIC_CLASSIFICATION"}]  =~ /stoploss/ || $line[$col{"ANNOVAR_FUNCTION"}] =~ /splicing/)){
+	if((($control_exist && $line[$col{"ANNOTATION_control"}] eq "germline") || (!$control_exist && $line[$col{"RECLASSIFICATION"}] =~ "SNP_support_germline")) && $line[$col{"ANNOVAR_FUNCTION"}] !~ /ncRNA/ && ($line[$col{"EXONIC_CLASSIFICATION"}] =~ /nonsynonymous/ || $line[$col{"EXONIC_CLASSIFICATION"}] =~ /stopgain/ ||$line[$col{"EXONIC_CLASSIFICATION"}]  =~ /stoploss/ || $line[$col{"ANNOVAR_FUNCTION"}] =~ /splicing/)){
 		print GER $_, "\n";
 	}
 }

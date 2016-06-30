@@ -16,6 +16,7 @@
         <cvalue name='GHOSTSCRIPT_BINARY' value='/usr/bin/gs' type='path'/>
         <cvalue name="RAW_SNV_FILTER_OPTIONS" value='" --minVac=3 --minVaf=0.03 --minVacPS=2"' type="string"/>
         <!--<cvalue name='REFERENCE_GENOME' value="${referenceGenome_hg19_chr}" type="string"/>-->
+        <cvalue name="PYPY_LOCAL_LIBPATH" value="~/.local/lib/pypy" type="string"/>
 
         <!--## Databases -->
         <!-- hg19DatabasesDirectory=/icgc/ngs_share/assemblies/hg19_GRCh37_1000genomes/databases -->
@@ -46,18 +47,18 @@
         <!--#### EXTRA FILTERING -->
         <!--#### BELOW VALUES WILL BE NEGLECTED WHEN GERMLINE_AVAILABLE IS SET -->
             <!--## Filter switch -->
-            <cvalue name="FILTER_ExAC" value="true" type="boolean" />
-            <cvalue name="FILTER_EVS" value="true" type="boolean" />
-            <cvalue name="FILTER_1KGENOMES" value="true" type="boolean" />
+            <cvalue name="FILTER_ExAC" value="false" type="boolean" />
+            <cvalue name="FILTER_EVS" value="false" type="boolean" />
+            <cvalue name="FILTER_1KGENOMES" value="false" type="boolean" />
             <cvalue name="FILTER_RECURRENCE" value="false" type="boolean" />
-            <cvalue name="FILTER_LOCALCONTROL" value="true" type="boolean" />
-            <cvalue name="FILTER_NON_CLINIC" value="true" type="boolean" />
+            <cvalue name="FILTER_LOCALCONTROL" value="false" type="boolean" />
+            <cvalue name="FILTER_NON_CLINIC" value="false" type="boolean" />
 
             <!--## Filter criteria -->
             <!--## The rows with corresponding values larger than below criteria will be filtered out. -->
-            <cvalue name="CRIT_ExAC_maxMAF" value="0.1" type="string" />
-            <cvalue name="CRIT_EVS_maxMAF" value="0.1" type="string" />
-            <cvalue name="CRIT_1KGENOMES_maxMAF" value="0.1" type="string" />
+            <cvalue name="CRIT_ExAC_maxMAF" value="0.01" type="string" />
+            <cvalue name="CRIT_EVS_maxMAF" value="0.01" type="string" />
+            <cvalue name="CRIT_1KGENOMES_maxMAF" value="0.01" type="string" />
             <cvalue name="CRIT_RECURRENCE" value="7" type="string" />
             <cvalue name="CRIT_LOCALCONTROL_maxMAF" value="0.1" type="string" />
         <!--#### END EXTRA FILTERING -->

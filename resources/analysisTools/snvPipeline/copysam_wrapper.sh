@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-PYTHONPATH=~/.local/lib/pypy/site-packages $@
+PYTHONPATH=${1}/site-packages "${@:2}"
