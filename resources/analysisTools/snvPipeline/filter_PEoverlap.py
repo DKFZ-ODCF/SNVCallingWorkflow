@@ -306,6 +306,10 @@ def performAnalysis(args):
             sys.stdout.write('\t'.join(entries) + '\n')
         else:
             sys.stdout.write(line)   # write germline and somatic-multiallelic SNVs as is
+
+        del ALT_basePositions
+        del REF_baseQualities
+        del ALT_baseQualities
     samfile.close()
 
     if args.altBQF is not None:

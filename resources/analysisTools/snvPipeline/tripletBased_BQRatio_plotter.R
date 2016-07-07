@@ -14,6 +14,7 @@ combineReverseComplement = T
 # registerDoParallel(numberOfCores)
 Plottype.Ratio.UniColor=1
 Plottype.Differences.BiColor=2
+SEQUENCE_CONTEXT_COLUMN_INDEX=11
 
 
 
@@ -26,7 +27,8 @@ opt = getopt(matrix(c(
   'baseScoreThreshold', 't', 2, "integer",
   'plotType', 'p', 2, "character",
   'descriptionForMainTitle', 'd', 2, "character",
-  'outFile', 'o', 1, "character"
+  'outFile', 'o', 1, "character",
+  'sequenceContextColumnIndex', 's', 2, "integer"
 ),ncol=4,byrow=TRUE));
 
 
@@ -77,12 +79,18 @@ if (is.null(opt$plotType)){      # noplot type is set
   cat("PPlease specify the plotType as one of \"Differences\" or \"Ratios\".\n"); 
   q(status=3);      # quit, status unequal 0 means error
 }
+if (! is.null(opt$sequenceContextColumnIndex)){
+  tmp = as.integer(opt$sequenceContextColumnIndex)
+  if (!is.na(tmp)) {
+    SEQUENCE_CONTEXT_COLUMN_INDEX = tmp
+  }
+}
 
 
 options(stringsAsFactors = FALSE)
 
 
-data = try( read.table(pipe(paste0("cut -f 1,2,4,5,11 ",opt$vcfInputFile)), comment.char = '', sep = "\t", header = T) )
+data = try( read.table(pipe(paste0("cut -f 1,2,4,5,",SEQUENCE_CONTEXT_COLUMN_INDEX," ",opt$vcfInputFile)), comment.char = '', sep = "\t", header = T) )
 colnames(data)[1] = "CHROM"
 
 

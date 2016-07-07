@@ -88,6 +88,14 @@ filenameSnvDiagnosticsPlot=${outputFilenamePrefix}_allSNVdiagnosticsPlots${RERUN
 
 
 if [[ ${RERUN_FILTER_STEP} == 1 ]]; then
+
+    plotBackgroundBaseScoreDistribution='0'
+    forceRerun='0'
+    combineRevComp='1'
+
+    filenameSomaticSnvs_original=`basename ${outputFilenamePrefix}_somatic_snvs_conf_${MIN_CONFIDENCE_SCORE}_to_10.vcf`
+    ${RSCRIPT_BINARY} ${TOOL_PLOT_TRIPLET_SPECIFIC_BASE_SCORE_DISTRIBUTION} -v ${filenameSomaticSnvs_original} -m ${mpileupDirectory} -a ${ALIGNMENT_FOLDER} -p ${PID} -b ${plotBackgroundBaseScoreDistribution} -o ${filenameTripletSpecificBaseScoreDistributions} -R ${forceRerun} -c ${combineRevComp} -f ${MEDIAN_FILTER_THRESHOLD}
+
     cp ${filenameSomaticSnvs} ${filenameSomaticSnvs}.forSNVExtractor
     ${PERL_BINARY} ${TOOL_SNV_EXTRACTOR} --infile=${filenameSomaticSnvs}.forSNVExtractor --minconf=${MIN_CONFIDENCE_SCORE} --pid=${outputFilenamePrefix} --suffix=${RERUN_SUFFIX} --bgzip=${BGZIP_BINARY} --tabix=${TABIX_BINARY} ${SNV_FILTER_OPTIONS}
     [[ "$?" != 0 ]] && echo "There was a non-zero exit code in the somatic file and dbSNP counting pipe" && exit 1
@@ -187,11 +195,6 @@ then
             filenameBaseScoreDistributions=''
         fi
 
-        plotBackgroundBaseScoreDistribution='0'
-        forceRerun='0'
-        combineRevComp='1'
-
-        ${RSCRIPT_BINARY} ${TOOL_PLOT_TRIPLET_SPECIFIC_BASE_SCORE_DISTRIBUTION} -v ${filenameSomaticSnvs} -m ${mpileupDirectory} -a ${ALIGNMENT_FOLDER} -p ${PID} -b ${plotBackgroundBaseScoreDistribution} -o ${filenameTripletSpecificBaseScoreDistributions} -R ${forceRerun} -c ${combineRevComp} -f ${MEDIAN_FILTER_THRESHOLD}
         if [[ ! -f ${filenameTripletSpecificBaseScoreDistributions} ]]; then
             filenameTripletSpecificBaseScoreDistributions=''
         fi

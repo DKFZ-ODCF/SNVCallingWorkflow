@@ -1,11 +1,15 @@
 library(getopt)
 library(ggplot2)
 library(Biostrings) # for reverseComplement
+library(grid) # for unit,gpar
+library(reshape2)
 
 
+CANNEL_INDIVIDUAL_GRAPHS=F
 MAX_BASE_QUALITY=55
 ALT.MEDIAN.THRESHOLD = 20 # -1 means NO FILTERING
 parameter.density.bandwidth = 2.00
+SEQUENCE_CONTEXT_COLUMN_INDEX=11
 
 
 opt = getopt(matrix(c(
@@ -18,7 +22,10 @@ opt = getopt(matrix(c(
   'outFile', 'o', 1, "character",
   'forceRerun', 'R', 2, "integer",
   'combineRevcomp', 'c', 2, "integer",
-  'filterThreshold', 'f', 2, "integer"
+  'filterThreshold', 'f', 2, "integer",
+  'sequenceContextColumnIndex', 's', 2, "integer",
+  'channelIndividualGraphs', 'i', 2, "integer",
+  'mainTitle', 't', 2, "character"
 ),ncol=4,byrow=TRUE));
 
 if (is.null(opt$vcfInputFile)){
@@ -75,16 +82,42 @@ if (! is.null(opt$filterThreshold)){
     ALT.MEDIAN.THRESHOLD = tmp
   }
 }
+if (! is.null(opt$sequenceContextColumnIndex)){
+  tmp = as.integer(opt$sequenceContextColumnIndex)
+  if (!is.na(tmp)) {
+    SEQUENCE_CONTEXT_COLUMN_INDEX = tmp
+  }
+}
+if (! is.null(opt$channelIndividualGraphs)){
+  if (opt$channelIndividualGraphs == 1) {
+    CANNEL_INDIVIDUAL_GRAPHS = T
+  } else {
+    CANNEL_INDIVIDUAL_GRAPHS = F
+  }
+}
+
+
 
 
 if (COMBINE_REVCOMP) {
   transitions = data.frame( c(rep("C",3),rep("T",3)), c("A","G","T","A","C","G"), stringsAsFactors = F)  
+  possible_mutations = c("CA", "CG", "CT", "TA", "TC", "TG")
+  forbidden_mutations = sapply(possible_mutations, function(mutation) {as.character(complement(DNAString(mutation)))})
 } else {
   transitions = data.frame( c(rep("A",3),rep("C",3),rep("G",3),rep("T",3)), c("C","G","T","A","G","T","A","C","T","A","C","G"), stringsAsFactors = F)
+  possible_mutations = c("AC","AG","AT", "CA","CG","CT", "GA","GC","GT", "TA","TC","TG")
 }
 colnames(transitions) = c("FROM", "TO")
 
 
+# RPP_FOLDER="/icgc/pcawg/analysis/train2full/projects/CMDI-UK/"
+# opt$PID = "f8e61a02-654c-c226-e040-11ac0d481b60"
+# opt$mpileupFolder = paste0(RPP_FOLDER,opt$PID,"/merged_may2016Calls_filtered_BQD_plots")
+# opt$vcfInputFile = paste0(opt$mpileupFolder,"/",opt$PID,"_somatic.snv_mnv.vcf_filtered.vcf")
+# opt$alignmentFolder = paste0(RPP_FOLDER,opt$PID,"/alignment")
+# opt$outFile = paste0(opt$mpileupFolder,"/snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
+# opt$background = F
+# opt$combineRevcomp = 1
 
 # RPP_FOLDER="/icgc/dkfzlsdf/analysis/B080/warsow/Cavathrombus/results_per_pid/BW/"
 # opt$PID = "BW"
@@ -162,10 +195,18 @@ vcfInputFile = paste0(opt$vcfInputFile)
 RefAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_reference_allele_base_qualities.txt.gz", collapse = "")
 AltAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_alternative_allele_base_qualities.txt.gz", collapse = "")
 PDF_OUTPUT_FILE=paste0(opt$outFile)
+# PID="f8e61a02-654c-c226-e040-11ac0d481b60"
+# MPILEUP_FOLDER="/icgc/pcawg/analysis/train2full/projects/CMDI-UK/f8e61a02-654c-c226-e040-11ac0d481b60/merged_may2016Calls_filtered_BQD_plots/"
+# ALIGNMENT_FOLDER="/icgc/pcawg/analysis/train2full/projects/CMDI-UK/f8e61a02-654c-c226-e040-11ac0d481b60/alignment/"
+# vcfInputFile = "/icgc/pcawg/analysis/train2full/projects/CMDI-UK/f8e61a02-654c-c226-e040-11ac0d481b60/merged_may2016Calls_filtered_BQD_plots/f8e61a02-654c-c226-e040-11ac0d481b60_somatic.snv_mnv.vcf_filtered.OnlyPassed.vcf"
+# RefAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_reference_allele_base_qualities.txt.gz", collapse = "")
+# AltAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_alternative_allele_base_qualities.txt.gz", collapse = "")
+# PDF_OUTPUT_FILE=paste0(MPILEUP_FOLDER,"snvs_",PID,"_triplet-specific_BQ_distributions_filteredAltMedian20.pdf")
+
 
 if (ALT.MEDIAN.THRESHOLD > -1) {
   DATA_RESULTS_FILE=paste0(MPILEUP_FOLDER,"BQ_TripletSpecific_MedianFiltered",ALT.MEDIAN.THRESHOLD,".RData")
-  VCF_OUTPUT_FILE.filtered = sub(".vcf", paste0("_filteredAltMedian",ALT.MEDIAN.THRESHOLD,".vcf"), vcfInputFile)  
+  VCF_OUTPUT_FILE.filtered = sub(".vcf$", paste0("_filteredAltMedian",ALT.MEDIAN.THRESHOLD,".vcf"), vcfInputFile)  
 } else {
   DATA_RESULTS_FILE=paste0(MPILEUP_FOLDER,"BQ_TripletSpecific.RData")
 }
@@ -192,7 +233,7 @@ if ( file.exists(DATA_RESULTS_FILE) & ! FORCE_RERUN ) {
   # READ IN DATA FOR CHANNEL-SPECIFIC BQs
   
   #--------------------------------------------------------------------------------------------------------CHR----POS----REF---ALT---------------------BaseBefore-----BaseAfter
-  data.bq.triplet = read.table(pipe(paste0("cat ",vcfInputFile, " | cut -f 1,2,4,5,11 | perl -ne '$_ =~ /^(.*?)\t(.*?)\t(.*?)\t(.*?)\t[ACGTNacgtn]{9}([ACGTNacgtn]),([ACGTNacgtn])[ACGTNacgtn]{9}/; print \"$1\t$2\t$3\t$4\t$5\t$6\n\";' ")), comment.char = '', sep = "\t", header = T, stringsAsFactors = F)
+  data.bq.triplet = read.table(pipe(paste0("cat ",vcfInputFile, " | grep -v '^##' | cut -f 1,2,4,5,",SEQUENCE_CONTEXT_COLUMN_INDEX," | perl -ne '$_ =~ /^(.*?)\t(.*?)\t(.*?)\t(.*?)\t[ACGTNacgtn]{9}([ACGTNacgtn]),([ACGTNacgtn])[ACGTNacgtn]{9}/; print \"$1\t$2\t$3\t$4\t$5\t$6\n\";' ")), comment.char = '', sep = "\t", header = T, stringsAsFactors = F)
   colnames(data.bq.triplet) = c("CHROM", "POS","REF","ALT","BaseBefore","BaseAfter")
   data.bq.triplet$Triplet = with(data.bq.triplet, paste0(BaseBefore,REF,ALT,BaseAfter))
   # VCF = data.bq.triplet
@@ -271,8 +312,6 @@ if ( file.exists(DATA_RESULTS_FILE) & ! FORCE_RERUN ) {
 }
 
 
-
-
 data.bq.triplet$REVCOMP_TRIPLET = apply(data.bq.triplet, 1, function(line) {
   if (COMBINE_REVCOMP) {
     if (line["REF"] == "C" | line["REF"] == "T") {
@@ -323,30 +362,55 @@ add.alpha = function(col, alpha=1){
 redColor = rgb(1,0,0)
 greenColor = rgb(0,1,0)
 
+xlim = 45
+offset.row=2
+offset.col=2
+POSITIONS.BEFORE=c("A"=4+offset.row,"C"=3+offset.row,"G"=2+offset.row,"T"=1+offset.row)
+POSITIONS.FROMTO.COL=c("CA"=0,"CG"=1,"CT"=2,"TA"=0,"TC"=1,"TG"=2)
+POSITIONS.FROMTO.ROW=c("CA"=0,"CG"=0,"CT"=0,"TA"=1,"TC"=1,"TG"=1)
+POSITIONS.AFTER=c("A"=1+offset.col,"C"=2+offset.col,"G"=3+offset.col,"T"=4+offset.col)
+
 
 plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet) {
-  pdf(PDF_OUTPUT_FILE, 8.27, 6.0)
-    if (COMBINE_REVCOMP) {
-      par(mfrow=c(2,3))
-    } else {
-      par(mfrow=c(4,3))  
-    }
-    apply(transitions, 1, function(transition) {
-      # transition=transitions[i,]
-      # transition=transitions[1,]
-      from=transition["FROM"]
-      to=transition["TO"]
+  # pdf(PDF_OUTPUT_FILE, 8.27, 6.0)
+  pdf(PDF_OUTPUT_FILE, paper = "a4r")
+  
+    if (CANNEL_INDIVIDUAL_GRAPHS == T) {
+      if (COMBINE_REVCOMP == F) {
+        stop("Channel-individual plots are only supported for combined revcomp!")
+      }
       
-      plot(1, xlim=c(0,45), ylim=c(0,0.4), main=paste0("Base Quality distribution for ",from,"->",to," in PID\n",PID), cex.main=0.8, xlab = "BaseQuality", ylab = "density")
+      grid.newpage(recording = F)
+      gl <- grid.layout(nrow=13, ncol=17, widths = unit(c(3,1,2.6,2,2,2,1,2,2,2,2,1,2,2,2,2,3), "null"), heights = unit(c(2,2,2,2,2,2.5,2.5,2,2,2,2.5,0.5), "null"))
+      pushViewport(viewport(layout = gl))
+      
+      grid.text(opt$mainTitle, vp = viewport(layout.pos.row = 1, layout.pos.col = 2+offset.col), hjust = -0.2, vjust = 1.7)
+      
+      grid.text(paste0(transitions[1,1],"->",transitions[1,2]), vp = viewport(layout.pos.row = offset.row, layout.pos.col = 2+offset.col), hjust = -0.2, vjust = 1.7)
+      grid.text(paste0(transitions[2,1],"->",transitions[2,2]), vp = viewport(layout.pos.row = offset.row, layout.pos.col = 7+offset.col), hjust = -0.2, vjust = 1.7)
+      grid.text(paste0(transitions[3,1],"->",transitions[3,2]), vp = viewport(layout.pos.row = offset.row, layout.pos.col = 12+offset.col), hjust = -0.2, vjust = 1.7)
+      grid.text(paste0(transitions[4,1],"->",transitions[4,2]), vp = viewport(layout.pos.row = offset.row+5, layout.pos.col = 2+offset.col), hjust = -0.2, vjust = 1.9)
+      grid.text(paste0(transitions[5,1],"->",transitions[5,2]), vp = viewport(layout.pos.row = offset.row+5, layout.pos.col = 7+offset.col), hjust = -0.2, vjust = 1.9)
+      grid.text(paste0(transitions[6,1],"->",transitions[6,2]), vp = viewport(layout.pos.row = offset.row+5, layout.pos.col = 12+offset.col), hjust = -0.2, vjust = 1.9)
+      
+      
+      
 
-      transitionSubset = data.bq.triplet[substr(data.bq.triplet$REVCOMP_TRIPLET,2,2)==as.character(from) & substr(data.bq.triplet$REVCOMP_TRIPLET,3,3)==as.character(to),]
-      if (nrow(transitionSubset) > 0) {
+      apply(transitions, 1, function(transition) {
+        # transition=transitions[i,]
+        # transition=transitions[1,]
+        from=transition["FROM"]
+        to=transition["TO"]
+        fromto = paste0(from,to)
+        n.total = sum(substr(data.bq.triplet$REVCOMP_TRIPLET,2,2)==as.character(from) & substr(data.bq.triplet$REVCOMP_TRIPLET,3,3)==as.character(to))
         for (baseBefore in c("A","C","G","T")) {
           for (baseAfter in c("A","C","G","T")) {
-            # baseBefore="A"
-            # baseAfter="T"
-            transitionSubset.triplet = transitionSubset[transitionSubset$REVCOMP_TRIPLET==paste0(baseBefore,from,to,baseAfter),]
-            n = nrow(transitionSubset.triplet)
+            # baseBefore="G"
+            # baseAfter="G"
+            triplet = paste0(baseBefore,from,to,baseAfter, collapse = "")
+            transitionSubset = data.bq.triplet[data.bq.triplet$REVCOMP_TRIPLET == triplet,]
+            # plot(1, xlim=c(0,45), ylim=c(0,0.4), main=paste0("Base Quality distribution for ",baseBefore,from,"->",to,baseAfter," in PID\n",PID), cex.main=0.8, xlab = "BaseQuality", ylab = "density")
+            n = nrow(transitionSubset)
             if (n > 0) {
               if (n<=3) {
                 alpha = 0.2
@@ -358,63 +422,218 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet) {
                 alpha=1.0
               }
               
-              baseScores.ref.counts = colSums(transitionSubset.triplet[,c(paste0("BQ.ref.",sapply(seq(MAX_BASE_QUALITY+1)-1, function(i) {i})))])
-              baseScores.alt.counts = colSums(transitionSubset.triplet[,c(paste0("BQ.alt.",sapply(seq(MAX_BASE_QUALITY+1)-1, function(i) {i})))])
-              # baseScores.ref.counts = colSums(transitionSubset.triplet[,c(paste0("BQ.ref.",sapply(seq(50), function(i) {i})))])
-              # baseScores.alt.counts = colSums(transitionSubset.triplet[,c(paste0("BQ.alt.",sapply(seq(50), function(i) {i})))])
+              color.numbers = "black"
+              color.panel.border = "black"
+              fontface.numbers = "plain"
+              if (n/n.total > 0.09) {
+                fontface.numbers = "bold"
+                if (n/n.total > 0.15) {
+                  color.numbers = "red"
+                  if (n/n.total > 0.25) {
+                    color.panel.border = "red"
+                  }
+                } else {
+                  color.numbers = "orange"
+                }
+              }              
               
+              baseScores.ref.counts = colSums(transitionSubset[,c(paste0("BQ.ref.",sapply(seq(MAX_BASE_QUALITY+1)-1, function(i) {i})))])
+              baseScores.alt.counts = colSums(transitionSubset[,c(paste0("BQ.alt.",sapply(seq(MAX_BASE_QUALITY+1)-1, function(i) {i})))])
+
               baseScores.ref.counts.normalized = baseScores.ref.counts / sum(baseScores.ref.counts)
               baseScores.alt.counts.normalized = baseScores.alt.counts / sum(baseScores.alt.counts)
               
               # alpha_surplusPenalty makes triplets with low overall number of base scores slightly less visible
               alpha_surplusPenalty.ref = 0.0
-              if (sum(transitionSubset.triplet$nBQ.ref) < 50) {
+              if (sum(transitionSubset$nBQ.ref) < 50) {
                 alpha_surplusPenalty.ref = 0.1
               }
-              lines(baseScores.ref.counts.normalized, col=add.alpha(greenColor, alpha-alpha_surplusPenalty.ref))
+              # lines(baseScores.ref.counts.normalized, col=add.alpha(greenColor, alpha-alpha_surplusPenalty.ref))
               
               alpha_surplusPenalty.alt = 0.0
-              if (sum(transitionSubset.triplet$nBQ.alt) < 50) {
+              if (sum(transitionSubset$nBQ.alt) < 50) {
                 alpha_surplusPenalty.alt = 0.1
               }
-              lines(baseScores.alt.counts.normalized, col=add.alpha(redColor, alpha-alpha_surplusPenalty.alt))
+              # lines(baseScores.alt.counts.normalized, col=add.alpha(redColor, alpha-alpha_surplusPenalty.alt))
+              
+              molten.ref=melt(baseScores.ref.counts.normalized)
+              molten.ref$BQ=as.integer(gsub("BQ\\..+\\.(\\d+)$", "\\1", rownames(molten.ref), perl=T))
+              molten.ref$type="REF"
+              molten.alt=melt(baseScores.alt.counts.normalized)
+              molten.alt$BQ=as.integer(gsub("BQ\\..+\\.(\\d+)$", "\\1", rownames(molten.alt), perl=T))
+              molten.alt$type="ALT"
+              molten = rbind(molten.ref, molten.alt)
+              molten = molten[molten$BQ <= xlim,]
+              
+              
+              row = as.integer(POSITIONS.BEFORE[baseBefore]+POSITIONS.FROMTO.ROW[fromto]*(4+1))
+              col = as.integer(POSITIONS.AFTER[baseAfter]+POSITIONS.FROMTO.COL[fromto]*(4+1))
+              vp = viewport(layout.pos.row = row, layout.pos.col = col)
+              
+              axis.label.size=3
+              if (col == offset.col+1) {
+                grid.text(baseBefore, vp = viewport(layout.pos.row = row, layout.pos.col = col-1), vjust = -1.0, gp = gpar(fontsize = 6))
+                if (row == offset.row+4 | row == offset.row+9) {
+                  if (row == offset.row+9) {
+                    grid.text(baseAfter, vp = viewport(layout.pos.row = row+1, layout.pos.col = col), hjust = -1.0, gp = gpar(fontsize = 6))
+                  }                  
+                  # both axes have ticks and labels
+                  theme = theme(legend.position="none", axis.title=element_blank(), 
+                                axis.ticks = element_blank(), axis.text=element_text(size=axis.label.size),
+                                plot.margin = unit(c(0,-0.1,0,-0.1), "cm"), legend.margin = unit(c(0,0,0,0), "cm"),
+                                panel.border = element_rect(colour = color.panel.border, fill = NA),
+                                panel.background = element_rect(fill = NA))
+                  
+                } else {                  # only axis ticks and labels for y axis
+                  
+                  theme = theme(legend.position="none", axis.title=element_blank(), axis.ticks = element_blank(),
+                                plot.margin = unit(c(0,-0.05,-0.25,-0.1), "cm"), legend.margin = unit(c(0,0,0,0), "cm"),
+                                axis.text.x = element_blank(), axis.text.y=element_text(size=axis.label.size), #axis.ticks.length = unit(0,"null"), #axis.ticks.margin = unit(0,"null"),
+                                panel.border = element_rect(colour = color.panel.border, fill = NA),
+                                panel.background = element_rect(fill = NA))
+                  
+                }
+              } else {
+                if (row == offset.row+4 | row == offset.row+9) {
+                  if (row == offset.row+9) {
+                    grid.text(baseAfter, vp = viewport(layout.pos.row = row+1, layout.pos.col = col), hjust = -0.5, gp = gpar(fontsize = 6))
+                  }
+                  # only axis ticks and labels for x axis
+                  theme = theme(legend.position="none", axis.title=element_blank(), axis.ticks = element_blank(),
+                                plot.margin = unit(c(0,-0.1,0,-0.35), "cm"), legend.margin = unit(c(0,0,0,0), "cm"),
+                                axis.text.y = element_blank(), axis.text.x=element_text(size=axis.label.size), #axis.ticks.length = unit(0,"null"), #axis.ticks.margin = unit(0,"null"),
+                                panel.border = element_rect(colour = color.panel.border, fill = NA),
+                                panel.background = element_rect(fill = NA))                  
+                } else {
+                  # no axis ticks at all
+                  theme = theme(legend.position="none", axis.title=element_blank(), axis.ticks = element_blank(),
+                                plot.margin = unit(c(0,-0.1,0,-0.1), "cm"), legend.margin = unit(c(0,0,0,0), "cm"),
+                                axis.text = element_blank(), axis.ticks.length = unit(0,"null"), axis.ticks.margin = unit(0,"null"),
+                                panel.border = element_rect(colour = color.panel.border, fill = NA),
+                                panel.background = element_rect(fill = NA))                  
+                }
+              }
+              
+              plot = ggplot(molten, aes(x=BQ,y=value, colour=type)) + geom_line(size=0.15) +
+                xlim(0, xlim) + ylim(0,0.4) +
+                scale_color_manual(values=c(as.character(add.alpha(redColor, alpha-alpha_surplusPenalty.alt)), as.character(add.alpha(greenColor, alpha-alpha_surplusPenalty.ref)))) +
+                theme
+              
+              
+              AUC.BQ30.ref = round(sum(molten[with(molten, BQ <= 30 & type == 'REF'),"value"])*100,1)
+              AUC.BQ30.alt = round(sum(molten[with(molten, BQ <= 30 & type == 'ALT'),"value"])*100,1)
+
+                              
+              print(plot, vp = vp)
+              grid.text(n, vp = viewport(layout.pos.row = row, layout.pos.col = col), hjust = 0, vjust = -5.8, gp = gpar(fontsize = 2.5, col=color.numbers, fontface=fontface.numbers))
+              grid.text(paste0(round(n/n.total*100,2),"%"), vp = viewport(layout.pos.row = row, layout.pos.col = col), hjust = 0.0, vjust = -4.2, gp = gpar(fontsize = 2.5, col=color.numbers, fontface=fontface.numbers))
+              grid.text(paste0("ref.BQ30: ",AUC.BQ30.ref,"%"), vp = viewport(layout.pos.row = row, layout.pos.col = col), hjust = 0.4, vjust = -4.3, gp = gpar(fontsize = 1.50, col=color.numbers, fontface=fontface.numbers))
+              grid.text(paste0("alt.BQ30: ",AUC.BQ30.alt,"%"), vp = viewport(layout.pos.row = row, layout.pos.col = col), hjust = 0.4, vjust = -3.0, gp = gpar(fontsize = 1.50, col=color.numbers, fontface=fontface.numbers))
+              
+              if (triplet == "GTGG" & n > 5) {
+                # check if Snager artifact is detected
+                if (AUC.BQ30.ref > 0.4 & AUC.BQ30.alt > 0.4) {
+                  d = as.data.frame(t(c("AUC.BQ30.ref"=AUC.BQ30.ref, "AUC.BQ30.alt"=AUC.BQ30.alt)))
+                  write.table(d, file = paste0(MPILEUP_FOLDER,"SangerArtifactDetected.txt"), sep = "\t", row.names = F, col.names = T, quote = F)
+                }
+              }
             }
           }
         }
-        
-        
-        # lines(data.bq.background.dens, lwd=3)
-        if (USE_BACKGROUND_BQs) {
-          baseScores.ref = unlist(apply(transitionSubset, 1, function(line) {
-            baseScores = as.integer(unlist(strsplit(unlist(strsplit(as.character(line["BQ_string.ref"]), ";"))[1], ",")))
-          }))
-          baseScores.alt = unlist(apply(transitionSubset, 1, function(line) {
-            baseScores = as.integer(unlist(strsplit(unlist(strsplit(as.character(line["BQ_string.alt"]), ";"))[1], ",")))
-          }))
-          
-          baseScores.ref.dens = density(baseScores.ref, bw = parameter.density.bandwidth, na.rm = T)
-          baseScores.alt.dens = density(baseScores.alt, bw = parameter.density.bandwidth, na.rm = T)
-          
-          lines(data.bq.background.dens, lwd=2)
-          lines(baseScores.ref.dens, col="green", lwd=2)
-          lines(baseScores.alt.dens, col="red", lwd=2)
-        }    
+      })
+      
+    } else {
+      if (COMBINE_REVCOMP) {
+        par(mfrow=c(2,3))
       } else {
-        text(21, 0.2, "No somatic SNVS with this triplet.")
+        par(mfrow=c(4,3))  
       }
-    })
+      apply(transitions, 1, function(transition) {
+        # transition=transitions[i,]
+        # transition=transitions[1,]
+        from=transition["FROM"]
+        to=transition["TO"]
+        
+        plot(1, xlim=c(0,45), ylim=c(0,0.4), main=paste0("Base Quality distribution for ",from,"->",to," in PID\n",PID), cex.main=0.8, xlab = "BaseQuality", ylab = "density")
+        
+        transitionSubset = data.bq.triplet[substr(data.bq.triplet$REVCOMP_TRIPLET,2,2)==as.character(from) & substr(data.bq.triplet$REVCOMP_TRIPLET,3,3)==as.character(to),]
+        if (nrow(transitionSubset) > 0) {
+          for (baseBefore in c("A","C","G","T")) {
+            for (baseAfter in c("A","C","G","T")) {
+              # baseBefore="A"
+              # baseAfter="T"
+              transitionSubset.triplet = transitionSubset[transitionSubset$REVCOMP_TRIPLET==paste0(baseBefore,from,to,baseAfter),]
+              n = nrow(transitionSubset.triplet)
+              if (n > 0) {
+                if (n<=3) {
+                  alpha = 0.2
+                } else if (n<7) {
+                  alpha = 0.4
+                } else if (n<=10) {
+                  alpha = 0.6
+                } else {
+                  alpha=1.0
+                }
+                
+                baseScores.ref.counts = colSums(transitionSubset.triplet[,c(paste0("BQ.ref.",sapply(seq(MAX_BASE_QUALITY+1)-1, function(i) {i})))])
+                baseScores.alt.counts = colSums(transitionSubset.triplet[,c(paste0("BQ.alt.",sapply(seq(MAX_BASE_QUALITY+1)-1, function(i) {i})))])
+                # baseScores.ref.counts = colSums(transitionSubset.triplet[,c(paste0("BQ.ref.",sapply(seq(50), function(i) {i})))])
+                # baseScores.alt.counts = colSums(transitionSubset.triplet[,c(paste0("BQ.alt.",sapply(seq(50), function(i) {i})))])
+                
+                baseScores.ref.counts.normalized = baseScores.ref.counts / sum(baseScores.ref.counts)
+                baseScores.alt.counts.normalized = baseScores.alt.counts / sum(baseScores.alt.counts)
+                
+                # alpha_surplusPenalty makes triplets with low overall number of base scores slightly less visible
+                alpha_surplusPenalty.ref = 0.0
+                if (sum(transitionSubset.triplet$nBQ.ref) < 50) {
+                  alpha_surplusPenalty.ref = 0.1
+                }
+                lines(baseScores.ref.counts.normalized, col=add.alpha(greenColor, alpha-alpha_surplusPenalty.ref))
+                
+                alpha_surplusPenalty.alt = 0.0
+                if (sum(transitionSubset.triplet$nBQ.alt) < 50) {
+                  alpha_surplusPenalty.alt = 0.1
+                }
+                lines(baseScores.alt.counts.normalized, col=add.alpha(redColor, alpha-alpha_surplusPenalty.alt))
+              }
+            }
+          }
+          
+          
+          # lines(data.bq.background.dens, lwd=3)
+          if (USE_BACKGROUND_BQs) {
+            baseScores.ref = unlist(apply(transitionSubset, 1, function(line) {
+              baseScores = as.integer(unlist(strsplit(unlist(strsplit(as.character(line["BQ_string.ref"]), ";"))[1], ",")))
+            }))
+            baseScores.alt = unlist(apply(transitionSubset, 1, function(line) {
+              baseScores = as.integer(unlist(strsplit(unlist(strsplit(as.character(line["BQ_string.alt"]), ";"))[1], ",")))
+            }))
+            
+            baseScores.ref.dens = density(baseScores.ref, bw = parameter.density.bandwidth, na.rm = T)
+            baseScores.alt.dens = density(baseScores.alt, bw = parameter.density.bandwidth, na.rm = T)
+            
+            lines(data.bq.background.dens, lwd=2)
+            lines(baseScores.ref.dens, col="green", lwd=2)
+            lines(baseScores.alt.dens, col="red", lwd=2)
+          }    
+        } else {
+          text(21, 0.2, "No somatic SNVS with this triplet.")
+        }
+      })      
+    }
   dev.off()
 }
 
 
 
-plot_BQD_to_pdf(PDF_OUTPUT_FILE = PDF_OUTPUT_FILE, data.bq.triplet = data.bq.triplet)
+
 
 if (ALT.MEDIAN.THRESHOLD > -1) {
   # PDF_OUTPUT_FILE.filtered = sub(".pdf", paste0("_filteredAltMedian",ALT.MEDIAN.THRESHOLD,".pdf"), PDF_OUTPUT_FILE)
   # plot_BQD_to_pdf(PDF_OUTPUT_FILE = PDF_OUTPUT_FILE.filtered, data.bq.triplet = data.bq.triplet.filtered)
+  plot_BQD_to_pdf(PDF_OUTPUT_FILE = PDF_OUTPUT_FILE, data.bq.triplet = data.bq.triplet.filtered)
 
-  VCF = read.table(vcfInputFile, comment.char = '', sep = "\t", header = T, stringsAsFactors = F, check.names = F)
+  VCF = read.table(pipe(paste0("cat ",vcfInputFile," | grep -v '^##' ")), comment.char = '', sep = "\t", header = T, stringsAsFactors = F, check.names = F)
   colnames(VCF)[1] = "CHROM"
   VCF.filtered = merge(VCF, data.bq.triplet.filtered[,c("CHROM","POS","REF","ALT")])
   chrOrder <-c((1:22),"X","Y")
@@ -424,6 +643,8 @@ if (ALT.MEDIAN.THRESHOLD > -1) {
   ncol=ncol(VCF.filtered)
   VCF.filtered = VCF.filtered[,c(1,2,5,3,4,6:ncol)]
   write.table(VCF.filtered, file=VCF_OUTPUT_FILE.filtered, quote = F, row.names = F, col.names = T, sep = "\t")  
+} else {
+  plot_BQD_to_pdf(PDF_OUTPUT_FILE = PDF_OUTPUT_FILE, data.bq.triplet = data.bq.triplet)
 }
 
 
