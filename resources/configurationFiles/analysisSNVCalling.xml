@@ -20,7 +20,7 @@
 
         <!--## Databases -->
         <!-- hg19DatabasesDirectory=/icgc/ngs_share/assemblies/hg19_GRCh37_1000genomes/databases -->
-        <cvalue name="DBSNP" value="${hg19DatabasesDirectory}/dbSNP/dbSNP_147/All_20160408.SNV.vcf.gz" type="path"/>
+        <cvalue name="DBSNP" value="${hg19DatabasesDirectory}/dbSNP/dbSNP_147/00-All.SNV.vcf.gz" type="path"/>
         <cvalue name="DBSNP_COL" value="DBSNP" type="string"/>
         <cvalue name="KGENOME" value="${hg19DatabasesDirectory}/1000genomes/ALL.wgs.phase1_integrated_calls.20101123.snps_chr.vcf.gz" type="path"/>
         <cvalue name="KGENOMES_COL" value="1K_GENOMES" type="string"/>
