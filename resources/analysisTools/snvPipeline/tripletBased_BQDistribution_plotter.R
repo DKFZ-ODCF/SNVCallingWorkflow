@@ -3,18 +3,18 @@ library(ggplot2)
 library(Biostrings) # for reverseComplement
 library(grid) # for unit,gpar
 library(reshape2)
+library("RColorBrewer")
 
 
-CANNEL_INDIVIDUAL_GRAPHS=F
+CANNEL_INDIVIDUAL_GRAPHS=T
 MAX_BASE_QUALITY=55
-ALT.MEDIAN.THRESHOLD = 20 # -1 means NO FILTERING
+ALT.MEDIAN.THRESHOLD = -1 # -1 means NO FILTERING
 parameter.density.bandwidth = 2.00
 SEQUENCE_CONTEXT_COLUMN_INDEX=11
-
+VAF_COLUMN_INDEX=-1
 
 opt = getopt(matrix(c(
   'vcfInputFile', 'v', 1, "character",
-  # 'baseFolder', 'f', 1, "character",
   'mpileupFolder', 'm', 1, "character",
   'alignmentFolder', 'a', 1, "character",
   'PID', 'p', 1, "character",
@@ -24,6 +24,7 @@ opt = getopt(matrix(c(
   'combineRevcomp', 'c', 2, "integer",
   'filterThreshold', 'f', 2, "integer",
   'sequenceContextColumnIndex', 's', 2, "integer",
+  'MAFColumnIndex', 'maf', 1, "integer",
   'channelIndividualGraphs', 'i', 2, "integer",
   'mainTitle', 't', 2, "character"
 ),ncol=4,byrow=TRUE));
@@ -71,6 +72,13 @@ if (is.null(opt$combineRevcomp)){
     COMBINE_REVCOMP = FALSE
   }
 }
+if (! is.null(opt$MAFColumnIndex)){
+  tmp = as.integer(opt$MAFColumnIndex)
+  if (!is.na(tmp)) {
+    VAF_COLUMN_INDEX = tmp
+  }
+}
+
 if (is.null(opt$outFile)){      # no vcf file specified
   cat("Please specify the output pdf file.\n"); 
   q(status=2);      # quit, status unequal 0 means error
@@ -113,11 +121,16 @@ colnames(transitions) = c("FROM", "TO")
 # RPP_FOLDER="/icgc/pcawg/analysis/train2full/projects/CMDI-UK/"
 # opt$PID = "f8e61a02-654c-c226-e040-11ac0d481b60"
 # opt$mpileupFolder = paste0(RPP_FOLDER,opt$PID,"/merged_may2016Calls_filtered_BQD_plots")
-# opt$vcfInputFile = paste0(opt$mpileupFolder,"/",opt$PID,"_somatic.snv_mnv.vcf_filtered.vcf")
+# opt$vcfInputFile = paste0(opt$mpileupFolder,"/",opt$PID,"_somatic.snv_mnv.vcf_filtered.OnlyPassed.withoutHeader.vcf")
 # opt$alignmentFolder = paste0(RPP_FOLDER,opt$PID,"/alignment")
-# opt$outFile = paste0(opt$mpileupFolder,"/snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
+# opt$outFile = paste0(opt$mpileupFolder,"/snvs_",opt$PID,"_triplet-specific_BQ_distributions_unfiltered.manual.pdf")
 # opt$background = F
 # opt$combineRevcomp = 1
+# opt$filterThreshold = -1
+# opt$MAFColumnIndex = 9
+# opt$sequenceContextColumnIndex = 10
+
+
 
 # RPP_FOLDER="/icgc/dkfzlsdf/analysis/B080/warsow/Cavathrombus/results_per_pid/BW/"
 # opt$PID = "BW"
@@ -126,6 +139,14 @@ colnames(transitions) = c("FROM", "TO")
 # opt$alignmentFolder = paste0(RPP_FOLDER,"/alignment/")
 # opt$outFile = paste0(opt$mpileupFolder,"snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
 # opt$background = F
+# opt$combineRevcomp = 1
+
+# RPP_FOLDER="/icgc/pcawg/analysis/train2full/projects/BOCA-UK/"
+# opt$PID = "f85ae2b7-cebf-17a2-e040-11ac0c48033a"
+# opt$mpileupFolder = paste0(RPP_FOLDER,opt$PID,"/merged_may2016Calls_filtered_BQD_plots")
+# opt$vcfInputFile = paste0(opt$mpileupFolder,"/",opt$PID,"_somatic.snv_mnv.vcf_filtered.OnlyPassed.vcf")
+# opt$vcfInputFile = paste0(opt$mpileupFolder,"/",opt$PID,"_somatic.snv_mnv.vcf_filtered.OnlyPassed.withoutHeader.vcf")
+# opt$outFile = paste0(opt$mpileupFolder,"/snvs_",opt$PID,"_SangerArtifcatDetected.txt")
 # opt$combineRevcomp = 1
 
 
@@ -231,10 +252,24 @@ if ( file.exists(DATA_RESULTS_FILE) & ! FORCE_RERUN ) {
   
   
   # READ IN DATA FOR CHANNEL-SPECIFIC BQs
-  
-  #--------------------------------------------------------------------------------------------------------CHR----POS----REF---ALT---------------------BaseBefore-----BaseAfter
-  data.bq.triplet = read.table(pipe(paste0("cat ",vcfInputFile, " | grep -v '^##' | cut -f 1,2,4,5,",SEQUENCE_CONTEXT_COLUMN_INDEX," | perl -ne '$_ =~ /^(.*?)\t(.*?)\t(.*?)\t(.*?)\t[ACGTNacgtn]{9}([ACGTNacgtn]),([ACGTNacgtn])[ACGTNacgtn]{9}/; print \"$1\t$2\t$3\t$4\t$5\t$6\n\";' ")), comment.char = '', sep = "\t", header = T, stringsAsFactors = F)
-  colnames(data.bq.triplet) = c("CHROM", "POS","REF","ALT","BaseBefore","BaseAfter")
+  if (VAF_COLUMN_INDEX > -1) {
+    if (VAF_COLUMN_INDEX > SEQUENCE_CONTEXT_COLUMN_INDEX) {
+      #------------------------------------------------------------------------------------------------------------------------------------------------------------CHR----POS----REF---ALT---------------------BaseBefore-----BaseAfter---------------------VAF-----
+      readFileCommand = paste0("cat ",vcfInputFile, " | grep -v '^##' | cut -f 1,2,4,5,",SEQUENCE_CONTEXT_COLUMN_INDEX,",",VAF_COLUMN_INDEX," | perl -ne '$_ =~ /^(.*?)\t(.*?)\t(.*?)\t(.*?)\t[ACGTNacgtn]{9}([ACGTNacgtn]),([ACGTNacgtn])[ACGTNacgtn]{9}\t([\\d\\.]*)/; print \"$1\t$2\t$3\t$4\t$5\t$6\t$7\n\";' ")
+    } else {
+      #---------------------------------------------------------------------------------------------------------------------------------------CHR----POS----REF---ALT----------------------------VAF------------------------BaseBefore-----BaseAfter
+      readFileCommand = paste0("cat ",vcfInputFile, " | grep -v '^##' | cut -f 1,2,4,5,",VAF_COLUMN_INDEX,",",SEQUENCE_CONTEXT_COLUMN_INDEX," | perl -ne '$_ =~ /^(.*?)\t(.*?)\t(.*?)\t(.*?)\t([\\d\\.]*)\t[ACGTNacgtn]{9}([ACGTNacgtn]),([ACGTNacgtn])[ACGTNacgtn]{9}/; print \"$1\t$2\t$3\t$4\t$6\t$7\t$5\n\";' ")
+    }
+  } else {
+    #---------------------------------------------------------------------------------------------------------------------------------------CHR----POS----REF---ALT---------------------BaseBefore-----BaseAfter
+    readFileCommand = paste0("cat ",vcfInputFile, " | grep -v '^##' | cut -f 1,2,4,5,",SEQUENCE_CONTEXT_COLUMN_INDEX," | perl -ne '$_ =~ /^(.*?)\t(.*?)\t(.*?)\t(.*?)\t[ACGTNacgtn]{9}([ACGTNacgtn]),([ACGTNacgtn])[ACGTNacgtn]{9}/; print \"$1\t$2\t$3\t$4\t$5\t$6\n\";' ")
+  }
+  data.bq.triplet = read.table(pipe(readFileCommand), comment.char = '', sep = "\t", header = T, stringsAsFactors = F)
+  if (VAF_COLUMN_INDEX > -1) {
+    colnames(data.bq.triplet) = c("CHROM", "POS","REF","ALT","BaseBefore","BaseAfter","VAF")
+  } else {
+    colnames(data.bq.triplet) = c("CHROM", "POS","REF","ALT","BaseBefore","BaseAfter")
+  }
   data.bq.triplet$Triplet = with(data.bq.triplet, paste0(BaseBefore,REF,ALT,BaseAfter))
   # VCF = data.bq.triplet
   
@@ -286,6 +321,18 @@ if ( file.exists(DATA_RESULTS_FILE) & ! FORCE_RERUN ) {
     line[1,"CoV.ref"] = baseScores.ref.CoV
     line[1,"CoV.alt"] = baseScores.alt.CoV
     
+    baseScores.ref.AuC.BQ30 = sum(counts.ref[as.integer(names(counts.ref))<=30])/sum(counts.ref)
+    baseScores.alt.AuC.BQ30 = sum(counts.alt[as.integer(names(counts.alt))<=30])/sum(counts.alt)
+    baseScores.ref.AuC.BQ25 = sum(counts.ref[as.integer(names(counts.ref))<=25])/sum(counts.ref)
+    baseScores.alt.AuC.BQ25 = sum(counts.alt[as.integer(names(counts.alt))<=25])/sum(counts.alt)
+    baseScores.ref.AuC.BQ20 = sum(counts.ref[as.integer(names(counts.ref))<=20])/sum(counts.ref)
+    baseScores.alt.AuC.BQ20 = sum(counts.alt[as.integer(names(counts.alt))<=20])/sum(counts.alt)
+    line[1,"AuC.ref.BQ20"] = baseScores.ref.AuC.BQ20
+    line[1,"AuC.alt.BQ20"] = baseScores.alt.AuC.BQ20
+    line[1,"AuC.ref.BQ25"] = baseScores.ref.AuC.BQ25
+    line[1,"AuC.alt.BQ25"] = baseScores.alt.AuC.BQ25
+    line[1,"AuC.ref.BQ30"] = baseScores.ref.AuC.BQ30
+    line[1,"AuC.alt.BQ30"] = baseScores.alt.AuC.BQ30
     
     line = cbind(line, countsLine.ref, countsLine.alt)
     
@@ -301,6 +348,9 @@ if ( file.exists(DATA_RESULTS_FILE) & ! FORCE_RERUN ) {
   data.bq.triplet$"REF" = factor(data.bq.triplet$"REF", levels=c("A","C","G","T"))
   data.bq.triplet$"ALT" = factor(data.bq.triplet$"ALT", levels=c("A","C","G","T"))
   data.bq.triplet$"BaseAfter" = factor(data.bq.triplet$"BaseAfter", levels=c("A","C","G","T"))
+  if ( ! is.null(data.bq.triplet$VAF) ) {
+    data.bq.triplet$"VAF" = as.numeric(as.character(data.bq.triplet$"VAF"))
+  }
   data.bq.triplet$"Triplet" = as.factor(as.character(data.bq.triplet$"Triplet"))
   
   if (USE_BACKGROUND_BQs) {
@@ -338,7 +388,7 @@ if (ALT.MEDIAN.THRESHOLD > -1) {
       SNVs = SNVs[indices,]    
       return (SNVs)
     }
-  }))  
+  }))
 }
 # data.bq.triplet.filtered = data.bq.triplet.filtered[order(data.bq.triplet.filtered$MeadianBQ.alt),]
 # any(is.na(data.bq.triplet.filtered$nBQ.ref))
@@ -371,9 +421,9 @@ POSITIONS.FROMTO.ROW=c("CA"=0,"CG"=0,"CT"=0,"TA"=1,"TC"=1,"TG"=1)
 POSITIONS.AFTER=c("A"=1+offset.col,"C"=2+offset.col,"G"=3+offset.col,"T"=4+offset.col)
 
 
-plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet) {
-  # pdf(PDF_OUTPUT_FILE, 8.27, 6.0)
-  pdf(PDF_OUTPUT_FILE, paper = "a4r")
+plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet, whatToPlot=c("BQD","BQ_CoV","BQD_sampleIndividual")) {
+  pdf(PDF_OUTPUT_FILE, 8.27, 6.0)
+  # pdf(PDF_OUTPUT_FILE, paper = "a4r")
   
     if (CANNEL_INDIVIDUAL_GRAPHS == T) {
       if (COMBINE_REVCOMP == F) {
@@ -381,7 +431,12 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet) {
       }
       
       grid.newpage(recording = F)
-      gl <- grid.layout(nrow=13, ncol=17, widths = unit(c(3,1,2.6,2,2,2,1,2,2,2,2,1,2,2,2,2,3), "null"), heights = unit(c(2,2,2,2,2,2.5,2.5,2,2,2,2.5,0.5), "null"))
+      if (whatToPlot == "BQD") {
+        gl <- grid.layout(nrow=13, ncol=17, widths = unit(c(3,1,2.6,2,2,2,1,2,2,2,2,1,2,2,2,2,3), "null"), heights = unit(c(2,2,2,2,2,2.5,2.5,2,2,2,2.5,0.5), "null"))
+      } else if (whatToPlot == "BQ_CoV" || whatToPlot == "BQD_sampleIndividual") {
+        gl <- grid.layout(nrow=13, ncol=17, widths = unit(c(3,1,2,2,2,2,1,2,2,2,2,1,2,2,2,2,3), "null"), heights = unit(c(2,2,2,2,2,2,2.5,2,2,2,2,0.5), "null"))
+      }
+      
       pushViewport(viewport(layout = gl))
       
       grid.text(opt$mainTitle, vp = viewport(layout.pos.row = 1, layout.pos.col = 2+offset.col), hjust = -0.2, vjust = 1.7)
@@ -398,7 +453,7 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet) {
 
       apply(transitions, 1, function(transition) {
         # transition=transitions[i,]
-        # transition=transitions[1,]
+        # transition=transitions[6,]
         from=transition["FROM"]
         to=transition["TO"]
         fromto = paste0(from,to)
@@ -412,6 +467,93 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet) {
             # plot(1, xlim=c(0,45), ylim=c(0,0.4), main=paste0("Base Quality distribution for ",baseBefore,from,"->",to,baseAfter," in PID\n",PID), cex.main=0.8, xlab = "BaseQuality", ylab = "density")
             n = nrow(transitionSubset)
             if (n > 0) {
+              
+              # # transitionSubset.highAUC = transitionSubset[transitionSubset$AuC.alt.BQ30>0.5,]
+              # VAF=transitionSubset[,"VAF"]
+              # AUC=transitionSubset[,"AuC.alt.BQ30"]
+              # model = lm(AUC ~ VAF)
+              # # plot(model)
+              # cor(VAF,AUC, method = "spearman")
+              # x=cor.test(VAF,AUC)
+              # # x$p.value
+              
+              
+              color.numbers = "black"
+              color.panel.border = "black"
+              fontface.numbers = "plain"    
+              fontsize.numbers = 1.5
+              
+              if (whatToPlot == "BQD_sampleIndividual") {
+                
+                baseScores.ref.counts = transitionSubset[,c(paste0("BQ.ref.",sapply(seq(MAX_BASE_QUALITY+1)-1, function(i) {i})))]
+                baseScores.alt.counts = transitionSubset[,c(paste0("BQ.alt.",sapply(seq(MAX_BASE_QUALITY+1)-1, function(i) {i})))]
+                
+                baseScores.ref.counts.normalized = baseScores.ref.counts / rowSums(baseScores.ref.counts)
+                baseScores.alt.counts.normalized = baseScores.alt.counts / rowSums(baseScores.alt.counts)
+
+                baseScores.ref.counts.normalized.cumul = as.data.frame(t(apply(baseScores.ref.counts.normalized,1,cumsum)))
+                baseScores.alt.counts.normalized.cumul = as.data.frame(t(apply(baseScores.alt.counts.normalized,1,cumsum)))
+                baseScores.ref.counts.normalized.cumul$sample = rownames(baseScores.ref.counts.normalized.cumul)
+                baseScores.alt.counts.normalized.cumul$sample = rownames(baseScores.alt.counts.normalized.cumul)
+                # baseScores.ref.counts.normalized.cumul$VAF = transitionSubset$VAF
+                # baseScores.alt.counts.normalized.cumul$VAF = transitionSubset$VAF
+
+                molten.ref=melt(baseScores.ref.counts.normalized.cumul, id.vars = "sample")
+                molten.ref$BQ=as.integer(gsub("BQ\\..+\\.(\\d+)$", "\\1", molten.ref$variable, perl=T))
+                molten.ref$type="REF"
+                molten.ref$VAF=transitionSubset[molten.ref$sample,"VAF"]
+                molten.ref$nBases=transitionSubset[molten.ref$sample,"nBQ.ref"]
+                molten.alt=melt(baseScores.alt.counts.normalized.cumul, id.vars = "sample")
+                molten.alt$BQ=as.numeric(gsub("BQ\\..+\\.(\\d+)$", "\\1", molten.alt$variable, perl=T))
+                molten.alt$type="ALT"
+                molten.alt$VAF=transitionSubset[molten.alt$sample,"VAF"]
+                molten.alt$nBases=transitionSubset[molten.alt$sample,"nBQ.alt"]
+                molten = rbind(molten.ref, molten.alt)
+                molten = molten[molten$BQ <= xlim,]
+                remove(molten.ref, molten.alt)
+              } else if (whatToPlot == "BQD") {
+                baseScores.ref.counts = colSums(transitionSubset[,c(paste0("BQ.ref.",sapply(seq(MAX_BASE_QUALITY+1)-1, function(i) {i})))])
+                baseScores.alt.counts = colSums(transitionSubset[,c(paste0("BQ.alt.",sapply(seq(MAX_BASE_QUALITY+1)-1, function(i) {i})))])
+                
+                baseScores.ref.counts.normalized = baseScores.ref.counts / sum(baseScores.ref.counts)
+                baseScores.alt.counts.normalized = baseScores.alt.counts / sum(baseScores.alt.counts)                
+                
+                molten.ref=melt(baseScores.ref.counts.normalized)
+                molten.ref$BQ=as.integer(gsub("BQ\\..+\\.(\\d+)$", "\\1", rownames(molten.ref), perl=T))
+                molten.ref$type="REF"
+                molten.alt=melt(baseScores.alt.counts.normalized)
+                molten.alt$BQ=as.integer(gsub("BQ\\..+\\.(\\d+)$", "\\1", rownames(molten.alt), perl=T))
+                molten.alt$type="ALT"
+                molten = rbind(molten.ref, molten.alt)
+                molten = molten[molten$BQ <= xlim,]
+                # molten = molten[,c("sample","type","BQ","value")]
+
+                
+                AUC.BQ30.ref = round(sum(molten[with(molten, BQ <= 30 & type == 'REF'),"value"])*100,1)
+                AUC.BQ30.alt = round(sum(molten[with(molten, BQ <= 30 & type == 'ALT'),"value"])*100,1)                
+                
+                # black | >30%:orange font | >40%:red font | >50% red font+border
+                if (AUC.BQ30.alt > 30) {
+                  fontface.numbers = "bold"
+                  if (AUC.BQ30.alt > 40) {
+                    color.numbers = "red"
+                    if (AUC.BQ30.alt > 50) {
+                      color.panel.border = "red"
+                    }
+                  } else {
+                    color.numbers = "orange"
+                  }
+                }                   
+              } else if (whatToPlot == "BQ_CoV") {
+                molten.Cov.ref = melt(transitionSubset[,"CoV.ref"])
+                molten.Cov.ref$type="REF"
+                molten.Cov.alt = melt(transitionSubset[,"CoV.alt"])
+                molten.Cov.alt$type="ALT"
+                molten.CoV = rbind(molten.Cov.ref, molten.Cov.alt)
+                remove(molten.Cov.ref, molten.Cov.alt)                
+              }
+              
+              
               if (n<=3) {
                 alpha = 0.2
               } else if (n<7) {
@@ -422,27 +564,7 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet) {
                 alpha=1.0
               }
               
-              color.numbers = "black"
-              color.panel.border = "black"
-              fontface.numbers = "plain"
-              if (n/n.total > 0.09) {
-                fontface.numbers = "bold"
-                if (n/n.total > 0.15) {
-                  color.numbers = "red"
-                  if (n/n.total > 0.25) {
-                    color.panel.border = "red"
-                  }
-                } else {
-                  color.numbers = "orange"
-                }
-              }              
-              
-              baseScores.ref.counts = colSums(transitionSubset[,c(paste0("BQ.ref.",sapply(seq(MAX_BASE_QUALITY+1)-1, function(i) {i})))])
-              baseScores.alt.counts = colSums(transitionSubset[,c(paste0("BQ.alt.",sapply(seq(MAX_BASE_QUALITY+1)-1, function(i) {i})))])
 
-              baseScores.ref.counts.normalized = baseScores.ref.counts / sum(baseScores.ref.counts)
-              baseScores.alt.counts.normalized = baseScores.alt.counts / sum(baseScores.alt.counts)
-              
               # alpha_surplusPenalty makes triplets with low overall number of base scores slightly less visible
               alpha_surplusPenalty.ref = 0.0
               if (sum(transitionSubset$nBQ.ref) < 50) {
@@ -456,87 +578,171 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet) {
               }
               # lines(baseScores.alt.counts.normalized, col=add.alpha(redColor, alpha-alpha_surplusPenalty.alt))
               
-              molten.ref=melt(baseScores.ref.counts.normalized)
-              molten.ref$BQ=as.integer(gsub("BQ\\..+\\.(\\d+)$", "\\1", rownames(molten.ref), perl=T))
-              molten.ref$type="REF"
-              molten.alt=melt(baseScores.alt.counts.normalized)
-              molten.alt$BQ=as.integer(gsub("BQ\\..+\\.(\\d+)$", "\\1", rownames(molten.alt), perl=T))
-              molten.alt$type="ALT"
-              molten = rbind(molten.ref, molten.alt)
-              molten = molten[molten$BQ <= xlim,]
-              
+
               
               row = as.integer(POSITIONS.BEFORE[baseBefore]+POSITIONS.FROMTO.ROW[fromto]*(4+1))
               col = as.integer(POSITIONS.AFTER[baseAfter]+POSITIONS.FROMTO.COL[fromto]*(4+1))
               vp = viewport(layout.pos.row = row, layout.pos.col = col)
               
               axis.label.size=3
-              if (col == offset.col+1) {
-                grid.text(baseBefore, vp = viewport(layout.pos.row = row, layout.pos.col = col-1), vjust = -1.0, gp = gpar(fontsize = 6))
-                if (row == offset.row+4 | row == offset.row+9) {
-                  if (row == offset.row+9) {
-                    grid.text(baseAfter, vp = viewport(layout.pos.row = row+1, layout.pos.col = col), hjust = -1.0, gp = gpar(fontsize = 6))
-                  }                  
-                  # both axes have ticks and labels
-                  theme = theme(legend.position="none", axis.title=element_blank(), 
-                                axis.ticks = element_blank(), axis.text=element_text(size=axis.label.size),
-                                plot.margin = unit(c(0,-0.1,0,-0.1), "cm"), legend.margin = unit(c(0,0,0,0), "cm"),
-                                panel.border = element_rect(colour = color.panel.border, fill = NA),
-                                panel.background = element_rect(fill = NA))
-                  
-                } else {                  # only axis ticks and labels for y axis
-                  
-                  theme = theme(legend.position="none", axis.title=element_blank(), axis.ticks = element_blank(),
-                                plot.margin = unit(c(0,-0.05,-0.25,-0.1), "cm"), legend.margin = unit(c(0,0,0,0), "cm"),
-                                axis.text.x = element_blank(), axis.text.y=element_text(size=axis.label.size), #axis.ticks.length = unit(0,"null"), #axis.ticks.margin = unit(0,"null"),
-                                panel.border = element_rect(colour = color.panel.border, fill = NA),
-                                panel.background = element_rect(fill = NA))
-                  
-                }
-              } else {
-                if (row == offset.row+4 | row == offset.row+9) {
-                  if (row == offset.row+9) {
-                    grid.text(baseAfter, vp = viewport(layout.pos.row = row+1, layout.pos.col = col), hjust = -0.5, gp = gpar(fontsize = 6))
-                  }
-                  # only axis ticks and labels for x axis
-                  theme = theme(legend.position="none", axis.title=element_blank(), axis.ticks = element_blank(),
-                                plot.margin = unit(c(0,-0.1,0,-0.35), "cm"), legend.margin = unit(c(0,0,0,0), "cm"),
-                                axis.text.y = element_blank(), axis.text.x=element_text(size=axis.label.size), #axis.ticks.length = unit(0,"null"), #axis.ticks.margin = unit(0,"null"),
-                                panel.border = element_rect(colour = color.panel.border, fill = NA),
-                                panel.background = element_rect(fill = NA))                  
-                } else {
-                  # no axis ticks at all
-                  theme = theme(legend.position="none", axis.title=element_blank(), axis.ticks = element_blank(),
-                                plot.margin = unit(c(0,-0.1,0,-0.1), "cm"), legend.margin = unit(c(0,0,0,0), "cm"),
-                                axis.text = element_blank(), axis.ticks.length = unit(0,"null"), axis.ticks.margin = unit(0,"null"),
-                                panel.border = element_rect(colour = color.panel.border, fill = NA),
-                                panel.background = element_rect(fill = NA))                  
-                }
-              }
-              
-              plot = ggplot(molten, aes(x=BQ,y=value, colour=type)) + geom_line(size=0.15) +
-                xlim(0, xlim) + ylim(0,0.4) +
-                scale_color_manual(values=c(as.character(add.alpha(redColor, alpha-alpha_surplusPenalty.alt)), as.character(add.alpha(greenColor, alpha-alpha_surplusPenalty.ref)))) +
-                theme
-              
-              
-              AUC.BQ30.ref = round(sum(molten[with(molten, BQ <= 30 & type == 'REF'),"value"])*100,1)
-              AUC.BQ30.alt = round(sum(molten[with(molten, BQ <= 30 & type == 'ALT'),"value"])*100,1)
+              if (whatToPlot == "BQD_sampleIndividual") {
 
-                              
-              print(plot, vp = vp)
-              grid.text(n, vp = viewport(layout.pos.row = row, layout.pos.col = col), hjust = 0, vjust = -5.8, gp = gpar(fontsize = 2.5, col=color.numbers, fontface=fontface.numbers))
-              grid.text(paste0(round(n/n.total*100,2),"%"), vp = viewport(layout.pos.row = row, layout.pos.col = col), hjust = 0.0, vjust = -4.2, gp = gpar(fontsize = 2.5, col=color.numbers, fontface=fontface.numbers))
-              grid.text(paste0("ref.BQ30: ",AUC.BQ30.ref,"%"), vp = viewport(layout.pos.row = row, layout.pos.col = col), hjust = 0.4, vjust = -4.3, gp = gpar(fontsize = 1.50, col=color.numbers, fontface=fontface.numbers))
-              grid.text(paste0("alt.BQ30: ",AUC.BQ30.alt,"%"), vp = viewport(layout.pos.row = row, layout.pos.col = col), hjust = 0.4, vjust = -3.0, gp = gpar(fontsize = 1.50, col=color.numbers, fontface=fontface.numbers))
-              
-              if (triplet == "GTGG" & n > 5) {
-                # check if Snager artifact is detected
-                if (AUC.BQ30.ref > 0.4 & AUC.BQ30.alt > 0.4) {
-                  d = as.data.frame(t(c("AUC.BQ30.ref"=AUC.BQ30.ref, "AUC.BQ30.alt"=AUC.BQ30.alt)))
-                  write.table(d, file = paste0(MPILEUP_FOLDER,"SangerArtifactDetected.txt"), sep = "\t", row.names = F, col.names = T, quote = F)
+                axis.label.size.x=1
+                axis.label.size.y=2
+                
+                
+                theme = theme(legend.position="none", 
+                              axis.title=element_blank(), axis.ticks = element_blank(), axis.text = element_blank(), axis.line=element_blank(),
+                              #axis.text.x=element_text(size=axis.label.size.x), axis.text.y=element_text(size=axis.label.size.y),
+                              # plot.margin = unit(c(0,-0.2,-0.35,-2.0), "cm"), 
+                              plot.margin = unit(c(0,0.0,0.0,0.0), "cm"),
+                              legend.margin = unit(c(0,0,0,0), "cm"),
+                              panel.border = element_rect(colour = color.panel.border, fill = NA, size=0.0),
+                              # panel.background = element_rect(fill = NA),
+                              strip.text = element_text(size=2, lineheight=0.01),
+                              panel.margin=unit(0.000, "lines"),
+                              panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+                
+                plot = ggplot(molten, aes(x=BQ,y=value, group=interaction(sample,type), colour=VAF)) + 
+                  geom_line(aes(size=log2(nBases))) + scale_size(range = c(0.01, 0.1), limits = c(0.1,6)) +
+                  scale_color_gradientn( colours = rainbow(7), values=c(0, 0.125, 0.25, 0.375, 0.5, 0.75, 1), limits = c(0,1), breaks=breaks) +
+                  # scale_x_continuous(expand = c(-1, 0)) +
+                  # scale_y_continuous(expand = c(-1, 0)) +
+                  geom_errorbar(stat = "hline", yintercept = "median", width=0.005,aes(ymax=..y..,ymin=..y..), linetype=4) +
+                  facet_wrap(~ type) + 
+                  theme
+                
+                g <- ggplot_gtable(ggplot_build(plot))
+                ia <- which(g$layout$name == "axis_b-1")
+                g$grobs[[which(g$layout$name == "axis_b-1")]]$children[[2]] <- NULL
+                g$grobs[[which(g$layout$name == "axis_b-2")]]$children[[2]] <- NULL
+                g$grobs[[which(g$layout$name == "axis_l-1")]]$children[[2]] <- NULL
+                g$grobs[[which(g$layout$name == "axis_l-2")]]$children[[2]] <- NULL
+                grid.draw(g)
+                
+                g$grobs[[which(g$layout$name == "panel-1")]]$children[[5]]$children
+                plot
+                
+                
+                if (col == offset.col+1) {
+                  grid.text(baseBefore, vp = viewport(layout.pos.row = row, layout.pos.col = col-1), vjust = -1.0, gp = gpar(fontsize = 6))
+                }  
+                if (row == offset.row+9) {
+                  grid.text(baseAfter, vp = viewport(layout.pos.row = row+1, layout.pos.col = col), hjust = -0.5, gp = gpar(fontsize = 6))
+                }                                 
+                
+                                
+              }else if (whatToPlot == "BQD") {
+                if (col == offset.col+1) {
+                  grid.text(baseBefore, vp = viewport(layout.pos.row = row, layout.pos.col = col-1), vjust = -1.0, gp = gpar(fontsize = 6))
+                  if (row == offset.row+4 | row == offset.row+9) {
+                    if (row == offset.row+9) {
+                      grid.text(baseAfter, vp = viewport(layout.pos.row = row+1, layout.pos.col = col), hjust = -1.0, gp = gpar(fontsize = 6))
+                    }                  
+                    # both axes have ticks and labels
+                    theme = theme(legend.position="none", axis.title=element_blank(), 
+                                  axis.ticks = element_blank(), axis.text=element_text(size=axis.label.size),
+                                  plot.margin = unit(c(0,-0.1,0,-0.1), "cm"), legend.margin = unit(c(0,0,0,0), "cm"),
+                                  panel.border = element_rect(colour = color.panel.border, fill = NA),
+                                  panel.background = element_rect(fill = NA))
+                    
+                  } else {                  # only axis ticks and labels for y axis
+                    
+                    theme = theme(legend.position="none", axis.title=element_blank(), axis.ticks = element_blank(),
+                                  plot.margin = unit(c(0,-0.05,-0.25,-0.1), "cm"), legend.margin = unit(c(0,0,0,0), "cm"),
+                                  axis.text.x = element_blank(), axis.text.y=element_text(size=axis.label.size), #axis.ticks.length = unit(0,"null"), #axis.ticks.margin = unit(0,"null"),
+                                  panel.border = element_rect(colour = color.panel.border, fill = NA),
+                                  panel.background = element_rect(fill = NA))
+                    
+                  }
+                } else {
+                  if (row == offset.row+4 | row == offset.row+9) {
+                    if (row == offset.row+9) {
+                      grid.text(baseAfter, vp = viewport(layout.pos.row = row+1, layout.pos.col = col), hjust = -0.5, gp = gpar(fontsize = 6))
+                    }
+                    # only axis ticks and labels for x axis
+                    theme = theme(legend.position="none", axis.title=element_blank(), axis.ticks = element_blank(),
+                                  plot.margin = unit(c(0,-0.1,0,-0.35), "cm"), legend.margin = unit(c(0,0,0,0), "cm"),
+                                  axis.text.y = element_blank(), axis.text.x=element_text(size=axis.label.size), #axis.ticks.length = unit(0,"null"), #axis.ticks.margin = unit(0,"null"),
+                                  panel.border = element_rect(colour = color.panel.border, fill = NA),
+                                  panel.background = element_rect(fill = NA))                  
+                  } else {
+                    # no axis ticks at all
+                    theme = theme(legend.position="none", axis.title=element_blank(), axis.ticks = element_blank(),
+                                  plot.margin = unit(c(0,-0.1,0,-0.1), "cm"), legend.margin = unit(c(0,0,0,0), "cm"),
+                                  axis.text = element_blank(), axis.ticks.length = unit(0,"null"), axis.ticks.margin = unit(0,"null"),
+                                  panel.border = element_rect(colour = color.panel.border, fill = NA),
+                                  panel.background = element_rect(fill = NA))                  
+                  }
+                }                
+              } else if (whatToPlot == "BQ_CoV") {
+                theme = theme(legend.position="none", axis.title=element_blank(), 
+                              axis.ticks = element_blank(), axis.text=element_text(size=axis.label.size),
+                              plot.margin = unit(c(0,0,0,0), "cm"), legend.margin = unit(c(0,0,0,0), "cm"),
+                              panel.border = element_rect(colour = color.panel.border, fill = NA),
+                              panel.background = element_rect(fill = NA))
+                if (col == offset.col+1) {
+                  grid.text(baseBefore, vp = viewport(layout.pos.row = row, layout.pos.col = col-1), vjust = -1.0, gp = gpar(fontsize = 6))
+                }  
+                if (row == offset.row+9) {
+                  grid.text(baseAfter, vp = viewport(layout.pos.row = row+1, layout.pos.col = col), hjust = -0.5, gp = gpar(fontsize = 6))
                 }
               }
+
+              
+              if (whatToPlot == "BQD_sampleIndividual") {
+                molten$sample = as.factor(molten$sample)
+                molten$type = as.factor(molten$type)
+                breaks <- c(0, 0.125, 0.25, 0.375, 0.5, 0.75,1)
+                plot = ggplot(molten, aes(x=BQ,y=value, group=interaction(sample,type), colour=VAF)) + 
+                  geom_line(aes(size=log2(nBases))) + scale_size(range = c(0.01, 0.1), limits = c(0.1,6)) +
+                  scale_color_gradientn( colours = rainbow(7), values=c(0, 0.125, 0.25, 0.375, 0.5, 0.75, 1), limits = c(0,1), breaks=breaks) +
+                  geom_errorbar(stat = "hline", yintercept = "median", width=0.005,aes(ymax=..y..,ymin=..y..), linetype=4) +
+                  facet_wrap(~ type) + 
+                  theme
+              } else if (whatToPlot == "BQD") {
+                
+                plot = ggplot(molten, aes(x=BQ,y=value, colour=type)) + geom_line(size=0.15) + 
+                  xlim(0, xlim) + ylim(0,0.4) +
+                  scale_color_manual(values=c(as.character(add.alpha(redColor, alpha-alpha_surplusPenalty.alt)), as.character(add.alpha(greenColor, alpha-alpha_surplusPenalty.ref)))) +
+                  theme                
+              } else if (whatToPlot == "BQ_CoV") {
+                molten.CoV$type = factor(molten.CoV$type, levels=c("REF","ALT"))
+                plot = ggplot(molten.CoV, aes(x=type, y=value, colour=type)) + geom_boxplot(lwd=0.2, outlier.size = 0.6) + 
+                  scale_y_continuous(limits=c(0,100)) +
+                  scale_color_manual(values=c(as.character(add.alpha(greenColor, alpha-alpha_surplusPenalty.ref)),as.character(add.alpha(redColor, alpha-alpha_surplusPenalty.alt)))) +
+                  # ylab("CoV [%]") +
+                  theme(legend.position="none", axis.title.x=element_blank(), axis.title.y=element_blank(),
+                        # axis.title.y=element_text(size = 3),
+                        axis.ticks = element_blank(), axis.text=element_text(size=2.5),
+                        plot.margin = unit(c(0,-0.1,0,-0.1), "cm"), legend.margin = unit(c(0,0,0,0), "cm"),
+                        panel.border = element_rect(colour = color.panel.border, fill = NA),
+                        panel.background = element_rect(fill = NA))                
+                
+              }
+
+              
+              # ggplot() + geom_boxplot(data=molten.CoV, aes(x=type, y=value, colour=type)) + theme
+
+              
+                                
+              print(plot, vp = vp)
+
+              if (whatToPlot == "BQD") {
+                grid.text(n, vp = viewport(layout.pos.row = row, layout.pos.col = col), hjust = 0, vjust = -5.8, gp = gpar(fontsize = 2.5, col="black", fontface=fontface.numbers))
+                grid.text(paste0(round(n/n.total*100,2),"%"), vp = viewport(layout.pos.row = row, layout.pos.col = col), hjust = 0.0, vjust = -4.2, gp = gpar(fontsize = 2.5, col="black", fontface=fontface.numbers))
+                grid.text(paste0("ref.BQ<=30: ",AUC.BQ30.ref,"%"), vp = viewport(layout.pos.row = row, layout.pos.col = col), hjust = 0.4, vjust = -4.3, gp = gpar(fontsize = 1.50, col="black", fontface=fontface.numbers))
+                grid.text(paste0("alt.BQ<=30: ",AUC.BQ30.alt,"%"), vp = viewport(layout.pos.row = row, layout.pos.col = col), hjust = 0.4, vjust = -3.0, gp = gpar(fontsize = 1.50, col=color.numbers, fontface=fontface.numbers))
+                
+              }
+
+              # if (triplet == "GTGG" & n > 5) {
+              #   # check if Snager artifact is detected
+              #   if (AUC.BQ30.ref > 0.4 & AUC.BQ30.alt > 0.4) {
+              #     d = as.data.frame(t(c("AUC.BQ30.ref"=AUC.BQ30.ref, "AUC.BQ30.alt"=AUC.BQ30.alt)))
+              #     write.table(d, file = paste0(MPILEUP_FOLDER,"SangerArtifactDetected.txt"), sep = "\t", row.names = F, col.names = T, quote = F)
+              #   }
+              # }
             }
           }
         }
@@ -631,7 +837,8 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet) {
 if (ALT.MEDIAN.THRESHOLD > -1) {
   # PDF_OUTPUT_FILE.filtered = sub(".pdf", paste0("_filteredAltMedian",ALT.MEDIAN.THRESHOLD,".pdf"), PDF_OUTPUT_FILE)
   # plot_BQD_to_pdf(PDF_OUTPUT_FILE = PDF_OUTPUT_FILE.filtered, data.bq.triplet = data.bq.triplet.filtered)
-  plot_BQD_to_pdf(PDF_OUTPUT_FILE = PDF_OUTPUT_FILE, data.bq.triplet = data.bq.triplet.filtered)
+  plot_BQD_to_pdf(PDF_OUTPUT_FILE = PDF_OUTPUT_FILE, data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQD")
+  # plot_BQD_to_pdf(PDF_OUTPUT_FILE = PDF_OUTPUT_FILE, data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQ_CoV")
 
   VCF = read.table(pipe(paste0("cat ",vcfInputFile," | grep -v '^##' ")), comment.char = '', sep = "\t", header = T, stringsAsFactors = F, check.names = F)
   colnames(VCF)[1] = "CHROM"
@@ -644,7 +851,11 @@ if (ALT.MEDIAN.THRESHOLD > -1) {
   VCF.filtered = VCF.filtered[,c(1,2,5,3,4,6:ncol)]
   write.table(VCF.filtered, file=VCF_OUTPUT_FILE.filtered, quote = F, row.names = F, col.names = T, sep = "\t")  
 } else {
-  plot_BQD_to_pdf(PDF_OUTPUT_FILE = PDF_OUTPUT_FILE, data.bq.triplet = data.bq.triplet)
+  plot_BQD_to_pdf(PDF_OUTPUT_FILE = PDF_OUTPUT_FILE, data.bq.triplet = data.bq.triplet, whatToPlot = "BQD")
+  # plot_BQD_to_pdf(PDF_OUTPUT_FILE = PDF_OUTPUT_FILE, data.bq.triplet = data.bq.triplet, whatToPlot = "BQ_CoV")
+  # plot_BQD_to_pdf(PDF_OUTPUT_FILE = PDF_OUTPUT_FILE, data.bq.triplet = data.bq.triplet, whatToPlot = "BQD_sampleIndividual")
+  # data.bq.triplet.short = data.bq.triplet[data.bq.triplet$REF=="T" & data.bq.triplet$ALT=="G",]
+  # plot_BQD_to_pdf(PDF_OUTPUT_FILE = PDF_OUTPUT_FILE, data.bq.triplet = data.bq.triplet.short, whatToPlot = "BQD_sampleIndividual")
 }
 
 
