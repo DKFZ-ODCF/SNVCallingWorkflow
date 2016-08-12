@@ -1,3 +1,5 @@
+# ATTENTION: In the output files of this script multi alternative SNVs have been removed!
+
 library(getopt)
 library(ggplot2)
 library(Biostrings) # for reverseComplement
@@ -12,6 +14,7 @@ ALT.MEDIAN.THRESHOLD = -1 # -1 means NO FILTERING
 parameter.density.bandwidth = 2.00
 SEQUENCE_CONTEXT_COLUMN_INDEX=11
 VAF_COLUMN_INDEX=-1
+SKIP_PLOTS=FALSE
 
 opt = getopt(matrix(c(
   'vcfInputFile', 'v', 1, "character",
@@ -19,15 +22,17 @@ opt = getopt(matrix(c(
   'alignmentFolder', 'a', 1, "character",
   'PID', 'p', 1, "character",
   'background', 'b', 2, "integer",
-  'outFile', 'o', 1, "character",
+  'outFilePrefix', 'o', 1, "character",
   'forceRerun', 'R', 2, "integer",
   'combineRevcomp', 'c', 2, "integer",
   'filterThreshold', 'f', 2, "integer",
   'sequenceContextColumnIndex', 's', 2, "integer",
-  'MAFColumnIndex', 'maf', 1, "integer",
+  'MAFColumnIndex', 'z', 1, "integer",
   'channelIndividualGraphs', 'i', 2, "integer",
-  'mainTitle', 't', 2, "character"
+  'mainTitle', 't', 2, "character",
+  'skipPlots', 'x', 2, "integer"
 ),ncol=4,byrow=TRUE));
+
 
 if (is.null(opt$vcfInputFile)){
   cat("Please specify the file that contains the SNVs for which the base score distribution plot shall be created.\n"); 
@@ -79,7 +84,7 @@ if (! is.null(opt$MAFColumnIndex)){
   }
 }
 
-if (is.null(opt$outFile)){      # no vcf file specified
+if (is.null(opt$outFilePrefix)){      # no vcf file specified
   cat("Please specify the output pdf file.\n"); 
   q(status=2);      # quit, status unequal 0 means error
 }
@@ -103,6 +108,13 @@ if (! is.null(opt$channelIndividualGraphs)){
     CANNEL_INDIVIDUAL_GRAPHS = F
   }
 }
+if (! is.null(opt$skipPlots)){
+  if (opt$skipPlots == 1) {
+    SKIP_PLOTS = T
+  } else {
+    SKIP_PLOTS = F
+  }
+}
 
 
 
@@ -118,12 +130,23 @@ if (COMBINE_REVCOMP) {
 colnames(transitions) = c("FROM", "TO")
 
 
-# RPP_FOLDER="/icgc/pcawg/analysis/train2full/projects/CMDI-UK/"
-# opt$PID = "f8e61a02-654c-c226-e040-11ac0d481b60"
-# opt$mpileupFolder = paste0(RPP_FOLDER,opt$PID,"/merged_may2016Calls_filtered_BQD_plots")
-# opt$vcfInputFile = paste0(opt$mpileupFolder,"/",opt$PID,"_somatic.snv_mnv.vcf_filtered.OnlyPassed.withoutHeader.vcf")
+# RPP_FOLDER="/icgc/dkfzlsdf/analysis/V960/RCCL/results_per_pid_noCTL/"
+# opt$PID = "KIKA75"
+# opt$mpileupFolder = paste0(RPP_FOLDER,opt$PID,"/mpileup_noCTL")
+# opt$vcfInputFile = paste0(opt$mpileupFolder,"/snvs_",opt$PID,"_somatic_snvs_conf_8_to_10.vcf")
 # opt$alignmentFolder = paste0(RPP_FOLDER,opt$PID,"/alignment")
-# opt$outFile = paste0(opt$mpileupFolder,"/snvs_",opt$PID,"_triplet-specific_BQ_distributions_unfiltered.manual.pdf")
+# opt$outFilePrefix = paste0(opt$mpileupFolder,"/snvs_",opt$PID,"_triplet-specific_BQ_distributions_unfiltered.manual.pdf")
+# opt$background = F
+# opt$combineRevcomp = 1
+# opt$filterThreshold = -1
+# opt$sequenceContextColumnIndex = 11
+
+# RPP_FOLDER="/icgc/pcawg/analysis/train2full/projects/CMDI-UK/"
+# opt$PID = "f93abbbf-5e13-9b85-e040-11ac0d485718"
+# opt$mpileupFolder = paste0(RPP_FOLDER,opt$PID,"/merged_may2016Calls_filtered_BQD_plots")
+# opt$vcfInputFile = paste0(opt$mpileupFolder,"/",opt$PID,"_somatic.snv_mnv.vcf_filtered.OnlyPassed.vcf")
+# opt$alignmentFolder = paste0(RPP_FOLDER,opt$PID,"/alignment")
+# opt$outFilePrefix = paste0(opt$mpileupFolder,"/snvs_",opt$PID,"_triplet-specific_BQ_distributions_unfiltered.manual.pdf")
 # opt$background = F
 # opt$combineRevcomp = 1
 # opt$filterThreshold = -1
@@ -137,7 +160,7 @@ colnames(transitions) = c("FROM", "TO")
 # opt$mpileupFolder = paste0(RPP_FOLDER,"SNV_Calling.backup/mpileup2.3_VRenalisAdjacent_vs_NormalKidney/")
 # opt$vcfInputFile = paste0(opt$mpileupFolder,"/snvs_",opt$PID,"_somatic_snvs_conf_8_to_10.vcf")
 # opt$alignmentFolder = paste0(RPP_FOLDER,"/alignment/")
-# opt$outFile = paste0(opt$mpileupFolder,"snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
+# opt$outFilePrefix = paste0(opt$mpileupFolder,"snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
 # opt$background = F
 # opt$combineRevcomp = 1
 
@@ -146,19 +169,23 @@ colnames(transitions) = c("FROM", "TO")
 # opt$mpileupFolder = paste0(RPP_FOLDER,opt$PID,"/merged_may2016Calls_filtered_BQD_plots")
 # opt$vcfInputFile = paste0(opt$mpileupFolder,"/",opt$PID,"_somatic.snv_mnv.vcf_filtered.OnlyPassed.vcf")
 # opt$vcfInputFile = paste0(opt$mpileupFolder,"/",opt$PID,"_somatic.snv_mnv.vcf_filtered.OnlyPassed.withoutHeader.vcf")
-# opt$outFile = paste0(opt$mpileupFolder,"/snvs_",opt$PID,"_SangerArtifcatDetected.txt")
+# opt$outFilePrefix = paste0(opt$mpileupFolder,"/snvs_",opt$PID,"_SangerArtifcatDetected.txt")
 # opt$combineRevcomp = 1
 
 
-# opt$PID = "4116268"
+# RPP_FOLDER = "/icgc/dkfzlsdf/analysis/mmml/whole_genome_pcawg/results_per_pid"
+# opt$PID = "4192483_merged"
 # opt$PID = 4108101
 # opt$PID = 4104893
 # opt$PID = 4178345
-# opt$baseFolder = "/icgc/dkfzlsdf/analysis/mmml/whole_genome_pcawg/results_per_pid"
-# opt$vcfInputFile = paste0("snvs_",opt$PID,"_somatic_snvs_conf_8_to_10.vcf")
-# opt$mpileupFolder = "mpileup"
-# opt$outFile = paste0("snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
+# opt$mpileupFolder = paste0(RPP_FOLDER,"/",opt$PID,"/mpileup_filteredByMedianBQ20")
+# opt$vcfInputFile = paste0(opt$mpileupFolder,"/","snvs_",opt$PID,"_somatic_snvs_conf_8_to_10.vcf")
 # opt$background = F
+# opt$alignmentFolder = paste0(RPP_FOLDER,"/",opt$PID,"/alignment")
+# opt$outFilePrefix = paste0(opt$mpileupFolder,"/snvs_",opt$PID,"_triplet-specific_BQ_distributions_unfiltered.manual.pdf")
+# opt$combineRevcomp = 1
+# opt$filterThreshold = 20
+# opt$sequenceContextColumnIndex = 11
 
 # BLCA-US (PCAWG) test config
 # opt$PID = "8c619cbc-9e91-4716-9711-5236e55d8f46"
@@ -166,7 +193,7 @@ colnames(transitions) = c("FROM", "TO")
 # opt$vcfInputFile = paste0("snvs_",opt$PID,"_somatic_snvs_conf_8_to_10.vcf")
 # opt$vcfInputFile = "snvs_8c619cbc-9e91-4716-9711-5236e55d8f46_somatic_snvs_conf_8_to_10.vcf"
 # opt$mpileupFolder = "BQD_plots"
-# opt$outFile = paste0("snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
+# opt$outFilePrefix = paste0("snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
 # opt$background = 0
 # opt$forceRerun = 1
 
@@ -175,7 +202,7 @@ colnames(transitions) = c("FROM", "TO")
 # opt$baseFolder = "/icgc/pcawg/analysis/train2full/projects/BRCA-EU"
 # opt$vcfInputFile = paste0("snvs_",opt$PID,"_somatic_snvs_conf_8_to_10.vcf")
 # opt$mpileupFolder = "BQD_plots"
-# opt$outFile = paste0("snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
+# opt$outFilePrefix = paste0("snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
 # opt$background = T
 
 # CLLE-ES (PCAWG) test config
@@ -183,24 +210,24 @@ colnames(transitions) = c("FROM", "TO")
 # opt$baseFolder = "/icgc/pcawg/analysis/train2full/projects/CLLE-ES"
 # opt$vcfInputFile = paste0("snvs_",opt$PID,"_somatic_snvs_conf_8_to_10.vcf")
 # opt$mpileupFolder = "BQD_plots"
-# opt$outFile = paste0("snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
+# opt$outFilePrefix = paste0("snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
 
 # # LAML-US (PCAWG) test config
 # opt$PID = "1193a9c4-5aab-4cd7-a690-60c96bd1172d"
 # opt$baseFolder = "/icgc/pcawg/analysis/train2full/projects/LAML-US"
 # opt$vcfInputFile = paste0("snvs_",opt$PID,"_somatic_snvs_conf_8_to_10.vcf")
 # opt$mpileupFolder = "BQD_plots"
-# opt$outFile = paste0("snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
+# opt$outFilePrefix = paste0("snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
 
 # opt$vcfInputFile = paste0("snvs_",opt$PID,"_somatic_snvs_conf_8_to_10.vcf")
 # opt$mpileupFolder = "BQD_plots"
-# opt$outFile = paste0("snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
+# opt$outFilePrefix = paste0("snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
 # (PCAWG) test config
 # opt$PID = "320ebe6f-48bd-40f1-9be5-1401a3bff328"
 # opt$baseFolder = "/icgc/pcawg/analysis/train2full/projects/LAML-US"
 # opt$vcfInputFile = paste0("snvs_",opt$PID,"_somatic_snvs_conf_8_to_10.vcf")
 # opt$mpileupFolder = "BQD_plots"
-# opt$outFile = paste0("snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
+# opt$outFilePrefix = paste0("snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
 
 
 
@@ -215,14 +242,14 @@ ALIGNMENT_FOLDER=paste0(opt$alignmentFolder,"/")
 vcfInputFile = paste0(opt$vcfInputFile)
 RefAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_reference_allele_base_qualities.txt.gz", collapse = "")
 AltAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_alternative_allele_base_qualities.txt.gz", collapse = "")
-PDF_OUTPUT_FILE=paste0(opt$outFile)
+PDF_OUTPUT_FILE_PREFIX=paste0(opt$outFilePrefix)
 # PID="f8e61a02-654c-c226-e040-11ac0d481b60"
 # MPILEUP_FOLDER="/icgc/pcawg/analysis/train2full/projects/CMDI-UK/f8e61a02-654c-c226-e040-11ac0d481b60/merged_may2016Calls_filtered_BQD_plots/"
 # ALIGNMENT_FOLDER="/icgc/pcawg/analysis/train2full/projects/CMDI-UK/f8e61a02-654c-c226-e040-11ac0d481b60/alignment/"
 # vcfInputFile = "/icgc/pcawg/analysis/train2full/projects/CMDI-UK/f8e61a02-654c-c226-e040-11ac0d481b60/merged_may2016Calls_filtered_BQD_plots/f8e61a02-654c-c226-e040-11ac0d481b60_somatic.snv_mnv.vcf_filtered.OnlyPassed.vcf"
 # RefAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_reference_allele_base_qualities.txt.gz", collapse = "")
 # AltAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_alternative_allele_base_qualities.txt.gz", collapse = "")
-# PDF_OUTPUT_FILE=paste0(MPILEUP_FOLDER,"snvs_",PID,"_triplet-specific_BQ_distributions_filteredAltMedian20.pdf")
+# PDF_OUTPUT_FILE_PREFIX=paste0(MPILEUP_FOLDER,"snvs_",PID,"_triplet-specific_BQ_distributions_filteredAltMedian20.pdf")
 
 
 if (ALT.MEDIAN.THRESHOLD > -1) {
@@ -272,6 +299,11 @@ if ( file.exists(DATA_RESULTS_FILE) & ! FORCE_RERUN ) {
   }
   data.bq.triplet$Triplet = with(data.bq.triplet, paste0(BaseBefore,REF,ALT,BaseAfter))
   # VCF = data.bq.triplet
+  # remove multi alternative 
+  if (length(grep(',', data.bq.triplet$"Triplet"))>0) {
+    data.bq.triplet = data.bq.triplet[-grep(',', data.bq.triplet$"Triplet"),]
+  }
+  
   
   data.bq.ref = read.table(file = RefAlleleBaseQualitiesFile, stringsAsFactors = F)
   data.bq.alt = read.table(file = AltAlleleBaseQualitiesFile, stringsAsFactors = F)
@@ -353,6 +385,7 @@ if ( file.exists(DATA_RESULTS_FILE) & ! FORCE_RERUN ) {
   }
   data.bq.triplet$"Triplet" = as.factor(as.character(data.bq.triplet$"Triplet"))
   
+
   if (USE_BACKGROUND_BQs) {
     save(data.bq.triplet, data.bq.background.dens, file = DATA_RESULTS_FILE)
     # write.table(data.bq.triplet.filtered)
@@ -382,9 +415,11 @@ data.bq.triplet$REVCOMP_TRIPLET = apply(data.bq.triplet, 1, function(line) {
 if (ALT.MEDIAN.THRESHOLD > -1) {
   data.bq.triplet.filtered = do.call(rbind, apply(transitions, 1, function(TRANSITION) {
     if ( "THIS SNV IS ARTIFACTED" == "THIS SNV IS ARTIFACTED" ) {
-      # TODO: only filter channels that show artifact (criterion still has to be defined)
+      # think about: only filter channels that show artifact?
       SNVs = data.bq.triplet[with(data.bq.triplet, substr(REVCOMP_TRIPLET,2,2)==TRANSITION[1] & substr(REVCOMP_TRIPLET,3,3)==TRANSITION[2]),]
       indices = which(SNVs$MeadianBQ.alt >= ALT.MEDIAN.THRESHOLD)
+      # indices = which(SNVs$MeadianBQ.alt >= ALT.MEDIAN.THRESHOLD | SNVs$nBQ.alt <= 5)
+      # SNVs$nBQ.alt
       SNVs = SNVs[indices,]    
       return (SNVs)
     }
@@ -393,8 +428,14 @@ if (ALT.MEDIAN.THRESHOLD > -1) {
 # data.bq.triplet.filtered = data.bq.triplet.filtered[order(data.bq.triplet.filtered$MeadianBQ.alt),]
 # any(is.na(data.bq.triplet.filtered$nBQ.ref))
 
-
-
+# data.bq.triplet.filtered[data.bq.triplet.filtered$Triplet=="TTGT" & data.bq.triplet.filtered$MeadianBQ.alt > 10 & data.bq.triplet.filtered$MeadianBQ.alt < 20,]
+# data.bq.triplet.filtered[data.bq.triplet.filtered$Triplet=="TTGT" & data.bq.triplet.filtered$AuC.alt.BQ30 > 0.9,c("CHROM","POS","nBQ.alt","AuC.alt.BQ20","AuC.alt.BQ30","MeadianBQ.alt")]
+# data.bq.triplet[data.bq.triplet$REVCOMP_TRIPLET=="TTGT" & data.bq.triplet$AuC.alt.BQ30 > 0.9,c("CHROM","POS","nBQ.alt","Triplet","REVCOMP_TRIPLET","AuC.alt.BQ20","AuC.alt.BQ30","MeadianBQ.alt")]
+# data.bq.triplet.filtered2=data.bq.triplet.filtered[data.bq.triplet.filtered$REVCOMP_TRIPLET=="TTGT",]
+# data.bq.triplet.filtered3=data.bq.triplet.filtered[data.bq.triplet.filtered$REVCOMP_TRIPLET=="TTGT",]
+# data.bq.triplet.filtered[3747,]
+# data.bq.triplet.filtered$MeadianBQ.alt
+data.bq.triplet$Triplet
 ######################################################
 # PLOTTING PART BEGINS HERE
 ######################################################
@@ -421,9 +462,13 @@ POSITIONS.FROMTO.ROW=c("CA"=0,"CG"=0,"CT"=0,"TA"=1,"TC"=1,"TG"=1)
 POSITIONS.AFTER=c("A"=1+offset.col,"C"=2+offset.col,"G"=3+offset.col,"T"=4+offset.col)
 
 
-plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet, whatToPlot=c("BQD","BQ_CoV","BQD_sampleIndividual")) {
-  pdf(PDF_OUTPUT_FILE, 8.27, 6.0)
-  # pdf(PDF_OUTPUT_FILE, paper = "a4r")
+plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c("BQD","BQ_CoV","BQD_sampleIndividual","BQD_sampleIndividual_ColoredByChromosome", "BQD_sampleIndividual_ColoredByVAF")) {
+  if (! is.na(PDF_OUTPUT_FILE_PREFIX)) {
+    pdf(PDF_OUTPUT_FILE_PREFIX, 8.27, 6.0)
+    # pdf(PDF_OUTPUT_FILE_PREFIX, paper = "a4r")
+    # par(mar=c(1,1,1,1)+0.1, mar=c(1,1,1,1))
+  }
+  
   
     if (CANNEL_INDIVIDUAL_GRAPHS == T) {
       if (COMBINE_REVCOMP == F) {
@@ -433,8 +478,12 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet, whatToPlot=c("BQD",
       grid.newpage(recording = F)
       if (whatToPlot == "BQD") {
         gl <- grid.layout(nrow=13, ncol=17, widths = unit(c(3,1,2.6,2,2,2,1,2,2,2,2,1,2,2,2,2,3), "null"), heights = unit(c(2,2,2,2,2,2.5,2.5,2,2,2,2.5,0.5), "null"))
-      } else if (whatToPlot == "BQ_CoV" || whatToPlot == "BQD_sampleIndividual") {
+      } else if (whatToPlot == "BQ_CoV") {
         gl <- grid.layout(nrow=13, ncol=17, widths = unit(c(3,1,2,2,2,2,1,2,2,2,2,1,2,2,2,2,3), "null"), heights = unit(c(2,2,2,2,2,2,2.5,2,2,2,2,0.5), "null"))
+      } else if (whatToPlot == "BQD_sampleIndividual" || whatToPlot == "BQD_sampleIndividual_ColoredByChromosome" || whatToPlot == "BQD_sampleIndividual_ColoredByVAF") {
+        gl <- grid.layout(nrow=13, ncol=19, widths = unit(c(2,1,2,2,2,2,1,2,2,2,2,1,2,2,2,2,2,2,1), "null"), heights = unit(c(2,2,2,2,2,2,2.5,2,2,2,2,0.5), "null"))
+        legend.x=18
+        legend.y=c(5,9)
       }
       
       pushViewport(viewport(layout = gl))
@@ -450,7 +499,7 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet, whatToPlot=c("BQD",
       
       
       
-
+      legend = NA
       apply(transitions, 1, function(transition) {
         # transition=transitions[i,]
         # transition=transitions[6,]
@@ -483,7 +532,7 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet, whatToPlot=c("BQD",
               fontface.numbers = "plain"    
               fontsize.numbers = 1.5
               
-              if (whatToPlot == "BQD_sampleIndividual") {
+              if (whatToPlot == "BQD_sampleIndividual" || whatToPlot == "BQD_sampleIndividual_ColoredByChromosome" || whatToPlot == "BQD_sampleIndividual_ColoredByVAF") {
                 
                 baseScores.ref.counts = transitionSubset[,c(paste0("BQ.ref.",sapply(seq(MAX_BASE_QUALITY+1)-1, function(i) {i})))]
                 baseScores.alt.counts = transitionSubset[,c(paste0("BQ.alt.",sapply(seq(MAX_BASE_QUALITY+1)-1, function(i) {i})))]
@@ -498,16 +547,25 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet, whatToPlot=c("BQD",
                 # baseScores.ref.counts.normalized.cumul$VAF = transitionSubset$VAF
                 # baseScores.alt.counts.normalized.cumul$VAF = transitionSubset$VAF
 
+                # x=molten.alt[molten.alt$sample=="172",]
+                # y=molten[molten$sample=="172",]
+                
                 molten.ref=melt(baseScores.ref.counts.normalized.cumul, id.vars = "sample")
                 molten.ref$BQ=as.integer(gsub("BQ\\..+\\.(\\d+)$", "\\1", molten.ref$variable, perl=T))
                 molten.ref$type="REF"
                 molten.ref$VAF=transitionSubset[molten.ref$sample,"VAF"]
+                molten.ref$AUC30=transitionSubset[molten.ref$sample,"AuC.ref.BQ30"]
                 molten.ref$nBases=transitionSubset[molten.ref$sample,"nBQ.ref"]
                 molten.alt=melt(baseScores.alt.counts.normalized.cumul, id.vars = "sample")
                 molten.alt$BQ=as.numeric(gsub("BQ\\..+\\.(\\d+)$", "\\1", molten.alt$variable, perl=T))
                 molten.alt$type="ALT"
                 molten.alt$VAF=transitionSubset[molten.alt$sample,"VAF"]
+                molten.alt$AUC30=transitionSubset[molten.alt$sample,"AuC.alt.BQ30"]
                 molten.alt$nBases=transitionSubset[molten.alt$sample,"nBQ.alt"]
+                if  (whatToPlot == "BQD_sampleIndividual_ColoredByChromosome") {
+                  molten.ref$CHROM = factor(transitionSubset[molten.ref$sample,"CHROM"], levels = c(seq(22),"X","Y"))
+                  molten.alt$CHROM = factor(transitionSubset[molten.alt$sample,"CHROM"], levels = c(seq(22),"X","Y"))
+                }                
                 molten = rbind(molten.ref, molten.alt)
                 molten = molten[molten$BQ <= xlim,]
                 remove(molten.ref, molten.alt)
@@ -585,45 +643,31 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet, whatToPlot=c("BQD",
               vp = viewport(layout.pos.row = row, layout.pos.col = col)
               
               axis.label.size=3
-              if (whatToPlot == "BQD_sampleIndividual") {
+              if (whatToPlot == "BQD_sampleIndividual" || whatToPlot == "BQD_sampleIndividual_ColoredByChromosome" || whatToPlot == "BQD_sampleIndividual_ColoredByVAF") {
 
-                axis.label.size.x=1
-                axis.label.size.y=2
+                axis.label.size.x=1.3
+                axis.label.size.y=1.7
                 
-                
-                theme = theme(legend.position="none", 
-                              axis.title=element_blank(), axis.ticks = element_blank(), axis.text = element_blank(), axis.line=element_blank(),
-                              #axis.text.x=element_text(size=axis.label.size.x), axis.text.y=element_text(size=axis.label.size.y),
-                              # plot.margin = unit(c(0,-0.2,-0.35,-2.0), "cm"), 
-                              plot.margin = unit(c(0,0.0,0.0,0.0), "cm"),
-                              legend.margin = unit(c(0,0,0,0), "cm"),
+                theme = theme(legend.position="none",
+                              axis.title=element_blank(),
+                              # axis.title.x=element_text(vjust = 2.5), axis.title.y=element_text(hjust = 12.5),
+                              axis.ticks=element_blank(),
+                              # axis.text=element_text(size = 15),
+                              # axis.line=element_blank(),
+                              axis.text.x=element_text(size=axis.label.size.x), axis.text.y=element_text(size=axis.label.size.y),
+                              axis.ticks.margin = unit(-0.14, "cm"),
+                              plot.margin = unit(c(0,0,0,0), "cm"),
+                              # plot.margin = unit(c(-0.9,-1.7,-0.9,-1.7), "cm"), 
+                              # plot.margin = unit(c(-0.6,0.5,-0.6,0.5), "cm"),
+                              # legend.margin = unit(c(0,0,0,0), "cm"),
                               panel.border = element_rect(colour = color.panel.border, fill = NA, size=0.0),
-                              # panel.background = element_rect(fill = NA),
-                              strip.text = element_text(size=2, lineheight=0.01),
+                              panel.background = element_rect(fill = NA),
+                              strip.text = element_text(size=1.5, lineheight=0.15, vjust = 0.01),
+                              strip.background=element_blank(),
                               panel.margin=unit(0.000, "lines"),
                               panel.grid.major = element_blank(), panel.grid.minor = element_blank())
                 
-                plot = ggplot(molten, aes(x=BQ,y=value, group=interaction(sample,type), colour=VAF)) + 
-                  geom_line(aes(size=log2(nBases))) + scale_size(range = c(0.01, 0.1), limits = c(0.1,6)) +
-                  scale_color_gradientn( colours = rainbow(7), values=c(0, 0.125, 0.25, 0.375, 0.5, 0.75, 1), limits = c(0,1), breaks=breaks) +
-                  # scale_x_continuous(expand = c(-1, 0)) +
-                  # scale_y_continuous(expand = c(-1, 0)) +
-                  geom_errorbar(stat = "hline", yintercept = "median", width=0.005,aes(ymax=..y..,ymin=..y..), linetype=4) +
-                  facet_wrap(~ type) + 
-                  theme
-                
-                g <- ggplot_gtable(ggplot_build(plot))
-                ia <- which(g$layout$name == "axis_b-1")
-                g$grobs[[which(g$layout$name == "axis_b-1")]]$children[[2]] <- NULL
-                g$grobs[[which(g$layout$name == "axis_b-2")]]$children[[2]] <- NULL
-                g$grobs[[which(g$layout$name == "axis_l-1")]]$children[[2]] <- NULL
-                g$grobs[[which(g$layout$name == "axis_l-2")]]$children[[2]] <- NULL
-                grid.draw(g)
-                
-                g$grobs[[which(g$layout$name == "panel-1")]]$children[[5]]$children
-                plot
-                
-                
+
                 if (col == offset.col+1) {
                   grid.text(baseBefore, vp = viewport(layout.pos.row = row, layout.pos.col = col-1), vjust = -1.0, gp = gpar(fontsize = 6))
                 }  
@@ -690,22 +734,74 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet, whatToPlot=c("BQD",
               }
 
               
-              if (whatToPlot == "BQD_sampleIndividual") {
+              if (whatToPlot == "BQD_sampleIndividual" || whatToPlot == "BQD_sampleIndividual_ColoredByChromosome" || whatToPlot == "BQD_sampleIndividual_ColoredByVAF") {
                 molten$sample = as.factor(molten$sample)
-                molten$type = as.factor(molten$type)
+                molten$type = factor(molten$type, levels=c("REF","ALT"))
+                # molten.backup = molten
+                # molten = molten.backup
+                # molten = molten[molten$sample!="10",]
+                # molten = molten[molten$sample=="10",]
+                  
                 breaks <- c(0, 0.125, 0.25, 0.375, 0.5, 0.75,1)
-                plot = ggplot(molten, aes(x=BQ,y=value, group=interaction(sample,type), colour=VAF)) + 
-                  geom_line(aes(size=log2(nBases))) + scale_size(range = c(0.01, 0.1), limits = c(0.1,6)) +
-                  scale_color_gradientn( colours = rainbow(7), values=c(0, 0.125, 0.25, 0.375, 0.5, 0.75, 1), limits = c(0,1), breaks=breaks) +
-                  geom_errorbar(stat = "hline", yintercept = "median", width=0.005,aes(ymax=..y..,ymin=..y..), linetype=4) +
-                  facet_wrap(~ type) + 
-                  theme
+                plot = ggplot(molten, aes(x=BQ,y=value, group=interaction(sample,type)))
+                if (whatToPlot == "BQD_sampleIndividual_ColoredByChromosome") {
+                  plot = plot + geom_line(aes(size=log2(nBases), colour=CHROM)) + scale_size(range = c(0.01, 0.1), limits = c(0.1,15)) +
+                    scale_color_manual(values=rainbow(24), limits = c(seq(22),"X","Y"))
+                } else if (whatToPlot == "BQD_sampleIndividual_ColoredByVAF") {
+                  if (VAF_COLUMN_INDEX > -1) {
+                    plot = plot + geom_line(aes(size=log2(nBases), colour=VAF)) + scale_size(range = c(0.01, 0.1), limits = c(0.1,15)) +
+                      scale_color_gradientn( colours = rev(rainbow(7)), limits = c(0,1), values=breaks, breaks=breaks)
+                  } else {
+                    plot = plot + geom_line(aes(size=log2(nBases), colour=type)) + scale_size(range = c(0.01, 0.1), limits = c(0.1,15)) + #scale_size(range = c(0.01, 0.1)
+                      scale_color_manual(values=c(greenColor,redColor))
+                  }                  
+                } else if (whatToPlot == "BQD_sampleIndividual") {
+                  plot = plot + geom_line(aes(size=log2(nBases), colour=type)) + scale_size(range = c(0.01, 0.1), limits = c(0.1,15)) + #scale_size(range = c(0.01, 0.1)
+                    scale_color_manual(values=c(greenColor,redColor))                  
+                }
+
+                
+                # z=molten[molten$AUC30 >0.58 & molten$AUC30 <0.59,]
+                
+                # plot = plot + geom_errorbar(stat = "hline", yintercept = "median", width=0.005, aes(ymax=..y..,ymin=..y..), linetype=4) +
+                # plot = plot + geom_line(stat = "hline", yintercept = "median", size=0.05, linetype=1) +
+                plot = plot + 
+                  #geom_hline(aes(yintercept=AUC30), size=0.005, linetype=1) +
+                  geom_vline(xintercept=30, size=0.02, linetype=1) +
+                  facet_wrap(~ type) +
+                  theme(legend.text=element_text(size=6), legend.key.height=unit(10,"pt"), legend.title=element_text(size=5))
+                  
+                #Extract Legend 
+                if (!"grob" %in% class(legend)) {
+                  tmp <- ggplot_gtable(ggplot_build(plot)) 
+                  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box") 
+                  legend <<- tmp$grobs[[leg]]
+                  pushViewport(viewport(layout.pos.row = legend.y, layout.pos.col = legend.x))
+                  grid.draw(legend)
+                  popViewport()
+                }
+                
+                plot = plot + theme
+                
+                g <- ggplot_gtable(ggplot_build(plot))
+                t = subset(g$layout, name == "strip_t-1")$t
+                # l = subset(g$layout, name == "strip_t-1")$l
+                l = (subset(g$layout, name == "axis_l-1")$l)-1
+                # b = subset(g$layout, name == "panel-1")$b
+                b = subset(g$layout, name == "axis_b-1")$b
+                r = subset(g$layout, name == "panel-2")$r
+                # panel1 = subset(g$layout, name == "panel-1")
+                # panel2 = subset(g$layout, name == "panel-2")
+                panel  = g[t:b, l:r]
+                panel$vp = vp
+                grid.draw(panel)                
               } else if (whatToPlot == "BQD") {
                 
                 plot = ggplot(molten, aes(x=BQ,y=value, colour=type)) + geom_line(size=0.15) + 
                   xlim(0, xlim) + ylim(0,0.4) +
                   scale_color_manual(values=c(as.character(add.alpha(redColor, alpha-alpha_surplusPenalty.alt)), as.character(add.alpha(greenColor, alpha-alpha_surplusPenalty.ref)))) +
-                  theme                
+                  theme   
+                print(plot, vp = vp)
               } else if (whatToPlot == "BQ_CoV") {
                 molten.CoV$type = factor(molten.CoV$type, levels=c("REF","ALT"))
                 plot = ggplot(molten.CoV, aes(x=type, y=value, colour=type)) + geom_boxplot(lwd=0.2, outlier.size = 0.6) + 
@@ -718,7 +814,7 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet, whatToPlot=c("BQD",
                         plot.margin = unit(c(0,-0.1,0,-0.1), "cm"), legend.margin = unit(c(0,0,0,0), "cm"),
                         panel.border = element_rect(colour = color.panel.border, fill = NA),
                         panel.background = element_rect(fill = NA))                
-                
+                print(plot, vp = vp)
               }
 
               
@@ -726,7 +822,7 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet, whatToPlot=c("BQD",
 
               
                                 
-              print(plot, vp = vp)
+              
 
               if (whatToPlot == "BQD") {
                 grid.text(n, vp = viewport(layout.pos.row = row, layout.pos.col = col), hjust = 0, vjust = -5.8, gp = gpar(fontsize = 2.5, col="black", fontface=fontface.numbers))
@@ -746,6 +842,7 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet, whatToPlot=c("BQD",
             }
           }
         }
+        ###################
       })
       
     } else {
@@ -835,11 +932,18 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet, whatToPlot=c("BQD",
 
 
 if (ALT.MEDIAN.THRESHOLD > -1) {
-  # PDF_OUTPUT_FILE.filtered = sub(".pdf", paste0("_filteredAltMedian",ALT.MEDIAN.THRESHOLD,".pdf"), PDF_OUTPUT_FILE)
-  # plot_BQD_to_pdf(PDF_OUTPUT_FILE = PDF_OUTPUT_FILE.filtered, data.bq.triplet = data.bq.triplet.filtered)
-  plot_BQD_to_pdf(PDF_OUTPUT_FILE = PDF_OUTPUT_FILE, data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQD")
-  # plot_BQD_to_pdf(PDF_OUTPUT_FILE = PDF_OUTPUT_FILE, data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQ_CoV")
-
+  if (! SKIP_PLOTS) {
+    # PDF_OUTPUT_FILE_PREFIX.filtered = sub(".pdf", paste0("_filteredAltMedian",ALT.MEDIAN.THRESHOLD,".pdf"), PDF_OUTPUT_FILE_PREFIX)
+    # plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = PDF_OUTPUT_FILE_PREFIX.filtered, data.bq.triplet = data.bq.triplet.filtered)
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_combined.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQD")
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_CoV.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQ_CoV")
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQD_sampleIndividual")
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_CHROMcolored.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQD_sampleIndividual_ColoredByChromosome")
+    # plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_CHROMcolored2.pdf"), data.bq.triplet = data.bq.triplet.filtered2, whatToPlot = "BQD_sampleIndividual_ColoredByChromosome")
+    # plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_CHROMcolored3.pdf"), data.bq.triplet = data.bq.triplet.filtered3, whatToPlot = "BQD_sampleIndividual_ColoredByChromosome")
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_VAFcolored.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQD_sampleIndividual_ColoredByVAF")  
+  }
+  
   VCF = read.table(pipe(paste0("cat ",vcfInputFile," | grep -v '^##' ")), comment.char = '', sep = "\t", header = T, stringsAsFactors = F, check.names = F)
   colnames(VCF)[1] = "CHROM"
   VCF.filtered = merge(VCF, data.bq.triplet.filtered[,c("CHROM","POS","REF","ALT")])
@@ -849,13 +953,24 @@ if (ALT.MEDIAN.THRESHOLD > -1) {
   colnames(VCF.filtered)[1] = "#CHROM"
   ncol=ncol(VCF.filtered)
   VCF.filtered = VCF.filtered[,c(1,2,5,3,4,6:ncol)]
+  print(paste0("Writing filtered vcf to file ",VCF_OUTPUT_FILE.filtered))
   write.table(VCF.filtered, file=VCF_OUTPUT_FILE.filtered, quote = F, row.names = F, col.names = T, sep = "\t")  
 } else {
-  plot_BQD_to_pdf(PDF_OUTPUT_FILE = PDF_OUTPUT_FILE, data.bq.triplet = data.bq.triplet, whatToPlot = "BQD")
-  # plot_BQD_to_pdf(PDF_OUTPUT_FILE = PDF_OUTPUT_FILE, data.bq.triplet = data.bq.triplet, whatToPlot = "BQ_CoV")
-  # plot_BQD_to_pdf(PDF_OUTPUT_FILE = PDF_OUTPUT_FILE, data.bq.triplet = data.bq.triplet, whatToPlot = "BQD_sampleIndividual")
-  # data.bq.triplet.short = data.bq.triplet[data.bq.triplet$REF=="T" & data.bq.triplet$ALT=="G",]
-  # plot_BQD_to_pdf(PDF_OUTPUT_FILE = PDF_OUTPUT_FILE, data.bq.triplet = data.bq.triplet.short, whatToPlot = "BQD_sampleIndividual")
+  if (! SKIP_PLOTS) {
+    print("BQD")
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_combined.pdf"), data.bq.triplet = data.bq.triplet, whatToPlot = "BQD")
+    print("BQD_CoV")
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_CoV.pdf"), data.bq.triplet = data.bq.triplet, whatToPlot = "BQ_CoV")
+    print("BQD_sampleIndividual")
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual.pdf"), data.bq.triplet = data.bq.triplet, whatToPlot = "BQD_sampleIndividual")
+    print("BQD_sampleIndividual_ColoredByChromosome")
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_CHROMcolored.pdf"), data.bq.triplet = data.bq.triplet, whatToPlot = "BQD_sampleIndividual_ColoredByChromosome")
+    print("BQD_sampleIndividual_ColoredByVAF")
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_VAFcolored.pdf"), data.bq.triplet = data.bq.triplet, whatToPlot = "BQD_sampleIndividual_ColoredByVAF")  
+    # data.bq.triplet.short = data.bq.triplet[data.bq.triplet$REF=="C" & data.bq.triplet$ALT=="G",]
+    # data.bq.triplet.short = data.bq.triplet[data.bq.triplet$REF=="T",]
+    # plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = PDF_OUTPUT_FILE_PREFIX, data.bq.triplet = data.bq.triplet, whatToPlot = "BQD_sampleIndividual_ColoredByChromosome")
+  }
 }
 
 

@@ -77,7 +77,12 @@ filenameBaseScoreBiasPlotPreFilter=${outputFilenamePrefix}_base_score_bias_befor
 filenameBaseScoreBiasPlotOnce=${outputFilenamePrefix}_base_score_bias_after_filter_once.pdf
 filenameBaseScoreBiasPlotFinal=${outputFilenamePrefix}_base_score_bias_plot_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.pdf
 filenameBaseScoreDistributions=${outputFilenamePrefix}_base_score_distribution${RERUN_SUFFIX}.pdf
-filenameTripletSpecificBaseScoreDistributions=${outputFilenamePrefix}_tripletSpecific_base_score_distribution${RERUN_SUFFIX}.pdf
+BaseScoreDistributionsPlots_PREFIX=${outputFilenamePrefix}_tripletSpecific_base_score_distribution${RERUN_SUFFIX}
+BaseScoreDistributionsPlots_COMBINED=${BaseScoreDistributionsPlots_PREFIX}.BQD_combined.pdf
+BaseScoreDistributionsPlots_CoV=${BaseScoreDistributionsPlots_PREFIX}.BQD_CoV.pdf
+BaseScoreDistributionsPlots_INDIVIDUAL=${BaseScoreDistributionsPlots_PREFIX}.BQD_individual.pdf
+BaseScoreDistributionsPlots_INDIVIDUAL_ChromColored=${BaseScoreDistributionsPlots_PREFIX}.BQD_individual_CHROMcolored.pdf
+BaseScoreDistributionsPlots_INDIVIDUAL_VAFColored=${BaseScoreDistributionsPlots_PREFIX}.BQD_individual_VAFcolored.pdf
 
 # maf plots
 filenameMafValues=${outputFilenamePrefix}_MAF_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt.tmp
@@ -89,17 +94,35 @@ filenameSnvDiagnosticsPlot=${outputFilenamePrefix}_allSNVdiagnosticsPlots${RERUN
 
 if [[ ${RERUN_FILTER_STEP} == 1 ]]; then
 
+    # prepare call of base score dist plot script in order to get median-filtered vcf file (skip plotting itself)
     plotBackgroundBaseScoreDistribution='0'
-    forceRerun='0'
+    forceRerun='1'
     combineRevComp='1'
+    channelIndividualGraphs='1'
+    skipPlots='1'
 
     filenameSomaticSnvs_original=`basename ${outputFilenamePrefix}_somatic_snvs_conf_${MIN_CONFIDENCE_SCORE}_to_10.vcf`
-    ${RSCRIPT_BINARY} ${TOOL_PLOT_TRIPLET_SPECIFIC_BASE_SCORE_DISTRIBUTION} -v ${filenameSomaticSnvs_original} -m ${mpileupDirectory} -a ${ALIGNMENT_FOLDER} -p ${PID} -b ${plotBackgroundBaseScoreDistribution} -o ${filenameTripletSpecificBaseScoreDistributions} -R ${forceRerun} -c ${combineRevComp} -f ${MEDIAN_FILTER_THRESHOLD}
+    SEQUENCE_CONTEXT_COLUMN_INDEX=`cat ${mpileupDirectory}/${filenameSomaticSnvs_original} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "SEQUENCE_CONTEXT"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
+    SNV_FILE_WITH_MAF=${mpileupDirectory}/${filenameSomaticSnvs_original}.withMAF.vcf
+    SNV_FILE_WITH_MAF_filtered=${mpileupDirectory}/${filenameSomaticSnvs_original}.withMAF_filteredAltMedian20.vcf
+    if [[ ! -f ${SNV_FILE_WITH_MAF} ]]; then
+        cat ${mpileupDirectory}/${filenameSomaticSnvs_original} | perl -ne 'chomp; my $line=$_; if (/DP4=(\d+),(\d+),(\d+),(\d+);/) {my $fR=$1; my $rR=$2; my $fA=$3; my $rA=$4; my $MAF=($fA+$rA)/($fR+$rR+$fA+$rA); print "$line\t$MAF\n";} else { if (/^#CHROM/) { print "$line\tMAF\n";} else {print "$line\n";} };' >${SNV_FILE_WITH_MAF}
+    fi
+    MAF_COLUMN_INDEX=`cat ${SNV_FILE_WITH_MAF} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "MAF"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
+    # this script will create a file named ${SNV_FILE_WITH_MAF_filtered}
+    ${RSCRIPT_BINARY} ${TOOL_PLOT_TRIPLET_SPECIFIC_BASE_SCORE_DISTRIBUTION} -v ${SNV_FILE_WITH_MAF} -m ${mpileupDirectory} -a ${ALIGNMENT_FOLDER} -p ${PID} -b ${plotBackgroundBaseScoreDistribution} -o ${BaseScoreDistributionsPlots_PREFIX} -R ${forceRerun} -c ${combineRevComp} -f ${MEDIAN_FILTER_THRESHOLD} -s ${SEQUENCE_CONTEXT_COLUMN_INDEX} --MAFColumnIndex ${MAF_COLUMN_INDEX} -i ${channelIndividualGraphs} -t 'Base score distribution of PID '${PID}'\nafter Median'${MEDIAN_FILTER_THRESHOLD}' filtering' --skipPlots ${skipPlots}
+    mv ${SNV_FILE_WITH_MAF_filtered} ${filenameSomaticSnvs}
 
     cp ${filenameSomaticSnvs} ${filenameSomaticSnvs}.forSNVExtractor
     ${PERL_BINARY} ${TOOL_SNV_EXTRACTOR} --infile=${filenameSomaticSnvs}.forSNVExtractor --minconf=${MIN_CONFIDENCE_SCORE} --pid=${outputFilenamePrefix} --suffix=${RERUN_SUFFIX} --bgzip=${BGZIP_BINARY} --tabix=${TABIX_BINARY} ${SNV_FILTER_OPTIONS}
     [[ "$?" != 0 ]] && echo "There was a non-zero exit code in the somatic file and dbSNP counting pipe" && exit 1
     rm ${filenameSomaticSnvs}.forSNVExtractor
+    rm ${SNV_FILE_WITH_MAF}
+
+    filenameSomaticFunctionalSnvs_original=`basename ${outputFilenamePrefix}_somatic_functional_snvs_conf_${MIN_CONFIDENCE_SCORE}_to_10.vcf`
+    filenameSomaticFunctionalSnvs_MedianFiltered=`basename ${outputFilenamePrefix}_somatic_functional_snvs_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.vcf`
+    filenameSomaticFunctionalSnvs_RemovedByMedianFilter=`basename ${outputFilenamePrefix}_somatic_functional_snvs_conf_${MIN_CONFIDENCE_SCORE}_to_10_removedByMedian${MEDIAN_FILTER_THRESHOLD}Filter.vcf`
+    grep '^#' ${filenameSomaticFunctionalSnvs_original} >${filenameSomaticFunctionalSnvs_RemovedByMedianFilter}; bedtools subtract -a ${filenameSomaticFunctionalSnvs_original} -b ${filenameSomaticFunctionalSnvs_MedianFiltered} >>${filenameSomaticFunctionalSnvs_RemovedByMedianFilter}
 else
     ${PERL_BINARY} ${TOOL_SNV_EXTRACTOR} --infile=${FILENAME_VCF} --minconf=${MIN_CONFIDENCE_SCORE} --pid=${outputFilenamePrefix} --bgzip=${BGZIP_BINARY} --tabix=${TABIX_BINARY} ${SNV_FILTER_OPTIONS}
     [[ "$?" != 0 ]] && echo "There was a non-zero exit code in the somatic file and dbSNP counting pipe" && exit 1
@@ -195,16 +218,43 @@ then
             filenameBaseScoreDistributions=''
         fi
 
-        if [[ ! -f ${filenameTripletSpecificBaseScoreDistributions} ]]; then
-            filenameTripletSpecificBaseScoreDistributions=''
+        plotBackgroundBaseScoreDistribution='0'
+        if [[ ${RERUN_FILTER_STEP} == 1 ]]; then
+            # do not force rerun as data file has been created in upper part (get median-filtered vcf file)
+            forceRerun='0'
+        else
+            forceRerun='1'
         fi
+        combineRevComp='1'
+        channelIndividualGraphs='1'
+        skipPlots='0'
+        SNV_FILE_WITH_MAF=${filenameSomaticSnvs}.withMAF.vcf
+        cat ${filenameSomaticSnvs} | perl -ne 'chomp; my $line=$_; if (/DP4=(\d+),(\d+),(\d+),(\d+);/) {my $fR=$1; my $rR=$2; my $fA=$3; my $rA=$4; my $MAF=($fA+$rA)/($fR+$rR+$fA+$rA); print "$line\t$MAF\n";} else { if (/^#CHROM/) { print "$line\tMAF\n";} else {print "$line\n";} };' >${SNV_FILE_WITH_MAF}
+
+        SEQUENCE_CONTEXT_COLUMN_INDEX=`cat ${SNV_FILE_WITH_MAF} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "SEQUENCE_CONTEXT"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
+        MAF_COLUMN_INDEX=`cat ${SNV_FILE_WITH_MAF} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "MAF"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
+        ${RSCRIPT_BINARY} ${TOOL_PLOT_TRIPLET_SPECIFIC_BASE_SCORE_DISTRIBUTION} -v ${SNV_FILE_WITH_MAF} -m ${mpileupDirectory} -a ${ALIGNMENT_FOLDER} -p ${PID} -b ${plotBackgroundBaseScoreDistribution} -o ${BaseScoreDistributionsPlots_PREFIX} -R ${forceRerun} -c ${combineRevComp} -f ${MEDIAN_FILTER_THRESHOLD} -s ${SEQUENCE_CONTEXT_COLUMN_INDEX} --MAFColumnIndex ${MAF_COLUMN_INDEX} -i ${channelIndividualGraphs} -t 'Base score distribution of PID '${PID} --skipPlots ${skipPlots}
+        if [[ ! ${runSecondFilterStep} ]]; then
+            rm ${SNV_FILE_WITH_MAF}
+        fi
+
+
+        [[ ! -f ${BaseScoreDistributionsPlots_COMBINED} ]] && BaseScoreDistributionsPlots_COMBINED=''
+        [[ ! -f ${BaseScoreDistributionsPlots_CoV} ]] && BaseScoreDistributionsPlots_CoV=''
+        [[ ! -f ${BaseScoreDistributionsPlots_INDIVIDUAL} ]] && BaseScoreDistributionsPlots_INDIVIDUAL=''
+        [[ ! -f ${BaseScoreDistributionsPlots_INDIVIDUAL_ChromColored} ]] && BaseScoreDistributionsPlots_INDIVIDUAL_ChromColored=''
+        [[ ! -f ${BaseScoreDistributionsPlots_INDIVIDUAL_VAFColored} ]] && BaseScoreDistributionsPlots_INDIVIDUAL_VAFColored=''
 
     else
         filenameBaseScoreDistributions=''
-        filenameTripletSpecificBaseScoreDistributions=''
         filenameBaseScoreBiasPlotPreFilter=''
         filenameBaseScoreBiasPlotOnce=''
         filenameBaseScoreBiasPlotFinal=''
+        BaseScoreDistributionsPlots_COMBINED=''
+        BaseScoreDistributionsPlots_CoV=''
+        BaseScoreDistributionsPlots_INDIVIDUAL=''
+        BaseScoreDistributionsPlots_INDIVIDUAL_ChromColored=''
+        BaseScoreDistributionsPlots_INDIVIDUAL_VAFColored=''
     fi
 
 	# make a pdf containing all plots
@@ -219,7 +269,7 @@ then
 	[[ -f ${filenameBaseScoreBiasPlotOnce} ]] && biasplots="${biasplots} ${filenameBaseScoreBiasPlotOnce}"
 	[[ -f ${filenameBaseScoreBiasPlotFinal} ]] && biasplots="${biasplots} ${filenameBaseScoreBiasPlotFinal}"
 	
-	${GHOSTSCRIPT_BINARY} -dBATCH -dNOPAUSE -dAutoRotatePages=false -q -sDEVICE=pdfwrite -sOutputFile=${filenameSnvDiagnosticsPlot} ${filenameIntermutationDistancePlot} ${filenameBaseScoreDistributions} ${filenameTripletSpecificBaseScoreDistributions} ${filenameMAFconfPlot} ${filenamePerChromFreq} ${filenameSnvsWithContext} ${biasplots}
+	${GHOSTSCRIPT_BINARY} -dBATCH -dNOPAUSE -dAutoRotatePages=false -q -sDEVICE=pdfwrite -sOutputFile=${filenameSnvDiagnosticsPlot} ${filenameIntermutationDistancePlot} ${filenameMAFconfPlot} ${filenamePerChromFreq} ${filenameSnvsWithContext} ${filenameBaseScoreDistributions} ${BaseScoreDistributionsPlots_COMBINED} ${BaseScoreDistributionsPlots_INDIVIDUAL} ${BaseScoreDistributionsPlots_INDIVIDUAL_ChromColored} ${BaseScoreDistributionsPlots_INDIVIDUAL_VAFColored} ${BaseScoreDistributionsPlots_CoV} ${biasplots}
 fi
 
 if [ ${RUN_PUREST} == 1 ]
