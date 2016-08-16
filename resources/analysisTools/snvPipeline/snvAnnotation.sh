@@ -229,8 +229,6 @@ then
 	echo -e "SOMATIC_SNVS_UNFILTERED\t${NRSOMSNV}">> ${filenameQCValues}
 
 	mv ${filenameSNVVCFTemp}.tmp ${filenameSNVVCFTemp}
-#	cp ${filenameSNVVCFTemp} ${filenameSNVVCFTemp}.preFilter.vcf
-#	cp ${filenameSomaticSNVsTmp} ${filenameSomaticSNVsTmp}.preFilter.vcf
 
     wait ${zipAlternativeAlleleBaseScores} ; [[ $? -gt 0 ]] && echo "Error from zipAlternativeAlleleBaseScores" && exit 31
     wait ${zipReferenceAlleleBaseScores} ; [[ $? -gt 0 ]] && echo "Error from zipReferenceAlleleBaseScores" && exit 32
@@ -255,9 +253,6 @@ then
 	[[ $? != 0 ]] && echo "Error in first filtering and/or second interation of confidence annotation" && exit 5
 
 	mv ${filenameSNVVCFTemp}.tmp ${filenameSNVVCFTemp}
-#	cp ${filenameSNVVCFTemp} ${filenameSNVVCFTemp}.afterFilter1.vcf
-#	cp ${filenameSomaticSNVsTmp} ${filenameSomaticSNVsTmp}.afterFilter1.vcf
-
 	mv ${filenamePCRerrorMatrix} ${filenamePCRerrorMatrixFirst}
 	mv ${filenameSequencingErrorMatrix} ${filenameSequencingErrorMatrixFirst}
 	mv ${filenameBiasMatrixSeqFile} ${filenameBiasMatrixSeqFileFirst}
@@ -280,7 +275,6 @@ then
 #	-f ${filenameSomaticSNVsTmp}
 
 	[[ $? != 0 ]] && echo "Error in second filtering and/or third iteration of confidence annotation" && exit 8
-#	cp ${filenameSomaticSNVsTmp} ${filenameSomaticSNVsTmp}.afterFilter2.vcf
 
 	mv ${filenamePCRerrorMatrix} ${filenamePCRerrorMatrixSecond}
 	mv ${filenameSequencingErrorMatrix} ${filenameSequencingErrorMatrixSecond}
