@@ -33,7 +33,6 @@ opt = getopt(matrix(c(
   'skipPlots', 'x', 2, "integer"
 ),ncol=4,byrow=TRUE));
 
-
 if (is.null(opt$vcfInputFile)){
   cat("Please specify the file that contains the SNVs for which the base score distribution plot shall be created.\n"); 
   q(status=1);      # quit, status unequal 0 means error
@@ -77,6 +76,12 @@ if (is.null(opt$combineRevcomp)){
     COMBINE_REVCOMP = FALSE
   }
 }
+if (is.null(opt$outFile)){      # no vcf file specified
+  cat("Please specify the output pdf file.\n"); 
+  q(status=2);      # quit, status unequal 0 means error
+}
+
+
 if (! is.null(opt$MAFColumnIndex)){
   tmp = as.integer(opt$MAFColumnIndex)
   if (!is.na(tmp)) {
