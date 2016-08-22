@@ -28,7 +28,7 @@ ALIGNMENT_FOLDER=`dirname ${TUMOR_BAMFILE_FULLPATH_BP}`
 
 numberOfChromosomes=${CHROMOSOME_INDICES[@]}
 outputFilenamePrefix=${mpileupDirectory}/${SNVFILE_PREFIX}${PID}
-
+outputFilenamePrefix_original=${outputFilenamePrefix}
 if [[ "$GERMLINE_AVAILABLE" == 0 ]]; then
     FILTER_VALUES=""
     [[ ${FILTER_ExAC} == 'true' ]]          && FILTER_VALUES="${FILTER_VALUES} ${ExAC_COL} AF ${CRIT_ExAC_maxMAF}+"
@@ -59,9 +59,9 @@ filenameSomaticSnvsIndbSNP=${outputFilenamePrefix}_somatic_in_dbSNP_conf_${MIN_C
 filenameIntermutationDistance=${outputFilenamePrefix}_somatic_mutation_dist_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt.tmp
 filenamePCRerrorMatrix=${outputFilenamePrefix}_sequence_specific_error_Matrix_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.txt
 filenameSequencingErrorMatrix=${outputFilenamePrefix}_sequencing_specific_error_Matrix_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.txt
-filenameReferenceAlleleBaseQualities=${outputFilenamePrefix}_reference_allele_base_qualities.txt.gz
-filenameAlternativeAlleleBaseQualities=${outputFilenamePrefix}_alternative_allele_base_qualities.txt.gz
-filenameAlternativeAlleleReadPositions=${outputFilenamePrefix}_alternative_allele_read_positions.txt.gz
+filenameReferenceAlleleBaseQualities=${outputFilenamePrefix_original}_reference_allele_base_qualities.txt.gz
+filenameAlternativeAlleleBaseQualities=${outputFilenamePrefix_original}_alternative_allele_base_qualities.txt.gz
+filenameAlternativeAlleleReadPositions=${outputFilenamePrefix_original}_alternative_allele_read_positions.txt.gz
 
 # plot paths
 filenamePerChromFreq=${outputFilenamePrefix}_perChromFreq_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.pdf
@@ -69,12 +69,12 @@ filenameSnvsWithContext=${outputFilenamePrefix}_snvs_with_context_conf_${MIN_CON
 filenameIntermutationDistancePlot=${outputFilenamePrefix}_intermutation_distance_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.pdf
 filenameSequenceErrorPlot=${outputFilenamePrefix}_sequence_specific_error_plot_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.pdf
 filenameSequencingErrorPlot=${outputFilenamePrefix}_sequencing_specific_error_plot_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.pdf
-filenameSequenceErrorPlotPreFilter=${outputFilenamePrefix}_sequence_specific_error_plot_before_filter.pdf
-filenameSequencingErrorPlotPreFilter=${outputFilenamePrefix}_sequencing_specific_error_plot_before_filter.pdf
-filenameSequenceErrorPlotFilterOnce=${outputFilenamePrefix}_sequence_specific_error_plot_after_filter_once.pdf
-filenameSequencingErrorPlotFilterOnce=${outputFilenamePrefix}_sequencing_specific_error_plot_after_filter_once.pdf
-filenameBaseScoreBiasPlotPreFilter=${outputFilenamePrefix}_base_score_bias_before_filter.pdf
-filenameBaseScoreBiasPlotOnce=${outputFilenamePrefix}_base_score_bias_after_filter_once.pdf
+filenameSequenceErrorPlotPreFilter=${outputFilenamePrefix_original}_sequence_specific_error_plot_before_filter.pdf
+filenameSequencingErrorPlotPreFilter=${outputFilenamePrefix_original}_sequencing_specific_error_plot_before_filter.pdf
+filenameSequenceErrorPlotFilterOnce=${outputFilenamePrefix_original}_sequence_specific_error_plot_after_filter_once.pdf
+filenameSequencingErrorPlotFilterOnce=${outputFilenamePrefix_original}_sequencing_specific_error_plot_after_filter_once.pdf
+filenameBaseScoreBiasPlotPreFilter=${outputFilenamePrefix_original}_base_score_bias_before_filter.pdf
+filenameBaseScoreBiasPlotOnce=${outputFilenamePrefix_original}_base_score_bias_after_filter_once.pdf
 filenameBaseScoreBiasPlotFinal=${outputFilenamePrefix}_base_score_bias_plot_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.pdf
 filenameBaseScoreDistributions=${outputFilenamePrefix}_base_score_distribution${RERUN_SUFFIX}.pdf
 BaseScoreDistributionsPlots_PREFIX=${outputFilenamePrefix}_tripletSpecific_base_score_distribution${RERUN_SUFFIX}
