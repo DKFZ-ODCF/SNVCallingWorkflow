@@ -50,7 +50,7 @@ def main(args):
                   '##FILTER=<ID=DP,Description="<= 5 reads total at position in tumor">\n' \
                   '##FILTER=<ID=SB,Description="Strand bias of reads with mutant allele = zero reads on one strand">\n' \
                   '##FILTER=<ID=TAC,Description="less than 6 reads in Tumor at position">\n' \
-                  '##FILTER=<ID=dbSNP,Description="variant in dbSNP135">\n' \
+                  '##FILTER=<ID=dbSNP,Description="variant in dbSNP147">\n' \
                   '##FILTER=<ID=DB,Description="variant in 1000Genomes, ALL.wgs.phase1_integrated_calls.20101123.snps_chr.vcf.gz or dbSNP">\n' \
                   '##FILTER=<ID=HSDEPTH,Description="variant in HiSeqDepthTop10Pct_chr.bed.gz region, downloaded from UCSC genome browser">\n' \
                   '##FILTER=<ID=MAP,Description="variant overlaps a region from wgEncodeCrgMapabilityAlign100mer.bedGraph.gz:::--breakPointMode --aEndOffset=1 with a value below 0.5, punishment increases with a decreasing mapability">\n' \
@@ -92,7 +92,8 @@ def main(args):
             headers = list(line[1:].rstrip().split('\t'))
             fixed_headers = ["^INFO$", "MAPABILITY", "HISEQDEPTH", "SIMPLE_TANDEMREPEATS", "REPEAT_MASKER", "DUKE_EXCLUDED",
                              "DAC_BLACKLIST", "SELFCHAIN", "^CONFIDENCE$", "^RECLASSIFICATION$", "^PENALTIES$",
-                             "^seqBiasPresent$", "^seqingBiasPresent$", "^seqBiasPresent_1$", "^seqingBiasPresent_1$"]
+                             "^seqBiasPresent$", "^seqingBiasPresent$", "^seqBiasPresent_1$", "^seqingBiasPresent_1$",
+                             "^seqBiasPresent_2$", "^seqingBiasPresent_2$"]
             variable_headers = { "ANNOVAR_SEGDUP_COL": "^SEGDUP$", "KGENOMES_COL": "^1K_GENOMES$", "DBSNP_COL": "^DBSNP$", }
 
             if args.no_control:
@@ -112,20 +113,25 @@ def main(args):
             if args.print_info and header_indices["PENALTIES"] == -1:
                 headers.append("PENALTIES")
 
-            idx_pcrbias = header_indices["seqBiasPresent"]
-            idx_seqbias = header_indices["seqingBiasPresent"]
+            if args.round < 3:
+                idx_pcrbias = header_indices["seqBiasPresent"]
+                idx_seqbias = header_indices["seqingBiasPresent"]
+            else:
+                idx_pcrbias = header_indices["seqBiasPresent"] = header_indices["seqBiasPresent_2"]
+                idx_seqbias = header_indices["seqingBiasPresent"] = header_indices["seqingBiasPresent_2"]
             idx_pcrbias_1 = header_indices["seqBiasPresent_1"]
             idx_seqbias_1 = header_indices["seqingBiasPresent_1"]
 
             if idx_pcrbias != -1 and idx_seqbias != -1:
-                if args.round > 0:
+                if args.round == 1 or args.round == 2:
                     # Update duplicating header names
                     headers[idx_pcrbias] = "seqBiasPresent_" + str(args.round)
                     headers[idx_seqbias] = "seqingBiasPresent_" + str(args.round)
 
-                if args.round == 2:
-                    if header_indices["seqBiasPresent_1"] == -1 or header_indices["seqingBiasPresent_1"] == -1:
+                if args.round == 2 or args.round == 3:
+                    if idx_pcrbias_1 == -1 or idx_seqbias_1 == -1:
                         raise ValueError("There was no column with the first bias filtering present.")
+                    args.round = 2
 
             header_str = "#" + '\t'.join(headers)
 
@@ -203,13 +209,13 @@ def main(args):
                 is_commonSNP = True
 
         if args.no_control:
-            if help["ExAC_COL_VALID"] and any(af > 0.01 for af in map(float, extract_info(help["ExAC_COL"], "AF").split(','))):
+            if help["ExAC_COL_VALID"] and any(af > 0.001 for af in map(float, extract_info(help["ExAC_COL"], "AF").split(','))):
                 inExAC = True
                 infofield["ExAC"] = "ExAC"
-            if help["EVS_COL_VALID"] and any(af > 0.01 for af in map(float, extract_info(help["EVS_COL"], "MAF").split(','))):
+            if help["EVS_COL_VALID"] and any(af > 1.0 for af in map(float, extract_info(help["EVS_COL"], "MAF").split(','))):
                 inEVS = True
                 infofield["EVS"] = "EVS"
-            if help["LOCALCONTROL_COL_VALID"] and any(af > 0.1 for af in map(float, extract_info(help["LOCALCONTROL_COL"], "AF").split(','))):
+            if help["LOCALCONTROL_COL_VALID"] and any(af > 0.02 for af in map(float, extract_info(help["LOCALCONTROL_COL"], "AF").split(','))):
                 inLocalControl = True
                 infofield["LocalControl"] = "LocalControl"
 
