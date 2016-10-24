@@ -1,0 +1,6 @@
+/.project
+/.pydevproject
+/SNVCallingWorkflow.iml
+.idea
+build
+classes
