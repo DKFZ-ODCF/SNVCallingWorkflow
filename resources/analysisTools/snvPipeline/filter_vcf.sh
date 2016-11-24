@@ -14,7 +14,7 @@ CONVERT_BINARY=${CONVERT_BINARY-convert}
 source ${TOOL_ANALYZE_BAM_HEADER}
 getRefGenomeAndChrPrefixFromHeader ${TUMOR_BAMFILE_FULLPATH_BP} # Sets CHR_PREFIX and REFERENCE_GENOME
 
-numberOfChromosomes=${CHROMOSOME_INDICES[@]}
+numberOfChromosomes=$(echo ${CHROMOSOME_INDICES} | sed -r "s/['\"]//g")
 outputFilenamePrefix=${mpileupDirectory}/${SNVFILE_PREFIX}${PID}
 
 # file paths
@@ -59,7 +59,7 @@ then
 	fi
 
 	# 1. rainfall plots
-	cat ${filenameSomaticSnvs} | ${PERL_BINARY} ${TOOL_IN_DB_SNP_COUNTER} - ${MIN_CONFIDENCE_SCORE} > ${filenameSomaticSnvsIndbSNP}
+   	cat ${filenameSomaticSnvs} | ${PERL_BINARY} ${TOOL_IN_DB_SNP_COUNTER} - ${MIN_CONFIDENCE_SCORE} > ${filenameSomaticSnvsIndbSNP}
 
 	[[ "$?" != 0 ]] && echo "There was a non-zero exit code in the somatic file and dbSNP counting pipe" && exit 2
 
@@ -70,7 +70,7 @@ then
 	CHR_TO_RAINFALL=${numberOfChromosomes}
 
 	${RSCRIPT_BINARY} --vanilla ${TOOL_INTERMUTATION_DISTANCE_COORD_COLOR} -i ${filenameSomaticSnvs} -s ${PID} -o ${filenameIntermutationDistancePlot} -a ${CHR_TO_RAINFALL// /,} -p "${CHR_PREFIX}" -u "${CHR_SUFFIX}" -l ${CHROMOSOME_LENGTH_FILE}
-	
+
 	[[ "$?" != 0 ]] && echo "There was a non-zero exit code in making the rainfall plot file" && exit 4
 	
 	${RSCRIPT_BINARY} ${TOOL_SNVS_PER_CHROM_PLOT} -i ${filenameIntermutationDistance} -s ${PID}_${anno} -o ${filenamePerChromFreq}
@@ -124,8 +124,11 @@ then
 	[[ -f ${filenameSequenceErrorPlot} ]] && biasplots="${filenameSequenceErrorPlot} ${biasplots}"
 	[[ -f ${filenameSequenceErrorPlotFilterOnce} ]] && biasplots="${filenameSequenceErrorPlotFilterOnce} ${biasplots}"
 	[[ -f ${filenameSequenceErrorPlotPreFilter} ]] && biasplots="${filenameSequenceErrorPlotPreFilter} ${biasplots}"
-	
-	${GHOSTSCRIPT_BINARY} -dBATCH -dNOPAUSE -dAutoRotatePages=false -q -sDEVICE=pdfwrite -sOutputFile=${filenameSnvDiagnosticsPlot} ${filenameIntermutationDistancePlot} ${filenameMAFconfPlot} ${filenamePerChromFreq} ${filenameSnvsWithContext} ${biasplots}
+
+	# Ghostscript does not want paths containing '+' characters (such as in timestamps).
+	${GHOSTSCRIPT_BINARY} -dBATCH -dNOPAUSE -dAutoRotatePages=false -q -sDEVICE=pdfwrite -sOutputFile=- ${filenameIntermutationDistancePlot} ${filenameMAFconfPlot} ${filenamePerChromFreq} ${filenameSnvsWithContext} ${biasplots} \
+	    > "$filenameSnvDiagnosticsPlot"
+	[[ "$?" != 0 ]] && echo "There was a non-zero exit code in making the SNV diagnostic plot" && exit 12
 fi
 
 if [ ${RUN_PUREST} == 1 ]
