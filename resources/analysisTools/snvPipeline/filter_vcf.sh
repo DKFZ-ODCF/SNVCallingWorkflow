@@ -14,7 +14,7 @@ CONVERT_BINARY=${CONVERT_BINARY-convert}
 source ${TOOL_ANALYZE_BAM_HEADER}
 getRefGenomeAndChrPrefixFromHeader ${TUMOR_BAMFILE_FULLPATH_BP} # Sets CHR_PREFIX and REFERENCE_GENOME
 
-numberOfChromosomes=$(echo ${CHROMOSOME_INDICES} | sed -r "s/['\"]//g")
+numberOfChromosomes=${CHROMOSOME_INDICES[@]}
 outputFilenamePrefix=${mpileupDirectory}/${SNVFILE_PREFIX}${PID}
 
 # file paths
