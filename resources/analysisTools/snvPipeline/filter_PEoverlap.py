@@ -104,8 +104,15 @@ def performAnalysis(args):
         mode += "c"
     samfile = pysam.Samfile(args.alignmentFile, mode)  # This should work for BAM file only (with random access).
 
-    ALT_baseQualities_file = args.altBQF
-    REF_baseQualities_file = args.refBQF
+    if args.altPosF != '':
+        ALT_basePositions_file = args.altPosF
+
+    if args.altBQF != '':
+        ALT_baseQualities_file = args.altBQF
+
+    if args.refBQF != '':
+        REF_baseQualities_file = args.refBQF
+
 
     for line in sys.stdin:  #   vcfInFile
         if line[0] == "#":
@@ -126,6 +133,7 @@ def performAnalysis(args):
         nonREFnonALTrev=0
         ALTcount=0
 
+        ALT_basePositions=[]
         REF_baseQualities=[]
         ALT_baseQualities=[]
 
@@ -160,10 +168,16 @@ def performAnalysis(args):
                         #print '\tbase in read %s = %s' % (pileupread.alignment.qname, pileupread.alignment.seq[pileupread.qpos])
                         baseScore = transformQualStr(pileupread.alignment.qual[pileupread.qpos])[0]
                         if pileupread.alignment.seq[pileupread.qpos].lower()  == ALT.lower():
-                            ALT_baseQualities.append(baseScore)
+                            if args.altBQF != '':
+                                ALT_baseQualities.append(baseScore)
+                            if args.altPosF != '':
+                                ALT_basePositions.append(pileupread.qpos)
                         if pileupread.alignment.seq[pileupread.qpos].lower()  == REF.lower():
-                            REF_baseQualities.append(baseScore)
+                            if args.refBQF != '':
+                                REF_baseQualities.append(baseScore)
+
                         if pileupread.alignment.mapq >= args.mapq:
+                            # http://wwwfgu.anat.ox.ac.uk/~andreas/documentation/samtools/api.html   USE qqual
                             try:
                                 if transformQualStr(pileupread.alignment.qual[pileupread.qpos])[0] >= args.baseq:
                                     # check if we consider this read as a proper read in terms of number of mismatches
@@ -265,6 +279,11 @@ def performAnalysis(args):
                             scoreString = ";".join([scoreString , str(VAF)])
                             REF_baseQualities_file.write("%s\t%s\t%s\n" % (chrom, pos, scoreString))
 
+                    if args.altPosF != '':
+                        positionsString = ",".join([str(readpos) for readpos in ALT_basePositions])
+                        if positionsString != '':
+                            ALT_basePositions_file.write("%s\t%s\t%s\n" % (chrom, pos, positionsString))
+
                     break # only one pileup for a position
 
             if (DP4[2] + DP4[3]) > ALTcount:    # that the ALTcount is larger  happens often due to BAQ during samtools mpileup which doesn't change the base qual in the BAM file, but decreases base qual during calling
@@ -287,6 +306,10 @@ def performAnalysis(args):
             sys.stdout.write('\t'.join(entries) + '\n')
         else:
             sys.stdout.write(line)   # write germline and somatic-multiallelic SNVs as is
+
+        del ALT_basePositions
+        del REF_baseQualities
+        del ALT_baseQualities
     samfile.close()
 
     if args.altBQF is not None:
@@ -294,6 +317,10 @@ def performAnalysis(args):
 
     if args.refBQF is not None:
         REF_baseQualities_file.close()
+
+    if args.altPosF is not None:
+        ALT_basePositions_file.close()
+
     #vcfInFile.close()
     #outFile.close()
     
@@ -304,16 +331,19 @@ if __name__ == '__main__':
     #parser.add_option('--inf',action='store',type='string',dest='inf',help='Specify the name of the input vcf file containing all snvs (germline and somatic)',default='')
     parser.add_argument('--alignmentFile',dest='alignmentFile',help='Specify the name of the BAM file containing bwa alignments, has to be the BAM file that was used to call the variants in the input vcf file - REQUIRED', required=True)
     #parser.add_option('--outf',action='store',type='string',dest='outf',help='Specify the name of the output file, which will have same format as input vcf but with PE overlap filtered DP4 values if somatic and if snvs in PE overlap region',default='')
+
     parser.add_argument('--mapq',type=int,dest='mapq',help='Specify the minimum mapping quality of bwa used for mpileup as parameter -q (default: 30 )',default=30)
     parser.add_argument('--baseq',type=int,dest='baseq',help='Specify the minimum base quality scores used for mpileup as parameter -Q (default: 13)',default=13)
     parser.add_argument('--qualityScore',dest='qualityScore',help='Specify whether the per base  quality score is given in phred or illumina format (default is Illumina score: ASCII offset of 64, while PHRED scores have an ASCII offset of 33)',default='phred')
     parser.add_argument('--maxNumberOfMismatchesInRead',type=int,dest='allowedNumberOfMismatches',help='Specify the number of mismatches that are allowed per read in order to consider this read. Value of -1 (default) turns this filter off.',default=-1)
     parser.add_argument('--altBaseQualFile',nargs="?",type=argparse.FileType('w'),dest='altBQF',help='Specify the name of the output file for alternative allele base qualities.',default=None)
     parser.add_argument('--refBaseQualFile',nargs="?",type=argparse.FileType('w'),dest='refBQF',help='Specify the name of the output file for reference allele base qualities.',default=None)
+    parser.add_argument('--altBasePositionsFile',nargs="?",type=argparse.FileType('w'),dest='altPosF',help='Specify the name of the output file for position within the reads for alternative bases.',default=None)
     parser.add_argument('--nocontrol',action='store_true',dest='no_control',help='Specify the workflow is run without control.',default=False)
     parser.add_argument('--configFile',nargs="?",type=argparse.FileType('r'),dest='configfile',help='Specify the config file which contains header names.',default=None)
-    
+
+
     args = parser.parse_args()
     performAnalysis(args)
-    #print "\nProgram successfully terminating...."  
+    #print "\nProgram successfully terminating...."
 

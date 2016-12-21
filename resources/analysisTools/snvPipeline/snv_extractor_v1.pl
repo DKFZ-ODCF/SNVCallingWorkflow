@@ -14,6 +14,7 @@ my $infile;
 my $minconf=8;
 my $region = 0;
 my $pid;
+my $suffix="";
 my $extractsyn = 0;
 my $extractNcRNA = 0;
 my $bgzip = "bgzip";
@@ -23,6 +24,7 @@ GetOptions (	"infile=s"	 		=> \$infile,		# vcf file, can be bgzipped
 				"region=s"			=> \$region,		# file with the region when only a region should be extracted
 				"ncRNA=i"			=> \$extractNcRNA,	# If non coding RNAs (functional) should be extracted
 				"pid=s"				=> \$pid,
+				"suffix=s"			=> \$suffix,
 				"synonymous=i"		=> \$extractsyn,
 				"bgzip=s"			=> \$bgzip,
 				"tabix=s"			=> \$tabix,
@@ -35,11 +37,11 @@ else{open(IN, "<$infile") or die "Could not open the infile: $infile\n";}
 
 if($region ne "0"){print "Region file provided: $region\n";}
 
-my $outsom = $pid."_somatic_snvs_conf_".$minconf."_to_10.vcf";
-my $outsomcod = $pid."_somatic_functional_snvs_conf_".$minconf."_to_10.vcf";
-my $outgermcod = $pid."_germline_functional_snvs_conf_".$minconf."_to_10.vcf";
-my $outsyn = $pid."_somatic_functional_and_synonymous_snvs_conf_".$minconf."_to_10.vcf";
-my $outNcRNA = $pid."_somatic_functional_ncRNA_snvs_conf_".$minconf."_to_10.vcf";
+my $outsom = $pid."_somatic_snvs_conf_".$minconf."_to_10".$suffix.".vcf";
+my $outsomcod = $pid."_somatic_functional_snvs_conf_".$minconf."_to_10".$suffix.".vcf";
+my $outgermcod = $pid."_germline_functional_snvs_conf_".$minconf."_to_10".$suffix.".vcf";
+my $outsyn = $pid."_somatic_functional_and_synonymous_snvs_conf_".$minconf."_to_10".$suffix.".vcf";
+my $outNcRNA = $pid."_somatic_functional_ncRNA_snvs_conf_".$minconf."_to_10".$suffix.".vcf";
 
 open(SOM, ">$outsom") or die "Could not open the file $outsom\n";
 open(COD, ">$outsomcod") or die "Could not open the file $outsomcod\n";
