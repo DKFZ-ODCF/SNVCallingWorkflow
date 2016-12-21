@@ -282,6 +282,7 @@ then
 	mv ${filenameBiasMatrixSeqingFile} ${filenameBiasMatrixSeqingFileSecond}
 
 	rm ${filenameSomaticSNVsTmp}
+	rm ${filenameSNVVCFTemp}
 
 	[[ $? != 0 ]] && echo "Error in moving the vcf file and index or in removing the temporary files" && exit 9
 
