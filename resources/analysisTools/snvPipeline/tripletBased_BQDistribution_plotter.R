@@ -33,95 +33,68 @@ opt = getopt(matrix(c(
   'skipPlots', 'x', 2, "integer"
 ),ncol=4,byrow=TRUE));
 
-if (is.null(opt$vcfInputFile)){
-  cat("Please specify the file that contains the SNVs for which the base score distribution plot shall be created.\n"); 
-  q(status=1);      # quit, status unequal 0 means error
+
+checkForMissingParameter = function(parameter, errorText, exitCode=1) {
+  if (is.null(opt[[parameter]])){
+    cat(paste0(errorText,"\n")) 
+    q(exitCode)      # quit, status unequal 0 means error
+  }
 }
-if (is.null(opt$mpileupFolder)){
-  cat("Please specify the mpileup folder.\n"); 
-  q(status=1);      # quit, status unequal 0 means error
+
+setIntegerValueFromParameter = function(parameterName, valueName) {
+  if (! is.null(opt[[parameterName]])){
+    tmp = as.integer(opt[[parameterName]])
+    if (!is.na(tmp)) {
+      assign(valueName, tmp)
+    }
+  }  
 }
-if (is.null(opt$alignmentFolder)){
-  cat("Please specify the alignment folder.\n"); 
-  q(status=1);      # quit, status unequal 0 means error
-}
-if (is.null(opt$PID)){
-  cat("Please specify the PID.\n"); 
-  q(status=1);      # quit, status unequal 0 means error
-}
+
+
+checkForMissingParameter("vcfInputFile", "Please specify the file that contains the SNVs for which the base score distribution plot shall be created.", 1)
+    vcfInputFile = paste0(opt$vcfInputFile)
+checkForMissingParameter("mpileupFolder", "Please specify the mpileup folder.", 1)
+    MPILEUP_FOLDER=paste0(opt$mpileupFolder,"/")
+    RefAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_reference_allele_base_qualities.txt.gz", collapse = "")
+    AltAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_alternative_allele_base_qualities.txt.gz", collapse = "")    
+checkForMissingParameter("alignmentFolder", "Please specify the alignment folder.", 1)
+    ALIGNMENT_FOLDER=paste0(opt$alignmentFolder,"/")
+checkForMissingParameter("PID", "Please specify the PID.", 1)
+    PID=opt$PID
+checkForMissingParameter("outFilePrefix", "Please specify the output pdf file.", 1)
+    PDF_OUTPUT_FILE_PREFIX=paste0(opt$outFilePrefix)
+
+
 if (is.null(opt$background)){
   USE_BACKGROUND_BQs = FALSE
 } else {
-  if (opt$background==1) {
-    USE_BACKGROUND_BQs = TRUE
-  } else {
-    USE_BACKGROUND_BQs = FALSE
-  }
+  USE_BACKGROUND_BQs = ifelse(opt$background==1, TRUE, FALSE)
 }
+
 if (is.null(opt$forceRerun)){     
   FORCE_RERUN = FALSE
 } else {
-  if (opt$forceRerun==1) {
-    FORCE_RERUN = TRUE
-  } else {
-    FORCE_RERUN = FALSE
-  }
+  FORCE_RERUN = ifelse(opt$forceRerun==1, TRUE, FALSE)
 }
+
 if (is.null(opt$combineRevcomp)){     
   COMBINE_REVCOMP = TRUE
 } else {
-  if (opt$combineRevcomp==1) {
-    COMBINE_REVCOMP = TRUE
-  } else {
-    COMBINE_REVCOMP = FALSE
-  }
-}
-if (is.null(opt$outFile)){      # no vcf file specified
-  cat("Please specify the output pdf file.\n"); 
-  q(status=2);      # quit, status unequal 0 means error
+  COMBINE_REVCOMP = ifelse(opt$combineRevcomp==1, TRUE, FALSE)
 }
 
-
-if (! is.null(opt$MAFColumnIndex)){
-  tmp = as.integer(opt$MAFColumnIndex)
-  if (!is.na(tmp)) {
-    VAF_COLUMN_INDEX = tmp
-  }
-}
-
-if (is.null(opt$outFilePrefix)){      # no vcf file specified
-  cat("Please specify the output pdf file.\n"); 
-  q(status=2);      # quit, status unequal 0 means error
-}
-
-if (! is.null(opt$filterThreshold)){
-  tmp = as.integer(opt$filterThreshold)
-  if (!is.na(tmp)) {
-    ALT.MEDIAN.THRESHOLD = tmp
-  }
-}
-if (! is.null(opt$sequenceContextColumnIndex)){
-  tmp = as.integer(opt$sequenceContextColumnIndex)
-  if (!is.na(tmp)) {
-    SEQUENCE_CONTEXT_COLUMN_INDEX = tmp
-  }
-}
 if (! is.null(opt$channelIndividualGraphs)){
-  if (opt$channelIndividualGraphs == 1) {
-    CANNEL_INDIVIDUAL_GRAPHS = T
-  } else {
-    CANNEL_INDIVIDUAL_GRAPHS = F
-  }
+  CANNEL_INDIVIDUAL_GRAPHS = ifelse (opt$channelIndividualGraphs == 1, TRUE, FALSE)
 }
+
 if (! is.null(opt$skipPlots)){
-  if (opt$skipPlots == 1) {
-    SKIP_PLOTS = T
-  } else {
-    SKIP_PLOTS = F
-  }
+  SKIP_PLOTS = ifelse (opt$skipPlots == 1, TRUE, FALSE)
 }
 
 
+setIntegerValueFromParameter(parameterName = "MAFColumnIndex", valueName = "VAF_COLUMN_INDEX")
+setIntegerValueFromParameter(parameterName = "filterThreshold", valueName = "ALT.MEDIAN.THRESHOLD")
+setIntegerValueFromParameter(parameterName = "sequenceContextColumnIndex", valueName = "SEQUENCE_CONTEXT_COLUMN_INDEX")
 
 
 if (COMBINE_REVCOMP) {
@@ -135,126 +108,7 @@ if (COMBINE_REVCOMP) {
 colnames(transitions) = c("FROM", "TO")
 
 
-# RPP_FOLDER="/icgc/dkfzlsdf/analysis/V960/RCCL/results_per_pid_noCTL/"
-# opt$PID = "KIKA75"
-# opt$mpileupFolder = paste0(RPP_FOLDER,opt$PID,"/mpileup_noCTL")
-# opt$vcfInputFile = paste0(opt$mpileupFolder,"/snvs_",opt$PID,"_somatic_snvs_conf_8_to_10.vcf")
-# opt$alignmentFolder = paste0(RPP_FOLDER,opt$PID,"/alignment")
-# opt$outFilePrefix = paste0(opt$mpileupFolder,"/snvs_",opt$PID,"_triplet-specific_BQ_distributions_unfiltered.manual.pdf")
-# opt$background = F
-# opt$combineRevcomp = 1
-# opt$filterThreshold = -1
-# opt$sequenceContextColumnIndex = 11
 
-# RPP_FOLDER="/icgc/pcawg/analysis/train2full/projects/CMDI-UK/"
-# opt$PID = "f93abbbf-5e13-9b85-e040-11ac0d485718"
-# opt$mpileupFolder = paste0(RPP_FOLDER,opt$PID,"/merged_may2016Calls_filtered_BQD_plots")
-# opt$vcfInputFile = paste0(opt$mpileupFolder,"/",opt$PID,"_somatic.snv_mnv.vcf_filtered.OnlyPassed.vcf")
-# opt$alignmentFolder = paste0(RPP_FOLDER,opt$PID,"/alignment")
-# opt$outFilePrefix = paste0(opt$mpileupFolder,"/snvs_",opt$PID,"_triplet-specific_BQ_distributions_unfiltered.manual.pdf")
-# opt$background = F
-# opt$combineRevcomp = 1
-# opt$filterThreshold = -1
-# opt$MAFColumnIndex = 9
-# opt$sequenceContextColumnIndex = 10
-
-
-
-# RPP_FOLDER="/icgc/dkfzlsdf/analysis/B080/warsow/Cavathrombus/results_per_pid/BW/"
-# opt$PID = "BW"
-# opt$mpileupFolder = paste0(RPP_FOLDER,"SNV_Calling.backup/mpileup2.3_VRenalisAdjacent_vs_NormalKidney/")
-# opt$vcfInputFile = paste0(opt$mpileupFolder,"/snvs_",opt$PID,"_somatic_snvs_conf_8_to_10.vcf")
-# opt$alignmentFolder = paste0(RPP_FOLDER,"/alignment/")
-# opt$outFilePrefix = paste0(opt$mpileupFolder,"snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
-# opt$background = F
-# opt$combineRevcomp = 1
-
-# RPP_FOLDER="/icgc/pcawg/analysis/train2full/projects/BOCA-UK/"
-# opt$PID = "f85ae2b7-cebf-17a2-e040-11ac0c48033a"
-# opt$mpileupFolder = paste0(RPP_FOLDER,opt$PID,"/merged_may2016Calls_filtered_BQD_plots")
-# opt$vcfInputFile = paste0(opt$mpileupFolder,"/",opt$PID,"_somatic.snv_mnv.vcf_filtered.OnlyPassed.vcf")
-# opt$vcfInputFile = paste0(opt$mpileupFolder,"/",opt$PID,"_somatic.snv_mnv.vcf_filtered.OnlyPassed.withoutHeader.vcf")
-# opt$outFilePrefix = paste0(opt$mpileupFolder,"/snvs_",opt$PID,"_SangerArtifcatDetected.txt")
-# opt$combineRevcomp = 1
-
-
-# RPP_FOLDER = "/icgc/dkfzlsdf/analysis/mmml/whole_genome_pcawg/results_per_pid"
-# opt$PID = "4192483_merged"
-# opt$PID = 4108101
-# opt$PID = 4104893
-# opt$PID = 4178345
-# opt$mpileupFolder = paste0(RPP_FOLDER,"/",opt$PID,"/mpileup_filteredByMedianBQ20")
-# opt$vcfInputFile = paste0(opt$mpileupFolder,"/","snvs_",opt$PID,"_somatic_snvs_conf_8_to_10.vcf")
-# opt$background = F
-# opt$alignmentFolder = paste0(RPP_FOLDER,"/",opt$PID,"/alignment")
-# opt$outFilePrefix = paste0(opt$mpileupFolder,"/snvs_",opt$PID,"_triplet-specific_BQ_distributions_unfiltered.manual.pdf")
-# opt$combineRevcomp = 1
-# opt$filterThreshold = 20
-# opt$sequenceContextColumnIndex = 11
-
-# BLCA-US (PCAWG) test config
-# opt$PID = "8c619cbc-9e91-4716-9711-5236e55d8f46"
-# opt$baseFolder = "/icgc/pcawg/analysis/train2full/projects/BLCA-US"
-# opt$vcfInputFile = paste0("snvs_",opt$PID,"_somatic_snvs_conf_8_to_10.vcf")
-# opt$vcfInputFile = "snvs_8c619cbc-9e91-4716-9711-5236e55d8f46_somatic_snvs_conf_8_to_10.vcf"
-# opt$mpileupFolder = "BQD_plots"
-# opt$outFilePrefix = paste0("snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
-# opt$background = 0
-# opt$forceRerun = 1
-
-# BRCA-EU (PCAWG) test config
-# opt$PID = "fc8130e0-0bfa-bba4-e040-11ac0c48328d"
-# opt$baseFolder = "/icgc/pcawg/analysis/train2full/projects/BRCA-EU"
-# opt$vcfInputFile = paste0("snvs_",opt$PID,"_somatic_snvs_conf_8_to_10.vcf")
-# opt$mpileupFolder = "BQD_plots"
-# opt$outFilePrefix = paste0("snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
-# opt$background = T
-
-# CLLE-ES (PCAWG) test config
-# opt$PID = "19cd4360-8392-4bc2-ae88-fdc1335d886b"
-# opt$baseFolder = "/icgc/pcawg/analysis/train2full/projects/CLLE-ES"
-# opt$vcfInputFile = paste0("snvs_",opt$PID,"_somatic_snvs_conf_8_to_10.vcf")
-# opt$mpileupFolder = "BQD_plots"
-# opt$outFilePrefix = paste0("snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
-
-# # LAML-US (PCAWG) test config
-# opt$PID = "1193a9c4-5aab-4cd7-a690-60c96bd1172d"
-# opt$baseFolder = "/icgc/pcawg/analysis/train2full/projects/LAML-US"
-# opt$vcfInputFile = paste0("snvs_",opt$PID,"_somatic_snvs_conf_8_to_10.vcf")
-# opt$mpileupFolder = "BQD_plots"
-# opt$outFilePrefix = paste0("snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
-
-# opt$vcfInputFile = paste0("snvs_",opt$PID,"_somatic_snvs_conf_8_to_10.vcf")
-# opt$mpileupFolder = "BQD_plots"
-# opt$outFilePrefix = paste0("snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
-# (PCAWG) test config
-# opt$PID = "320ebe6f-48bd-40f1-9be5-1401a3bff328"
-# opt$baseFolder = "/icgc/pcawg/analysis/train2full/projects/LAML-US"
-# opt$vcfInputFile = paste0("snvs_",opt$PID,"_somatic_snvs_conf_8_to_10.vcf")
-# opt$mpileupFolder = "BQD_plots"
-# opt$outFilePrefix = paste0("snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
-
-
-
-# numberOfCores = 12
-# library(doParallel)
-# registerDoParallel(numberOfCores)
-
-PID=opt$PID
-# BASEFOLDER=paste0(opt$baseFolder,"/")
-MPILEUP_FOLDER=paste0(opt$mpileupFolder,"/")
-ALIGNMENT_FOLDER=paste0(opt$alignmentFolder,"/")
-vcfInputFile = paste0(opt$vcfInputFile)
-RefAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_reference_allele_base_qualities.txt.gz", collapse = "")
-AltAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_alternative_allele_base_qualities.txt.gz", collapse = "")
-PDF_OUTPUT_FILE_PREFIX=paste0(opt$outFilePrefix)
-# PID="f8e61a02-654c-c226-e040-11ac0d481b60"
-# MPILEUP_FOLDER="/icgc/pcawg/analysis/train2full/projects/CMDI-UK/f8e61a02-654c-c226-e040-11ac0d481b60/merged_may2016Calls_filtered_BQD_plots/"
-# ALIGNMENT_FOLDER="/icgc/pcawg/analysis/train2full/projects/CMDI-UK/f8e61a02-654c-c226-e040-11ac0d481b60/alignment/"
-# vcfInputFile = "/icgc/pcawg/analysis/train2full/projects/CMDI-UK/f8e61a02-654c-c226-e040-11ac0d481b60/merged_may2016Calls_filtered_BQD_plots/f8e61a02-654c-c226-e040-11ac0d481b60_somatic.snv_mnv.vcf_filtered.OnlyPassed.vcf"
-# RefAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_reference_allele_base_qualities.txt.gz", collapse = "")
-# AltAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_alternative_allele_base_qualities.txt.gz", collapse = "")
-# PDF_OUTPUT_FILE_PREFIX=paste0(MPILEUP_FOLDER,"snvs_",PID,"_triplet-specific_BQ_distributions_filteredAltMedian20.pdf")
 
 
 if (ALT.MEDIAN.THRESHOLD > -1) {
@@ -430,17 +284,8 @@ if (ALT.MEDIAN.THRESHOLD > -1) {
     }
   }))
 }
-# data.bq.triplet.filtered = data.bq.triplet.filtered[order(data.bq.triplet.filtered$MeadianBQ.alt),]
-# any(is.na(data.bq.triplet.filtered$nBQ.ref))
 
-# data.bq.triplet.filtered[data.bq.triplet.filtered$Triplet=="TTGT" & data.bq.triplet.filtered$MeadianBQ.alt > 10 & data.bq.triplet.filtered$MeadianBQ.alt < 20,]
-# data.bq.triplet.filtered[data.bq.triplet.filtered$Triplet=="TTGT" & data.bq.triplet.filtered$AuC.alt.BQ30 > 0.9,c("CHROM","POS","nBQ.alt","AuC.alt.BQ20","AuC.alt.BQ30","MeadianBQ.alt")]
-# data.bq.triplet[data.bq.triplet$REVCOMP_TRIPLET=="TTGT" & data.bq.triplet$AuC.alt.BQ30 > 0.9,c("CHROM","POS","nBQ.alt","Triplet","REVCOMP_TRIPLET","AuC.alt.BQ20","AuC.alt.BQ30","MeadianBQ.alt")]
-# data.bq.triplet.filtered2=data.bq.triplet.filtered[data.bq.triplet.filtered$REVCOMP_TRIPLET=="TTGT",]
-# data.bq.triplet.filtered3=data.bq.triplet.filtered[data.bq.triplet.filtered$REVCOMP_TRIPLET=="TTGT",]
-# data.bq.triplet.filtered[3747,]
-# data.bq.triplet.filtered$MeadianBQ.alt
-data.bq.triplet$Triplet
+
 ######################################################
 # PLOTTING PART BEGINS HERE
 ######################################################
@@ -506,31 +351,16 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c
       
       legend = NA
       apply(transitions, 1, function(transition) {
-        # transition=transitions[i,]
-        # transition=transitions[6,]
         from=transition["FROM"]
         to=transition["TO"]
         fromto = paste0(from,to)
         n.total = sum(substr(data.bq.triplet$REVCOMP_TRIPLET,2,2)==as.character(from) & substr(data.bq.triplet$REVCOMP_TRIPLET,3,3)==as.character(to))
         for (baseBefore in c("A","C","G","T")) {
           for (baseAfter in c("A","C","G","T")) {
-            # baseBefore="G"
-            # baseAfter="G"
             triplet = paste0(baseBefore,from,to,baseAfter, collapse = "")
             transitionSubset = data.bq.triplet[data.bq.triplet$REVCOMP_TRIPLET == triplet,]
-            # plot(1, xlim=c(0,45), ylim=c(0,0.4), main=paste0("Base Quality distribution for ",baseBefore,from,"->",to,baseAfter," in PID\n",PID), cex.main=0.8, xlab = "BaseQuality", ylab = "density")
             n = nrow(transitionSubset)
             if (n > 0) {
-              
-              # # transitionSubset.highAUC = transitionSubset[transitionSubset$AuC.alt.BQ30>0.5,]
-              # VAF=transitionSubset[,"VAF"]
-              # AUC=transitionSubset[,"AuC.alt.BQ30"]
-              # model = lm(AUC ~ VAF)
-              # # plot(model)
-              # cor(VAF,AUC, method = "spearman")
-              # x=cor.test(VAF,AUC)
-              # # x$p.value
-              
               
               color.numbers = "black"
               color.panel.border = "black"
@@ -549,12 +379,7 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c
                 baseScores.alt.counts.normalized.cumul = as.data.frame(t(apply(baseScores.alt.counts.normalized,1,cumsum)))
                 baseScores.ref.counts.normalized.cumul$sample = rownames(baseScores.ref.counts.normalized.cumul)
                 baseScores.alt.counts.normalized.cumul$sample = rownames(baseScores.alt.counts.normalized.cumul)
-                # baseScores.ref.counts.normalized.cumul$VAF = transitionSubset$VAF
-                # baseScores.alt.counts.normalized.cumul$VAF = transitionSubset$VAF
 
-                # x=molten.alt[molten.alt$sample=="172",]
-                # y=molten[molten$sample=="172",]
-                
                 molten.ref=melt(baseScores.ref.counts.normalized.cumul, id.vars = "sample")
                 molten.ref$BQ=as.integer(gsub("BQ\\..+\\.(\\d+)$", "\\1", molten.ref$variable, perl=T))
                 molten.ref$type="REF"
@@ -633,15 +458,11 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c
               if (sum(transitionSubset$nBQ.ref) < 50) {
                 alpha_surplusPenalty.ref = 0.1
               }
-              # lines(baseScores.ref.counts.normalized, col=add.alpha(greenColor, alpha-alpha_surplusPenalty.ref))
               
               alpha_surplusPenalty.alt = 0.0
               if (sum(transitionSubset$nBQ.alt) < 50) {
                 alpha_surplusPenalty.alt = 0.1
               }
-              # lines(baseScores.alt.counts.normalized, col=add.alpha(redColor, alpha-alpha_surplusPenalty.alt))
-              
-
               
               row = as.integer(POSITIONS.BEFORE[baseBefore]+POSITIONS.FROMTO.ROW[fromto]*(4+1))
               col = as.integer(POSITIONS.AFTER[baseAfter]+POSITIONS.FROMTO.COL[fromto]*(4+1))
@@ -655,16 +476,10 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c
                 
                 theme = theme(legend.position="none",
                               axis.title=element_blank(),
-                              # axis.title.x=element_text(vjust = 2.5), axis.title.y=element_text(hjust = 12.5),
                               axis.ticks=element_blank(),
-                              # axis.text=element_text(size = 15),
-                              # axis.line=element_blank(),
                               axis.text.x=element_text(size=axis.label.size.x), axis.text.y=element_text(size=axis.label.size.y),
                               axis.ticks.margin = unit(-0.14, "cm"),
                               plot.margin = unit(c(0,0,0,0), "cm"),
-                              # plot.margin = unit(c(-0.9,-1.7,-0.9,-1.7), "cm"), 
-                              # plot.margin = unit(c(-0.6,0.5,-0.6,0.5), "cm"),
-                              # legend.margin = unit(c(0,0,0,0), "cm"),
                               panel.border = element_rect(colour = color.panel.border, fill = NA, size=0.0),
                               panel.background = element_rect(fill = NA),
                               strip.text = element_text(size=1.5, lineheight=0.15, vjust = 0.01),
@@ -742,10 +557,6 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c
               if (whatToPlot == "BQD_sampleIndividual" || whatToPlot == "BQD_sampleIndividual_ColoredByChromosome" || whatToPlot == "BQD_sampleIndividual_ColoredByVAF") {
                 molten$sample = as.factor(molten$sample)
                 molten$type = factor(molten$type, levels=c("REF","ALT"))
-                # molten.backup = molten
-                # molten = molten.backup
-                # molten = molten[molten$sample!="10",]
-                # molten = molten[molten$sample=="10",]
                   
                 breaks <- c(0, 0.125, 0.25, 0.375, 0.5, 0.75,1)
                 plot = ggplot(molten, aes(x=BQ,y=value, group=interaction(sample,type)))
@@ -765,11 +576,6 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c
                     scale_color_manual(values=c(greenColor,redColor))                  
                 }
 
-                
-                # z=molten[molten$AUC30 >0.58 & molten$AUC30 <0.59,]
-                
-                # plot = plot + geom_errorbar(stat = "hline", yintercept = "median", width=0.005, aes(ymax=..y..,ymin=..y..), linetype=4) +
-                # plot = plot + geom_line(stat = "hline", yintercept = "median", size=0.05, linetype=1) +
                 plot = plot + 
                   #geom_hline(aes(yintercept=AUC30), size=0.005, linetype=1) +
                   geom_vline(xintercept=30, size=0.02, linetype=1) +
@@ -790,13 +596,9 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c
                 
                 g <- ggplot_gtable(ggplot_build(plot))
                 t = subset(g$layout, name == "strip_t-1")$t
-                # l = subset(g$layout, name == "strip_t-1")$l
                 l = (subset(g$layout, name == "axis_l-1")$l)-1
-                # b = subset(g$layout, name == "panel-1")$b
                 b = subset(g$layout, name == "axis_b-1")$b
                 r = subset(g$layout, name == "panel-2")$r
-                # panel1 = subset(g$layout, name == "panel-1")
-                # panel2 = subset(g$layout, name == "panel-2")
                 panel  = g[t:b, l:r]
                 panel$vp = vp
                 grid.draw(panel)                
@@ -823,12 +625,6 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c
               }
 
               
-              # ggplot() + geom_boxplot(data=molten.CoV, aes(x=type, y=value, colour=type)) + theme
-
-              
-                                
-              
-
               if (whatToPlot == "BQD") {
                 grid.text(n, vp = viewport(layout.pos.row = row, layout.pos.col = col), hjust = 0, vjust = -5.8, gp = gpar(fontsize = 2.5, col="black", fontface=fontface.numbers))
                 grid.text(paste0(round(n/n.total*100,2),"%"), vp = viewport(layout.pos.row = row, layout.pos.col = col), hjust = 0.0, vjust = -4.2, gp = gpar(fontsize = 2.5, col="black", fontface=fontface.numbers))
@@ -836,19 +632,11 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c
                 grid.text(paste0("alt.BQ<=30: ",AUC.BQ30.alt,"%"), vp = viewport(layout.pos.row = row, layout.pos.col = col), hjust = 0.4, vjust = -3.0, gp = gpar(fontsize = 1.50, col=color.numbers, fontface=fontface.numbers))
                 
               }
-
-              # if (triplet == "GTGG" & n > 5) {
-              #   # check if Snager artifact is detected
-              #   if (AUC.BQ30.ref > 0.4 & AUC.BQ30.alt > 0.4) {
-              #     d = as.data.frame(t(c("AUC.BQ30.ref"=AUC.BQ30.ref, "AUC.BQ30.alt"=AUC.BQ30.alt)))
-              #     write.table(d, file = paste0(MPILEUP_FOLDER,"SangerArtifactDetected.txt"), sep = "\t", row.names = F, col.names = T, quote = F)
-              #   }
-              # }
             }
           }
         }
-        ###################
-      })
+        ################### 
+      }) # end of apply
       
     } else {
       if (COMBINE_REVCOMP) {
@@ -857,8 +645,6 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c
         par(mfrow=c(4,3))  
       }
       apply(transitions, 1, function(transition) {
-        # transition=transitions[i,]
-        # transition=transitions[1,]
         from=transition["FROM"]
         to=transition["TO"]
         
@@ -868,8 +654,6 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c
         if (nrow(transitionSubset) > 0) {
           for (baseBefore in c("A","C","G","T")) {
             for (baseAfter in c("A","C","G","T")) {
-              # baseBefore="A"
-              # baseAfter="T"
               transitionSubset.triplet = transitionSubset[transitionSubset$REVCOMP_TRIPLET==paste0(baseBefore,from,to,baseAfter),]
               n = nrow(transitionSubset.triplet)
               if (n > 0) {
@@ -885,13 +669,10 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c
                 
                 baseScores.ref.counts = colSums(transitionSubset.triplet[,c(paste0("BQ.ref.",sapply(seq(MAX_BASE_QUALITY+1)-1, function(i) {i})))])
                 baseScores.alt.counts = colSums(transitionSubset.triplet[,c(paste0("BQ.alt.",sapply(seq(MAX_BASE_QUALITY+1)-1, function(i) {i})))])
-                # baseScores.ref.counts = colSums(transitionSubset.triplet[,c(paste0("BQ.ref.",sapply(seq(50), function(i) {i})))])
-                # baseScores.alt.counts = colSums(transitionSubset.triplet[,c(paste0("BQ.alt.",sapply(seq(50), function(i) {i})))])
-                
+
                 baseScores.ref.counts.normalized = baseScores.ref.counts / sum(baseScores.ref.counts)
                 baseScores.alt.counts.normalized = baseScores.alt.counts / sum(baseScores.alt.counts)
                 
-                # alpha_surplusPenalty makes triplets with low overall number of base scores slightly less visible
                 alpha_surplusPenalty.ref = 0.0
                 if (sum(transitionSubset.triplet$nBQ.ref) < 50) {
                   alpha_surplusPenalty.ref = 0.1
@@ -907,8 +688,6 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c
             }
           }
           
-          
-          # lines(data.bq.background.dens, lwd=3)
           if (USE_BACKGROUND_BQs) {
             baseScores.ref = unlist(apply(transitionSubset, 1, function(line) {
               baseScores = as.integer(unlist(strsplit(unlist(strsplit(as.character(line["BQ_string.ref"]), ";"))[1], ",")))
@@ -938,14 +717,10 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c
 
 if (ALT.MEDIAN.THRESHOLD > -1) {
   if (! SKIP_PLOTS) {
-    # PDF_OUTPUT_FILE_PREFIX.filtered = sub(".pdf", paste0("_filteredAltMedian",ALT.MEDIAN.THRESHOLD,".pdf"), PDF_OUTPUT_FILE_PREFIX)
-    # plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = PDF_OUTPUT_FILE_PREFIX.filtered, data.bq.triplet = data.bq.triplet.filtered)
     plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_combined.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQD")
     plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_CoV.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQ_CoV")
     plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQD_sampleIndividual")
     plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_CHROMcolored.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQD_sampleIndividual_ColoredByChromosome")
-    # plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_CHROMcolored2.pdf"), data.bq.triplet = data.bq.triplet.filtered2, whatToPlot = "BQD_sampleIndividual_ColoredByChromosome")
-    # plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_CHROMcolored3.pdf"), data.bq.triplet = data.bq.triplet.filtered3, whatToPlot = "BQD_sampleIndividual_ColoredByChromosome")
     plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_VAFcolored.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQD_sampleIndividual_ColoredByVAF")  
   }
   
@@ -972,9 +747,6 @@ if (ALT.MEDIAN.THRESHOLD > -1) {
     plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_CHROMcolored.pdf"), data.bq.triplet = data.bq.triplet, whatToPlot = "BQD_sampleIndividual_ColoredByChromosome")
     print("BQD_sampleIndividual_ColoredByVAF")
     plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_VAFcolored.pdf"), data.bq.triplet = data.bq.triplet, whatToPlot = "BQD_sampleIndividual_ColoredByVAF")  
-    # data.bq.triplet.short = data.bq.triplet[data.bq.triplet$REF=="C" & data.bq.triplet$ALT=="G",]
-    # data.bq.triplet.short = data.bq.triplet[data.bq.triplet$REF=="T",]
-    # plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = PDF_OUTPUT_FILE_PREFIX, data.bq.triplet = data.bq.triplet, whatToPlot = "BQD_sampleIndividual_ColoredByChromosome")
   }
 }
 

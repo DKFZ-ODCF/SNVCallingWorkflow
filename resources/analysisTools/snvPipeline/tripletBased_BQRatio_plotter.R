@@ -9,13 +9,9 @@ library(data.table) # for rbindlist
 library(Biostrings) # for reverseComplement
 
 combineReverseComplement = T
-# numberOfCores = 2
-# library(doParallel)
-# registerDoParallel(numberOfCores)
 Plottype.Ratio.UniColor=1
 Plottype.Differences.BiColor=2
 SEQUENCE_CONTEXT_COLUMN_INDEX=11
-
 
 
 ## get parameters
@@ -33,42 +29,29 @@ opt = getopt(matrix(c(
 
 
 
-# # PID=4131738 # THA affected sample!
-# PID=4115001
-# PID=4163639
-# PID=4100636
-# PID="BW"
-# mpileupFolder="mpileup"
-# mpileupFolder="mpileup_TRASH"
-# opt$vcfInputFile=paste0("/icgc/dkfzlsdf/analysis/B080/warsow/Cavathrombus/results_per_pid/BW/SNV_Calling/mpileup2.3_VRenalisAdjacent_vs_NormalKidney/snvs_BW_somatic_snvs_conf_8_to_10.vcf")
-# opt$vcfInputFile=paste0("/icgc/dkfzlsdf/analysis/mmml/whole_genome_pcawg/results_per_pid/",PID,"/",mpileupFolder,"/snvs_",PID,"_somatic_snvs_conf_8_to_10.vcf")
-# opt$refScores=paste0("/icgc/dkfzlsdf/analysis/B080/warsow/Cavathrombus/results_per_pid/BW/SNV_Calling/mpileup2.3_VRenalisAdjacent_vs_NormalKidney/snvs_BW_reference_allele_base_qualities.txt.gz")
-# opt$altScores=paste0("/icgc/dkfzlsdf/analysis/B080/warsow/Cavathrombus/results_per_pid/BW/SNV_Calling/mpileup2.3_VRenalisAdjacent_vs_NormalKidney/snvs_BW_alternative_allele_base_qualities.txt.gz")
-# opt$outFile=paste0("/icgc/dkfzlsdf/analysis/B080/warsow/Cavathrombus/results_per_pid/BW/SNV_Calling/mpileup2.3_VRenalisAdjacent_vs_NormalKidney/snvs_BW_base_score_bias_plot.pdf")
-# opt$descriptionForMainTitle=paste0("Base Quality Bias Plot for ",PID)
-# opt$baseScoreThreshold=13
-# opt$plotType="Differences"
+checkForMissingParameter = function(parameter, errorText, exitCode=1) {
+  if (is.null(opt[[parameter]])){
+    cat(paste0(errorText,"\n")) 
+    q(exitCode)      # quit, status unequal 0 means error
+  }
+}
+
+setIntegerValueFromParameter = function(parameterName, valueName) {
+  if (! is.null(opt[[parameterName]])){
+    tmp = as.integer(opt[[parameterName]])
+    if (!is.na(tmp)) {
+      assign(valueName, tmp)
+    }
+  }  
+}
+
+checkForMissingParameter("vcfInputFile", "Please specify the file that contains the SNVs for which the base score distribution plot shall be created.", 1)
+checkForMissingParameter("refScores", "Please specify the file containing reference allele base scores.", 1)
+checkForMissingParameter("altScores", "Please specify the file containing alternative allele base scores.", 1)
+checkForMissingParameter("outFile", "Please specify the output pdf file.", 1)
+checkForMissingParameter("baseScoreThreshold", "No base score threshold is set", 1)
 
 
-if (is.null(opt$vcfInputFile)){
-  cat("Please specify the file that contains the SNVs for which the base score distribution plot shall be created.\n"); 
-  q(status=1);      # quit, status unequal 0 means error
-}
-if (is.null(opt$refScores)){
-  cat("Please specify the file containing reference allele base scores.\n"); 
-  q(status=1);      # quit, status unequal 0 means error
-}
-if (is.null(opt$altScores)){      # no vcf file specified
-  cat("PPlease specify the file containing alternative allele base scores.\n"); 
-  q(status=1);      # quit, status unequal 0 means error
-}
-if (is.null(opt$outFile)){      # no vcf file specified
-  cat("Please specify the output pdf file.\n"); 
-  q(status=2);      # quit, status unequal 0 means error
-}
-if (is.null(opt$baseScoreThreshold)){      # no base score threshold is set
-  opt$baseScoreThreshold = 0
-}
 if (is.null(opt$plotType)){      # noplot type is set
   plotType=Plottype.Differences.BiColor
 } else if (opt$plotType == "Differences") {
@@ -76,15 +59,11 @@ if (is.null(opt$plotType)){      # noplot type is set
 } else if (opt$plotType == "Ratios") {
   plotType=Plottype.Ratio.UniColor
 } else {
-  cat("PPlease specify the plotType as one of \"Differences\" or \"Ratios\".\n"); 
+  cat("Please specify the plotType as one of \"Differences\" or \"Ratios\".\n"); 
   q(status=3);      # quit, status unequal 0 means error
 }
-if (! is.null(opt$sequenceContextColumnIndex)){
-  tmp = as.integer(opt$sequenceContextColumnIndex)
-  if (!is.na(tmp)) {
-    SEQUENCE_CONTEXT_COLUMN_INDEX = tmp
-  }
-}
+
+setIntegerValueFromParameter(parameterName = "sequenceContextColumnIndex", valueName = "SEQUENCE_CONTEXT_COLUMN_INDEX")
 
 
 options(stringsAsFactors = FALSE)
@@ -103,46 +82,29 @@ colnames(altScores) = c("CHROM", "POS", "BaseScoreString.alt")
 refScores = merge(refScores, data[,1:2], by=c("CHROM","POS"))
 altScores = merge(altScores, data[,1:2], by=c("CHROM","POS"))
 
-# refScores.backup=refScores
-# refScores=refScores.backup
 
 refScores$BaseScore.ref = apply(refScores, 1, function(line) {
   baseScores = as.integer(unlist(strsplit(unlist(strsplit(line["BaseScoreString.ref"], ";"))[1], ",")))
   baseScores[which(baseScores >= opt$baseScoreThreshold)]
 })
 
-refScores$meanBQ.ref = apply(refScores, 1, function(line) {
-  mean(unlist(line["BaseScore.ref"]))
-})
-refScores$medianBQ.ref = apply(refScores, 1, function(line) {
-  median(unlist(line["BaseScore.ref"]))
-})
+refScores$meanBQ.ref = apply(refScores, 1, function(line) { mean(unlist(line["BaseScore.ref"])) })
+refScores$medianBQ.ref = apply(refScores, 1, function(line) { median(unlist(line["BaseScore.ref"])) })
 
 altScores$BaseScore.alt = apply(altScores, 1, function(line) {
   baseScores = as.integer(unlist(strsplit(unlist(strsplit(line["BaseScoreString.alt"], ";"))[1], ",")))
   baseScores[which(baseScores >= opt$baseScoreThreshold)]
 })
-altScores$meanBQ.alt = apply(altScores, 1, function(line) {
-  mean(unlist(line["BaseScore.alt"]))
-})
-altScores$medianBQ.alt = apply(altScores, 1, function(line) {
-  median(unlist(line["BaseScore.alt"]))
-})
+altScores$meanBQ.alt = apply(altScores, 1, function(line) { mean(unlist(line["BaseScore.alt"])) })
+altScores$medianBQ.alt = apply(altScores, 1, function(line) { median(unlist(line["BaseScore.alt"])) })
 
 
 data$baseBefore = apply(data, 1, function(line) {substr(unlist(strsplit(line["SEQUENCE_CONTEXT"], ","))[1], 10, 10)})
 data$baseAfter = apply(data, 1, function(line) {substr(unlist(strsplit(line["SEQUENCE_CONTEXT"], ","))[2], 1, 1)})
-data$triplet = as.factor(apply(data, 1, function(line) {
-  paste0(line["baseBefore"], line["REF"], line["ALT"], line["baseAfter"], collapse = "")
-}))
+data$triplet = as.factor(apply(data, 1, function(line) { paste0(line["baseBefore"], line["REF"], line["ALT"], line["baseAfter"], collapse = "") }))
 
 data = merge(data, refScores[,c("CHROM","POS","BaseScoreString.ref","meanBQ.ref","medianBQ.ref")], by=c("CHROM","POS"))
 data = merge(data, altScores[,c("CHROM","POS","BaseScoreString.alt","meanBQ.alt","medianBQ.alt")], by=c("CHROM","POS"))
-# data$BQ.ratio.mean = data$meanBQ.alt/data$meanBQ.ref
-# data$BQ.diff.mean = data$meanBQ.alt - data$meanBQ.ref
-# data$BQ.ratio.median = data$medianBQ.alt/data$medianBQ.ref
-# data$BQ.diff.median = data$medianBQ.alt - data$medianBQ.ref
-
 
 tripletSpecificBaseQualities.ref = aggregate(BaseScoreString.ref ~ triplet, data, c)
 rownames(tripletSpecificBaseQualities.ref) = tripletSpecificBaseQualities.ref$triplet
@@ -154,65 +116,7 @@ if (any(rownames(tripletSpecificBaseQualities.ref) != rownames(tripletSpecificBa
 }
 
 
-# tTest.baseScores = as.data.frame(tripletSpecificBaseQualities.ref$triplet)
-# colnames(tTest.baseScores) = "triplet"
-# rownames(tTest.baseScores) = tTest.baseScores$triplet
-# for (triplet in rownames(tripletSpecificBaseQualities.ref)) {
-#   scores.ref = unlist(apply(as.data.frame(tripletSpecificBaseQualities.ref[triplet,"BaseScoreString.ref"]), 1, function(BQset) {
-#     as.integer(unlist(strsplit(unlist(strsplit(BQset, ";"))[1], ",")))
-#   }))
-#   scores.alt = unlist(apply(as.data.frame(tripletSpecificBaseQualities.alt[triplet,"BaseScoreString.alt"]), 1, function(BQset) {
-#     as.integer(unlist(strsplit(unlist(strsplit(BQset, ";"))[1], ",")))
-#   }))  
-# 
-#   tripletSpecificBaseQualities.ref[triplet,"mean"] = mean(scores.ref)
-#   tripletSpecificBaseQualities.ref[triplet,"median"] = median(scores.ref)
-#   
-#   tripletSpecificBaseQualities.alt[triplet,"mean"] = mean(scores.alt)
-#   tripletSpecificBaseQualities.alt[triplet,"median"] = median(scores.alt)
-#   
-#   tTest.baseScores[triplet,"tTest_pval"] = t.test(scores.alt, scores.ref)$p.value
-# }
-# 
-# tTest.baseScores$tTest_pval_adjusted = p.adjust(tTest.baseScores$tTest_pval, method = "fdr")
-# 
-# 
-# 
-# tripletSpecificBaseQualityRatios = tripletSpecificBaseQualities.ref[,c("triplet","mean", "median")]
-# colnames(tripletSpecificBaseQualityRatios) = c("triplet", "mean.ref", "median.ref")
-# tripletSpecificBaseQualityRatios = merge(tripletSpecificBaseQualityRatios, tripletSpecificBaseQualities.alt[,c("triplet","mean", "median")], by="triplet")
-# colnames(tripletSpecificBaseQualityRatios) = c("triplet", "mean.ref", "median.ref", "mean.alt", "median.alt")
-# rownames(tripletSpecificBaseQualityRatios) = tripletSpecificBaseQualityRatios$triplet
-# 
-# 
-# 
-# 
-# transitions = data.frame( c(rep("A",3),rep("C",3),rep("G",3),rep("T",3)), c("C","G","T","A","G","T","A","C","T","A","C","G"), stringsAsFactors = F)
-# colnames(transitions) = c("FROM", "TO")
-# for (index.transition in seq(nrow(transitions))) {
-#   from = transitions[index.transition, "FROM"]
-#   to = transitions[index.transition, "TO"]
-#   for (baseBefore in c("A","C","G","T")) {
-#     for (baseAfter in c("A","C","G","T")) {
-#       triplet = paste0(baseBefore,from,to,baseAfter, collapse = "")
-#       indices.REF = which(tripletSpecificBaseQualities.ref$triplet == triplet)
-#       indices.ALT = which(tripletSpecificBaseQualities.alt$triplet == triplet)
-#       if (length(indices.REF) > 0 & length(indices.ALT) > 0) {
-#         mean.REF = tripletSpecificBaseQualities.ref[indices.REF,"mean"]
-#         mean.ALT = tripletSpecificBaseQualities.alt[indices.ALT,"mean"]
-#         tripletSpecificBaseQualityRatios[triplet,"ratio.mean"] = mean.ALT/mean.REF        
-# 
-#         median.REF = tripletSpecificBaseQualities.ref[tripletSpecificBaseQualities.ref$triplet == triplet,"median"]
-#         median.ALT = tripletSpecificBaseQualities.alt[tripletSpecificBaseQualities.alt$triplet == triplet,"median"]
-#         tripletSpecificBaseQualityRatios[triplet,"ratio.median"]  = median.ALT/median.REF        
-#       }
-#     }    
-#   }
-# }
-# 
-
-
-
+# Combine triplets to reverse complements if requested to do so via the parameters
 if (combineReverseComplement) {
   possible_mutations = c("CA", "CG", "CT", "TA", "TC", "TG")
   forbidden_mutations = sapply(possible_mutations, function(mutation) {as.character(complement(DNAString(mutation)))})
@@ -232,6 +136,7 @@ if (combineReverseComplement) {
 
 
 for (triplet in rownames(tripletSpecificBaseQualities.ref)) {
+  # do the following for each triplet...
   if (combineReverseComplement) {
     if (substr(triplet,2,3) %in% possible_mutations) {
       # collect the scores for the allowed half of this triplet
@@ -270,6 +175,7 @@ for (triplet in rownames(tripletSpecificBaseQualities.ref)) {
     }))    
   }
   
+  # generate some statistics for the current triplet
   mean.ref = mean(scores.ref)
   mean.alt = mean(scores.alt)
   median.ref = median(scores.ref)
@@ -301,6 +207,7 @@ for (triplet in rownames(tripletSpecificBaseQualities.ref)) {
   tripletSpecificBaseQualityRatios[triplet,"tTest_pval"] = t.test(scores.alt, scores.ref)$p.value
 }
 
+# adjust tTest pVals for multiple testing
 tripletSpecificBaseQualityRatios$tTest_pval_adjusted = p.adjust(tripletSpecificBaseQualityRatios$tTest_pval, method = "fdr")
 
 
@@ -319,101 +226,59 @@ transition = function(value, start_point, end_point) {
   return(result)
 }
 
+# prepare color gradients which will be used in the plotting part downstream
 col.ampel.red = colorRampPalette(c("white","white","red"), interpolate = "linear")(25+25)
 col.ampel.green = colorRampPalette(c("green","white","white"), interpolate = "linear")(25+25)
 col.ampel.greenWhiteRed = colorRampPalette(c("green","white","red"), interpolate = "linear")(40)
 
-getAmpelColor.red = function(value, min=0, intermediate=100, max=1000) {
-  color = ifelse(
-    value<=intermediate,
-    col.ampel.red[round(transition(value, min, intermediate)*25+1,0)],
-    col.ampel.red[round((transition(value, intermediate, max)*25)+25,0)]
-  )
-  return (color)
+
+createAmpelColorFunction = function(col.ampel.type1, col.ampel.type2, intermediate.default, max.default) {
+  # This function is a function generator. the result will be a function which can be used to get color gradients between 2 colors
+  colorFunction = eval(parse(text = paste0("function(value, min=0, intermediate=",intermediate.default,", max=",max.default,") {
+    color = ifelse(
+      value<=intermediate,
+      ",col.ampel.type1,"[round(transition(value, min, intermediate)*25+1,0)],
+      ",col.ampel.type2,"[round((transition(value, intermediate, max)*25)+25,0)]
+    )
+    return (color)    
+  }")))
+  return(colorFunction)
 }
-getAmpelColor.green = function(value, min=0, intermediate=100, max=1000) {
-  color = ifelse(
-    value<=intermediate,
-    col.ampel.green[round(transition(value, min, intermediate)*25+1,0)],
-    col.ampel.green[round((transition(value, intermediate, max)*25)+25,0)]
-  )
-  return (color)
-}
-getAmpelColor.greenWhiteRed = function(value, min=0, intermediate=20, max=40) {
-  color = ifelse(
-    value<=intermediate,
-    col.ampel.green[round(transition(value, min, intermediate)*25+1,0)],
-    col.ampel.red[round((transition(value, intermediate, max)*25)+25,0)]
-  )
-  return (color)  
-}
+
+getAmpelColor.red = createAmpelColorFunction(col.ampel.type1="col.ampel.red", col.ampel.type2="col.ampel.red", intermediate.default=100, max.default=1000)
+getAmpelColor.green = createAmpelColorFunction(col.ampel.type1="col.ampel.green", col.ampel.type2="col.ampel.green", intermediate.default=100,max.default=1000)
+getAmpelColor.greenWhiteRed = createAmpelColorFunction(col.ampel.type1="col.ampel.green", col.ampel.type2="col.ampel.red", intermediate.default=20,max.default=40)
+
 
 ## Add an alpha value to a colour
 add.alpha <- function(col, alpha=1){
   if(missing(col))
     stop("Please provide a vector of colours.")
   apply(sapply(col, col2rgb)/255, 2, 
-        function(x) 
-          rgb(x[1], x[2], x[3], alpha=alpha))  
+        function(x) { rgb(x[1], x[2], x[3], alpha=alpha) }
+  )  
 }
 
 
 
+######################################################
+# PLOTTING PART STARTS HERE...
+
+badBQ = 20 # values below which base quality will be called "poor quality" (red color)
+intermediateBQ=32 # expected intermediate BQ (white color)
+goodBQ=36 # values aboove which base quality will be called "good quality" (green color)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-badBQ = 20
-intermediateBQ=32
-goodBQ=36
-
-
-# opt$outFile="/home/warsow/BQ_biasPlot.pdf"
-# opt$outFile=paste0("/icgc/dkfzlsdf/analysis/mmml/whole_genome_pcawg/results_per_pid/",PID,"/mpileup_withBaseScoreBiasPlots/snvs_4100636_base_score_bias_plot_after_filter_twice_pVal0.99_lowT1.2_uppT2.0.pdf")
 pdf(file = opt$outFile , width = 13, height = 5)
-  
-  # opacity.pValThreshold = 0.05
-  # colorSaturation.lowerFoldChangeThreshold = 1.33 # start red/green coloring at this fold change
-  # colorSaturation.upperFoldChangeThreshold = 2.0  # full red/green coloring from this fold change on
-
-  opacity.pValThreshold = 0.99
-  # opacity.pValThreshold = 0.0005
+  # set opacity.pValThreshold to a value <0.99 in order to use opacity; 
+  # e.g. fade out triplets changing insignificantly between ALT vs. REF base qualities  
+  opacity.pValThreshold = 0.99 
   colorSaturation.lowerFoldChangeThreshold = 1.10 # start red/green coloring at this fold change
   colorSaturation.upperFoldChangeThreshold = 2.0  # full red/green coloring from this fold change on
   DiffThreshold = 2.00 # print difference values with abs value of at least colorSaturation.lowerDiffThreshold
 
 
-  
   plot(c(0, 290), c(0, 40), type= "n", xlab = "", ylab = "", asp=1, xaxt='n', yaxt='n')
   text(130, 55,  opt$descriptionForMainTitle, cex = 1.1)
   text(-5, 5, "A", cex = 0.6);text(-5, 15, "C", cex = 0.6);text(-5, 25, "G", cex = 0.6);text(-5, 35, "T", cex = 0.6)
@@ -480,14 +345,6 @@ pdf(file = opt$outFile , width = 13, height = 5)
               text(xleft+(xright-xleft)/2, ybottom+(ytop-ybottom)/2, round(diff.mean, 2), cex = 0.5)
             }            
           }
-
-          # color.ref = ifelse(meanBQ.ref>=whiteBQ,
-          #                getAmpelColor.red(value = meanBQ.ref, min = 0.00, intermediate = log2(colorSaturation.lowerFoldChangeThreshold), max = log2(colorSaturation.upperFoldChangeThreshold)),
-          #                getAmpelColor.green(value = meanBQ.ref, min = -log2(colorSaturation.upperFoldChangeThreshold), intermediate = -log2(colorSaturation.lowerFoldChangeThreshold), max = 0.00))
-          # 
-          # color.alt = getAmpelColor.greenWhiteRed(value = tripletSpecificBaseQualityRatios[triplet,"mean.alt"], min = 0, intermediate = whiteBQ, max = 40)
-
-          
           text(transition.x_offset[mutation] + 20, 45, paste0(from,"->",to), cex = 0.4)
 
 
