@@ -23,32 +23,19 @@ opt = getopt(matrix(c(
 ),ncol=4,byrow=TRUE));
 
  
-# opt$PID = "BW"
-# opt$baseFolder = "/home/warsow/Projects/Cavathrombus/Cavathrombus/results_per_pid"
-# opt$mpileupFolder = paste0(opt$baseFolder,"/",opt$PID,"/SNV_Calling/mpileup2.3_VRenalisAdjacent_vs_NormalKidney/")
-# opt$vcfInputFile = paste0(opt$mpileupFolder,"snvs_",opt$PID,"_somatic_snvs_conf_8_to_10.vcf")
-# opt$refScores = paste0(opt$mpileupFolder,"snvs_",opt$PID,"_reference_allele_base_qualities.txt.gz")
-# opt$altScores = paste0(opt$mpileupFolder,"snvs_",opt$PID,"_alternative_allele_base_qualities.txt.gz")
-# opt$baseScoreThreshold =13
-# opt$outFile = paste0(opt$mpileupFolder,"snvs_",opt$PID,"_triplet-specific_BQ_distributions.pdf")
+checkForMissingParameter = function(parameter, errorText, exitCode=1) {
+  if (is.null(opt[[parameter]])){
+    cat(paste0(errorText,"\n")) 
+    q(exitCode)      # quit, status unequal 0 means error
+  }
+}
 
 
-if (is.null(opt$vcfInputFile)){
-  cat("Please specify the file that contains the SNVs for which the base score distribution plot shall be created.\n"); 
-  q(status=1);      # quit, status unequal 0 means error
-}
-if (is.null(opt$refScores)){
-  cat("Please specify the file containing reference allele base scores.\n"); 
-  q(status=1);      # quit, status unequal 0 means error
-}
-if (is.null(opt$altScores)){      # no vcf file specified
-  cat("PPlease specify the file containing alternative allele base scores.\n"); 
-  q(status=1);      # quit, status unequal 0 means error
-}
-if (is.null(opt$outFile)){      # no vcf file specified
-  cat("Please specify the output pdf file.\n"); 
-  q(status=2);      # quit, status unequal 0 means error
-}
+checkForMissingParameter("vcfInputFile", "Please specify the file that contains the SNVs for which the base score distribution plot shall be created.", 1)
+checkForMissingParameter("refScores", "Please specify the file containing reference allele base scores.", 1)
+checkForMissingParameter("altScores", "Please specify the file containing alternative allele base scores.", 1)
+checkForMissingParameter("outFile", "Please specify the output pdf file.", 1)
+
 
 options(stringsAsFactors = FALSE)
 
