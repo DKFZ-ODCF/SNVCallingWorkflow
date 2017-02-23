@@ -1,4 +1,9 @@
 #!/usr/bin/env Rscript
+# This script determins the THA artifact score for the given snvs vcf file.
+# The score is calculated as the fraction of SNVs with a baseQbias (PV4) p-value of at most 0.05 minus 0.15.
+# See Phabricator Task 597 and related tasks.
+# Author: G. Warsow
+
 
 library(getopt)
 options(stringsAsFactors = FALSE)
@@ -24,6 +29,7 @@ colnames(PV4) = c("CHROM", "POS", "VDB", "RPB" , "DP4", "strandbias", "baseQbias
 PV4[,paste0("baseQbias_below",pval)] = PV4$baseQbias < pval
 count.BaseQ_below0.05 = sum(PV4[,paste0("baseQbias_below",pval)])
 count.total = nrow(PV4)
-THA_score = count.BaseQ_below0.05 - 0.15 * count.total
+# RELATIVE (not absolute) THA score:
+THA_score = round(count.BaseQ_below0.05/count.total - 0.15)
 
 cat(paste0(THA_score,"\n"))

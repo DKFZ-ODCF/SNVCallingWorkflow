@@ -55,12 +55,12 @@ checkForMissingParameter("vcfInputFile", "Please specify the file that contains 
     vcfInputFile = paste0(opt$vcfInputFile)
 checkForMissingParameter("mpileupFolder", "Please specify the mpileup folder.", 1)
     MPILEUP_FOLDER=paste0(opt$mpileupFolder,"/")
-    RefAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_reference_allele_base_qualities.txt.gz", collapse = "")
-    AltAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_alternative_allele_base_qualities.txt.gz", collapse = "")    
 checkForMissingParameter("alignmentFolder", "Please specify the alignment folder.", 1)
     ALIGNMENT_FOLDER=paste0(opt$alignmentFolder,"/")
 checkForMissingParameter("PID", "Please specify the PID.", 1)
     PID=opt$PID
+    RefAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_reference_allele_base_qualities.txt.gz", collapse = "")
+    AltAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_alternative_allele_base_qualities.txt.gz", collapse = "")    
 checkForMissingParameter("outFilePrefix", "Please specify the output pdf file.", 1)
     PDF_OUTPUT_FILE_PREFIX=paste0(opt$outFilePrefix)
 

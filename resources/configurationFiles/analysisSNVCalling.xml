@@ -272,6 +272,7 @@
         <tool name="plotBaseScoreBias" value="tripletBased_BQRatio_plotter.R" basepath="snvPipeline"/>
         <tool name="plotTripletSpecificBaseScoreDistribution" value="tripletBased_BQDistribution_plotter.R" basepath="snvPipeline"/>
         <tool name="sangerArtifactDetector" value="SangerArtifactDetector.R" basepath="snvPipeline"/>
+        <tool name="ThaDetector" value="determine_THA_score.R" basepath="snvPipeline"/>
         <tool name="analyzeBamHeader" value="analyzeBamHeader.sh" basepath="tools"/>
         <tool name="copysamWrapper" value="copysam_wrapper.sh" basepath="snvPipeline"/>
     </processingTools>
