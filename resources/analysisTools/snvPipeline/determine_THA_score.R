@@ -30,6 +30,6 @@ PV4[,paste0("baseQbias_below",pval)] = PV4$baseQbias < pval
 count.BaseQ_below0.05 = sum(PV4[,paste0("baseQbias_below",pval)])
 count.total = nrow(PV4)
 # RELATIVE (not absolute) THA score:
-THA_score = round(count.BaseQ_below0.05/count.total - 0.15)
+THA_score = count.BaseQ_below0.05/count.total
 
 cat(paste0(THA_score,"\n"))

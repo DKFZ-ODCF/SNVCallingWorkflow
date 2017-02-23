@@ -81,6 +81,7 @@
         <cvalue name="biasRatioThreshold" value="0.63" type="float" description="threshold for fraction of reads in direction of bias / total variant reads above which it will be considered a strong bias"/>
         <cvalue name="nReads" value="20" type="integer" description=" number of reads in one field above which a bias is possible"/>
         <cvalue name="nMuts" value="4" type="integer" description=" number of muts above which a bias is possible"/>
+        <cvalue name="THA_SCORE_THRESHOLD" value="0.15" type="float" description="Threshold for calling sample THA affected. Threshold refers to fraction of SNVs with BaseQ pVal below 0.05"/>
 
         <!--## Thresholds to determine if a variant call is an artifact-->
         <!--#max mumber of reads we will tolerate in the direction opposite to the bias for it to be called an artefact-->
