@@ -22,50 +22,6 @@ opt = getopt(matrix(c(
 ),ncol=4,byrow=TRUE));
 
 
-# RPP_FOLDER="/icgc/pcawg/analysis/train2full/projects/CMDI-UK/"
-# opt$PID = "f8e61a02-654c-c226-e040-11ac0d481b60"
-# opt$PID = "f9012277-55c4-2486-e040-11ac0c48236f"
-# opt$mpileupFolder = paste0(RPP_FOLDER,opt$PID,"/merged_may2016Calls_filtered_BQD_plots")
-# opt$vcfInputFile = paste0(opt$mpileupFolder,"/",opt$PID,"_somatic.snv_mnv.vcf_filtered.OnlyPassed.vcf")
-# opt$outFile = paste0(opt$mpileupFolder,"/snvs_",opt$PID,"_SangerArtifcatDetected.txt")
-# opt$combineRevcomp = 1
-
-# RPP_FOLDER="/icgc/pcawg/analysis/train2full/projects/BLCA-US/"
-# opt$PID = "2b142863-b963-4cc9-8f8f-c72503c93390"
-# opt$PID = "0c7aca3f-e006-4de3-afc2-20b4f727d4fd"
-# opt$mpileupFolder = paste0(RPP_FOLDER,opt$PID,"/merged_may2016Calls_filtered_BQD_plots")
-# opt$vcfInputFile = paste0(opt$mpileupFolder,"/",opt$PID,"_somatic.snv_mnv.vcf_filtered.OnlyPassed.vcf")
-# opt$outFile = paste0(opt$mpileupFolder,"/snvs_",opt$PID,"_SangerArtifcatDetected.txt")
-# opt$combineRevcomp = 1
-# opt$sequenceContextColumnIndex = 10
-
-# RPP_FOLDER="/icgc/pcawg/analysis/train2full/projects/CLLE-ES/"
-# opt$PID = "873ed251-fa44-465f-99e0-c90a42ea13d9"
-# opt$mpileupFolder = paste0(RPP_FOLDER,opt$PID,"/merged_may2016Calls_filtered_BQD_plots")
-# opt$vcfInputFile = paste0(opt$mpileupFolder,"/",opt$PID,"_somatic.snv_mnv.vcf_filtered.OnlyPassed.vcf")
-# opt$outFile = paste0(opt$mpileupFolder,"/snvs_",opt$PID,"_SangerArtifcatDetected.txt")
-# opt$combineRevcomp = 1
-
-# RPP_FOLDER="/icgc/pcawg/analysis/train2full/projects/BOCA-UK/"
-# opt$PID = "f85ae2b7-cebf-17a2-e040-11ac0c48033a"
-# opt$PID = "fc970467-ae01-4a8f-e040-11ac0c48163b"
-# opt$PID = "f82d213f-bc99-5b1d-e040-11ac0c486880"
-# opt$mpileupFolder = paste0(RPP_FOLDER,opt$PID,"/merged_may2016Calls_filtered_BQD_plots")
-# opt$vcfInputFile = paste0(opt$mpileupFolder,"/",opt$PID,"_somatic.snv_mnv.vcf_filtered.OnlyPassed.vcf")
-# opt$vcfInputFile = paste0(opt$mpileupFolder,"/",opt$PID,"_somatic.snv_mnv.vcf_filtered.OnlyPassed.withoutHeader.vcf")
-# opt$outFile = paste0(opt$mpileupFolder,"/snvs_",opt$PID,"_SangerArtifcatDetected.txt")
-# opt$combineRevcomp = 1
-
-# RPP_FOLDER="/icgc/pcawg/analysis/train2full/projects/LAML-US/"
-# opt$PID = "fc2d6c31-dadb-45cb-9053-c87f535a77a5"
-# opt$PID = "fc970467-ae01-4a8f-e040-11ac0c48163b"
-# opt$PID = "f82d213f-bc99-5b1d-e040-11ac0c486880"
-# opt$mpileupFolder = "/icgc/pcawg/analysis/train2full/projects/LAML-US/fc2d6c31-dadb-45cb-9053-c87f535a77a5/artifactDetection/Sanger"
-# opt$vcfInputFile = "/icgc/pcawg/analysis/train2full/projects/LAML-US/fc2d6c31-dadb-45cb-9053-c87f535a77a5/artifactDetection/Sanger/snvs_fc2d6c31-dadb-45cb-9053-c87f535a77a5_somatic_snvs_conf_8_to_10.OnlyPassed.withoutHeader.vcf"
-# opt$outFile = "/icgc/pcawg/analysis/train2full/projects/LAML-US/fc2d6c31-dadb-45cb-9053-c87f535a77a5/artifactDetection/Sanger/snvs_fc2d6c31-dadb-45cb-9053-c87f535a77a5_SangerArtifcatData.txt"
-# opt$combineRevcomp = 1
-# opt$sequenceContextColumnIndex = 10
-
 if (is.null(opt$vcfInputFile)){
   cat("Please specify the file that contains the SNVs for which the base score distribution plot shall be created.\n"); 
   q(status=1);      # quit, status unequal 0 means error
@@ -98,7 +54,6 @@ if (! is.null(opt$sequenceContextColumnIndex)){
     SEQUENCE_CONTEXT_COLUMN_INDEX = tmp
   }
 }
-
 
 if (COMBINE_REVCOMP) {
   transitions = data.frame( c(rep("C",3),rep("T",3)), c("A","G","T","A","C","G"), stringsAsFactors = F)  
@@ -242,8 +197,6 @@ AUC.alt.DF = data.frame(Triplet = character(0),
                              AUC20=numeric(0), AUC5.20=numeric(0), AUC13.20=numeric(0) )
 
 data.SangerArtifact = apply(transitions, 1, function(transition) {
-  # transition=transitions[i,]
-  # transition=transitions[6,]
   from=transition["FROM"]
   to=transition["TO"]
   fromto = paste0(from,to)
@@ -251,8 +204,6 @@ data.SangerArtifact = apply(transitions, 1, function(transition) {
   data.SangerArtifact.tmp = data.frame(Triplet=character(0), count=integer(0), proportion=numeric(0), AUC.BQ30.ref=numeric(0), AUC.BQ30.alt=numeric(0))
   for (baseBefore in c("A","C","G","T")) {
     for (baseAfter in c("A","C","G","T")) {
-      # baseBefore="G"
-      # baseAfter="G"
       triplet = paste0(baseBefore,from,to,baseAfter, collapse = "")
       transitionSubset = data.bq.triplet[data.bq.triplet$REVCOMP_TRIPLET == triplet,]
       n = nrow(transitionSubset)
@@ -336,39 +287,18 @@ pdf(file=paste0(MPILEUP_FOLDER,"snvs_",PID,"_zScoreBased_AUC.BQ30_BiasPlot.pdf",
 #   for (lowerThresholdBQ in c(0,5,13)) {
 for (upperThresholdBQ in c(30)) {
   for (lowerThresholdBQ in c(0)) {    
-    if (lowerThresholdBQ > 0 ) {
-      # lmCommand = paste0("mod = lm(AUC",lowerThresholdBQ,".",upperThresholdBQ," ~ const, data=AUC.alt.DF)")
-      # CooksD_colName = paste0("CooksD",lowerThresholdBQ,".",upperThresholdBQ)
-      # FoldCookMean_colName = paste0("FoldCookMean",lowerThresholdBQ,".",upperThresholdBQ)      
-      # AUC_colName = paste0("AUC.BQ",lowerThresholdBQ,".",upperThresholdBQ,".alt")
-      # mainTitleForPlot = paste0("Cook's Distance for AUC.BQ",lowerThresholdBQ,".",upperThresholdBQ,".alt\nfor PID ",PID)
-    } else {
-      # lmCommand = paste0("mod = lm(AUC",upperThresholdBQ," ~ const, data=AUC.alt.DF)")
-      # CooksD_colName = paste0("CooksD",upperThresholdBQ)
-      FoldCookMean_colName = paste0("FoldCookMean",upperThresholdBQ)
-      Residuum_colName = paste0("Residuum.BQ",upperThresholdBQ)
-      FoldResiduumMean_colname = paste0("FoldResiduumMean.BQ",upperThresholdBQ)
-      zScore_colname = paste0("zScore.BQ",upperThresholdBQ)
-      AUC_colName = paste0("AUC.BQ",upperThresholdBQ,".alt")
-      # mainTitleForPlot = paste0("Cook's Distance for AUC.BQ",upperThresholdBQ,".alt\nfor PID ",PID)
-      mainTitleForPlot = paste0("AUC.BQ",upperThresholdBQ,".alt with zScore-based outlier detection\nfor PID ",PID)
-    }
-    # eval(parse(text=lmCommand))
-    # cooksd <- cooks.distance(mod)
-    # http://r-statistics.co/Outlier-Treatment-With-R.html
+    Residuum_colName = paste0("Residuum.BQ",upperThresholdBQ)
+    FoldResiduumMean_colname = paste0("FoldResiduumMean.BQ",upperThresholdBQ)
+    zScore_colname = paste0("zScore.BQ",upperThresholdBQ)
+    AUC_colName = paste0("AUC.BQ",upperThresholdBQ,".alt")
+    mainTitleForPlot = paste0("AUC.BQ",upperThresholdBQ,".alt with zScore-based outlier detection\nfor PID ",PID)
+    
     AUC = data.SangerArtifact[,AUC_colName]
     AUC.mean = mean(AUC, na.rm=T)
     AUC.stdv = sd(AUC,na.rm = T)
     AUC.zScore = abs(AUC - AUC.mean) / AUC.stdv
     AUC.alt.DF[,zScore_colname] = AUC.zScore
-    # AUC.alt.DF[names(cooksd),CooksD_colName] = cooksd
-    # data.SangerArtifact[,FoldCookMean_colName] = round(AUC.alt.DF[,CooksD_colName]/mean(AUC.alt.DF[,CooksD_colName], na.rm=T),2)
-    
-    # indices_orange = cooksd>4*mean(cooksd, na.rm=T)
-    # indices_orange = names(indices_orange)[indices_orange]
-    # indices_red = cooksd>10*mean(cooksd, na.rm=T)
-    # indices_red = names(indices_red)[indices_red]
-    
+
     indices_orange = AUC.alt.DF[,zScore_colname]>2
     indices_orange = rownames(AUC.alt.DF)[indices_orange]
     indices_orange = indices_orange[!is.na(indices_orange)]
@@ -388,22 +318,6 @@ for (upperThresholdBQ in c(30)) {
       AUC.alt.DF[indices_red, "color"] = "red"
     }
     
-        
-    # plot(AUC.alt.DF[,CooksD_colName], pch="*", cex=2, col=AUC.alt.DF$color, ylab="CooksDistance", xlab="Triplet Index", ylim=c(0.0,max(c(0.6,max(cooksd)+0.1))), main=mainTitleForPlot)
-    # abline(h = 4*mean(cooksd, na.rm=T), col="orange")
-    # text(96, 4*mean(cooksd, na.rm=T), "4-fold", col="orange", cex=0.6)
-    # abline(h = 10*mean(cooksd, na.rm=T), col="red")
-    # text(95, 10*mean(cooksd, na.rm=T), "10-fold", col="red", cex=0.6)
-    # for (fold in c(25,50,75,100)) {
-    #   abline(h = fold*mean(cooksd, na.rm=T), col="grey")
-    #   text(95, fold*mean(cooksd, na.rm=T), paste0(fold,"-fold"), col="grey", cex=0.6)      
-    # }
-    # abline(h = mean(cooksd, na.rm=T), col="grey")
-    # text(95, mean(cooksd, na.rm=T), paste0("mean"), col="grey", cex=0.6)      
-    # text(x=1:nrow(AUC.alt.DF), y=AUC.alt.DF[,CooksD_colName]+0.030, labels=AUC.alt.DF$printLabel, col=AUC.alt.DF$color, cex=0.8)
-    # text(x=1:nrow(AUC.alt.DF), y=AUC.alt.DF[,CooksD_colName]+0.015, labels=AUC.alt.DF$printAUC, col=AUC.alt.DF$color, cex=0.6)
-    
-    
     plot(data.SangerArtifact[,AUC_colName], pch="*", cex=2, col=AUC.alt.DF$color, 
          ylab="AUC", xlab="Triplet Index", ylim=c(0,1.05), 
          main=mainTitleForPlot)    
@@ -421,33 +335,7 @@ for (upperThresholdBQ in c(30)) {
 dev.off()
 
 
-
-
 data.SangerArtifact = merge(data.SangerArtifact, AUC.alt.DF, by="Triplet")
 
 data.SangerArtifact = data.SangerArtifact[order(substr(data.SangerArtifact$Triplet,start = 2,3),substr(data.SangerArtifact$Triplet,start = 1,1),substr(data.SangerArtifact$Triplet,start = 4,4)),]
 write.table(data.SangerArtifact, file = OUTPUT_FILE, sep = "\t", row.names = F, col.names = T, quote = F)
-
-
-
-# if (data.SangerArtifact[data.SangerArtifact$Triplet=="GTGG","proportion"] > 0.2) {
-#   if (data.SangerArtifact[data.SangerArtifact$Triplet=="GTGG","count"] > 5) {
-#     if (data.SangerArtifact[data.SangerArtifact$Triplet=="GTGG","AUC.BQ30.alt"] > 0.40) {
-#       data.SangerArtifact = data.SangerArtifact[order(substr(data.SangerArtifact$Triplet,start = 2,3),substr(data.SangerArtifact$Triplet,start = 1,1),substr(data.SangerArtifact$Triplet,start = 4,4)),]
-#       write.table(data.SangerArtifact, file = OUTPUT_FILE, sep = "\t", row.names = F, col.names = T, quote = F)
-#     }
-#   }
-# }
-
-# if (data.SangerArtifact[data.SangerArtifact$Triplet=="GTGG","proportion"] > 0.0) {
-#   if (data.SangerArtifact[data.SangerArtifact$Triplet=="GTGG","count"] > 0) {
-#     if (data.SangerArtifact[data.SangerArtifact$Triplet=="GTGG","AUC.BQ30.alt"] > 0.00) {
-#       data.SangerArtifact = data.SangerArtifact[order(substr(data.SangerArtifact$Triplet,start = 2,3),substr(data.SangerArtifact$Triplet,start = 1,1),substr(data.SangerArtifact$Triplet,start = 4,4)),]
-#       write.table(data.SangerArtifact, file = OUTPUT_FILE, sep = "\t", row.names = F, col.names = T, quote = F)
-#     }
-#   }          
-# }
-
-
-
-
