@@ -30,7 +30,9 @@ opt = getopt(matrix(c(
   'MAFColumnIndex', 'z', 1, "integer",
   'channelIndividualGraphs', 'i', 2, "integer",
   'mainTitle', 't', 2, "character",
-  'skipPlots', 'x', 2, "integer"
+  'skipPlots', 'x', 2, "integer",
+  'refBaseQual', 'k', 1, "character",
+  'altBaseQual', 'l', 1, "character"
 ),ncol=4,byrow=TRUE));
 
 
@@ -59,8 +61,10 @@ checkForMissingParameter("alignmentFolder", "Please specify the alignment folder
     ALIGNMENT_FOLDER=paste0(opt$alignmentFolder,"/")
 checkForMissingParameter("PID", "Please specify the PID.", 1)
     PID=opt$PID
-    RefAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_reference_allele_base_qualities.txt.gz", collapse = "")
-    AltAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_alternative_allele_base_qualities.txt.gz", collapse = "")    
+checkForMissingParameter("refBaseQual", "Please specify the reference allel base qualities file.", 1)    
+    RefAlleleBaseQualitiesFile=opt$refBaseQual
+checkForMissingParameter("altBaseQual", "Please specify the alternative allel base qualities file.", 1)    
+    AltAlleleBaseQualitiesFile=opt$altBaseQual
 checkForMissingParameter("outFilePrefix", "Please specify the output pdf file.", 1)
     PDF_OUTPUT_FILE_PREFIX=paste0(opt$outFilePrefix)
 

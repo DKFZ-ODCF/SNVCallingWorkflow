@@ -110,7 +110,11 @@ if [[ ${RERUN_FILTER_STEP} == 1 ]]; then
     fi
     MAF_COLUMN_INDEX=`cat ${SNV_FILE_WITH_MAF} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "MAF"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
     # this script will create a file named ${SNV_FILE_WITH_MAF_filtered}
-    ${RSCRIPT_BINARY} ${TOOL_PLOT_TRIPLET_SPECIFIC_BASE_SCORE_DISTRIBUTION} -v ${SNV_FILE_WITH_MAF} -m ${mpileupDirectory} -a ${ALIGNMENT_FOLDER} -p ${PID} -b ${plotBackgroundBaseScoreDistribution} -o ${BaseScoreDistributionsPlots_PREFIX} -R ${forceRerun} -c ${combineRevComp} -f ${MEDIAN_FILTER_THRESHOLD} -s ${SEQUENCE_CONTEXT_COLUMN_INDEX} --MAFColumnIndex ${MAF_COLUMN_INDEX} -i ${channelIndividualGraphs} -t 'Base score distribution of PID '${PID}'\nafter Median'${MEDIAN_FILTER_THRESHOLD}' filtering' --skipPlots ${skipPlots}
+    ${RSCRIPT_BINARY} ${TOOL_PLOT_TRIPLET_SPECIFIC_BASE_SCORE_DISTRIBUTION} -v ${SNV_FILE_WITH_MAF} -m ${mpileupDirectory} -a ${ALIGNMENT_FOLDER} \
+        -p ${PID} -b ${plotBackgroundBaseScoreDistribution} -o ${BaseScoreDistributionsPlots_PREFIX} -R ${forceRerun} -c ${combineRevComp} \
+        -f ${MEDIAN_FILTER_THRESHOLD} -s ${SEQUENCE_CONTEXT_COLUMN_INDEX} --MAFColumnIndex ${MAF_COLUMN_INDEX} -i ${channelIndividualGraphs} \
+        -t 'Base score distribution of PID '${PID}'\nafter Median'${MEDIAN_FILTER_THRESHOLD}' filtering' --skipPlots ${skipPlots} \
+        --refBaseQual ${filenameReferenceAlleleBaseQualities} --altBaseQual ${filenameAlternativeAlleleBaseQualities}
     [[ "$?" != 0 ]] && "There was a non-zero exit code in the generation of the tripletBased BQ distribution plot." && exit 21
     mv ${SNV_FILE_WITH_MAF_filtered} ${filenameSomaticSnvs}
 
