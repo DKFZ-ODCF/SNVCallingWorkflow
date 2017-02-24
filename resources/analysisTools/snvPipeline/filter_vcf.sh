@@ -62,6 +62,7 @@ filenameSequencingErrorMatrix=${outputFilenamePrefix}_sequencing_specific_error_
 filenameReferenceAlleleBaseQualities=${outputFilenamePrefix_original}_reference_allele_base_qualities.txt.gz
 filenameAlternativeAlleleBaseQualities=${outputFilenamePrefix_original}_alternative_allele_base_qualities.txt.gz
 filenameAlternativeAlleleReadPositions=${outputFilenamePrefix_original}_alternative_allele_read_positions.txt.gz
+filenameTHAArtifactDetected=${outputFilenamePrefix}_is_THA_affected.txt
 
 # plot paths
 filenamePerChromFreq=${outputFilenamePrefix}_perChromFreq_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.pdf
@@ -104,7 +105,7 @@ if [[ ${RERUN_FILTER_STEP} == 1 ]]; then
     filenameSomaticSnvs_original=`basename ${outputFilenamePrefix}_somatic_snvs_conf_${MIN_CONFIDENCE_SCORE}_to_10.vcf`
     SEQUENCE_CONTEXT_COLUMN_INDEX=`cat ${mpileupDirectory}/${filenameSomaticSnvs_original} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "SEQUENCE_CONTEXT"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
     SNV_FILE_WITH_MAF=${mpileupDirectory}/${filenameSomaticSnvs_original}.withMAF.vcf
-    SNV_FILE_WITH_MAF_filtered=${mpileupDirectory}/${filenameSomaticSnvs_original}.withMAF_filteredAltMedian20.vcf
+    SNV_FILE_WITH_MAF_filtered=${mpileupDirectory}/${filenameSomaticSnvs_original}.withMAF_filteredAltMedian${MEDIAN_FILTER_THRESHOLD}.vcf
     if [[ ! -f ${SNV_FILE_WITH_MAF} ]]; then
         cat ${mpileupDirectory}/${filenameSomaticSnvs_original} | perl -ne 'chomp; my $line=$_; if (/DP4=(\d+),(\d+),(\d+),(\d+);/) {my $fR=$1; my $rR=$2; my $fA=$3; my $rA=$4; my $MAF=($fA+$rA)/($fR+$rR+$fA+$rA); print "$line\t$MAF\n";} else { if (/^#CHROM/) { print "$line\tMAF\n";} else {print "$line\n";} };' >${SNV_FILE_WITH_MAF}
     fi
@@ -214,11 +215,13 @@ then
 
 #        ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_BIAS} -v ${filenameSomaticSnvs} -r ${filenameReferenceAlleleBaseQualities} -a ${filenameAlternativeAlleleBaseQualities} -o ${filenameBaseScoreBiasPlot} -d "Final Base Quality Bias Plot for PID ${PID}"
         ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_BIAS} -v ${filenameSomaticSnvs} -r ${filenameReferenceAlleleBaseQualities} -a ${filenameAlternativeAlleleBaseQualities} -t ${basequal} -p ${PLOT_TYPE} -o ${filenameBaseScoreBiasPlotFinal} -d "Final Base Quality Bias Plot for PID ${PID}"
+        [[ "$?" != 0 ]] && echo "There was a non-zero exit code in the base score bias plot script." && exit 31
         if [[ ! -f ${filenameBaseScoreBiasPlotFinal} ]]; then
             filenameBaseScoreBiasPlotFinal=''
         fi
 
         ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_DISTRIBUTION} -v ${filenameSomaticSnvs} -r ${filenameReferenceAlleleBaseQualities} -a ${filenameAlternativeAlleleBaseQualities} -o ${filenameBaseScoreDistributions} -d "for somatic SNVs for PID ${PID}" -t ${basequal}
+        [[ "$?" != 0 ]] && echo "There was a non-zero exit code in the base score distribution plots script." && exit 32
         if [[ ! -f ${filenameBaseScoreDistributions} ]]; then
             filenameBaseScoreDistributions=''
         fi
@@ -238,7 +241,10 @@ then
 
         SEQUENCE_CONTEXT_COLUMN_INDEX=`cat ${SNV_FILE_WITH_MAF} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "SEQUENCE_CONTEXT"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
         MAF_COLUMN_INDEX=`cat ${SNV_FILE_WITH_MAF} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "MAF"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
-        ${RSCRIPT_BINARY} ${TOOL_PLOT_TRIPLET_SPECIFIC_BASE_SCORE_DISTRIBUTION} -v ${SNV_FILE_WITH_MAF} -m ${mpileupDirectory} -a ${ALIGNMENT_FOLDER} -p ${PID} -b ${plotBackgroundBaseScoreDistribution} -o ${BaseScoreDistributionsPlots_PREFIX} -R ${forceRerun} -c ${combineRevComp} -f ${MEDIAN_FILTER_THRESHOLD} -s ${SEQUENCE_CONTEXT_COLUMN_INDEX} --MAFColumnIndex ${MAF_COLUMN_INDEX} -i ${channelIndividualGraphs} -t 'Base score distribution of PID '${PID} --skipPlots ${skipPlots}
+        ${RSCRIPT_BINARY} ${TOOL_PLOT_TRIPLET_SPECIFIC_BASE_SCORE_DISTRIBUTION} -v ${SNV_FILE_WITH_MAF} -m ${mpileupDirectory} -a ${ALIGNMENT_FOLDER} -p ${PID} \
+        -b ${plotBackgroundBaseScoreDistribution} -o ${BaseScoreDistributionsPlots_PREFIX} -R ${forceRerun} -c ${combineRevComp} -f ${MEDIAN_FILTER_THRESHOLD} \
+        -s ${SEQUENCE_CONTEXT_COLUMN_INDEX} --MAFColumnIndex ${MAF_COLUMN_INDEX} -i ${channelIndividualGraphs} -t 'Base score distribution of PID '${PID} \
+        --skipPlots ${skipPlots} --refBaseQual ${filenameReferenceAlleleBaseQualities} --altBaseQual ${filenameAlternativeAlleleBaseQualities}
         if [[ ! ${runSecondFilterStep} ]]; then
             rm ${SNV_FILE_WITH_MAF}
         fi
@@ -278,7 +284,10 @@ then
 fi
 
 # infer baseQuality bias (PV4)-related THA score
-    THA_SCORE=`${RSCRIPT_BINARY} ${THA_DETECTOR} -i ${filenameSomaticSnvs}`
+    THA_SCORE=`${RSCRIPT_BINARY} ${TOOL_THA_DETECTOR} -i ${filenameSomaticSnvs}`
+    [[ "$?" != 0 ]] && echo "There was a non-zero exit code in THA score determination script." && exit 24
+    [[ -f ${filenameTHAArtifactDetected} ]] && rm ${filenameTHAArtifactDetected}
+    [[ $(echo "${THA_SCORE} > ${THA_SCORE_THRESHOLD}" | bc -l) ]] && echo -e "THA score\t${THA_SCORE}\n" >${filenameTHAArtifactDetected}
 
 
 if [ ${RUN_PUREST} == 1 ]
