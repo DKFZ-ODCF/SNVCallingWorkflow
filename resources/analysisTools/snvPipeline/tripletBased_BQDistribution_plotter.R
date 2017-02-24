@@ -45,7 +45,7 @@ setIntegerValueFromParameter = function(parameterName, valueName) {
   if (! is.null(opt[[parameterName]])){
     tmp = as.integer(opt[[parameterName]])
     if (!is.na(tmp)) {
-      assign(valueName, tmp)
+      assign(valueName, tmp, envir = .GlobalEnv)
     }
   }  
 }
