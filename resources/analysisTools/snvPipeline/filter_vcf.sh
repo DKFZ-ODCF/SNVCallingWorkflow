@@ -2,6 +2,17 @@
 
 source ${CONFIG_FILE}
 
+PLOT_TYPE=${BASE_SCORE_BIAS_PLOT_TYPE:-Differences}
+
+if [[ ${FILENAME_CHECKPOINT_FIRST_FILTER_RUN:-0} == 0 ]]; then
+    RERUN_FILTER_STEP=0
+    MEDIAN_FILTER_THRESHOLD=-1
+    RERUN_SUFFIX=""
+else
+    RERUN_FILTER_STEP=1
+fi
+
+
 set -o pipefail
 
 [[ -f ${FILENAME_CHECKPOINT} ]] && rm ${FILENAME_CHECKPOINT}
@@ -13,10 +24,11 @@ CONVERT_BINARY=${CONVERT_BINARY-convert}
 
 source ${TOOL_ANALYZE_BAM_HEADER}
 getRefGenomeAndChrPrefixFromHeader ${TUMOR_BAMFILE_FULLPATH_BP} # Sets CHR_PREFIX and REFERENCE_GENOME
+ALIGNMENT_FOLDER=`dirname ${TUMOR_BAMFILE_FULLPATH_BP}`
 
 numberOfChromosomes=${CHROMOSOME_INDICES[@]}
 outputFilenamePrefix=${mpileupDirectory}/${SNVFILE_PREFIX}${PID}
-
+outputFilenamePrefix_original=${outputFilenamePrefix}
 if [[ "$GERMLINE_AVAILABLE" == 0 ]]; then
     FILTER_VALUES=""
     [[ ${FILTER_ExAC} == 'true' ]]          && FILTER_VALUES="${FILTER_VALUES} ${ExAC_COL} AF ${CRIT_ExAC_maxMAF}+"
@@ -40,35 +52,82 @@ if [[ "$GERMLINE_AVAILABLE" == 0 ]]; then
     fi
 fi
 
+
 # file paths
-filenameSomaticSnvs=${outputFilenamePrefix}_somatic_snvs_conf_${MIN_CONFIDENCE_SCORE}_to_10.vcf
-filenameSomaticSnvsIndbSNP=${outputFilenamePrefix}_somatic_in_dbSNP_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt
+filenameSomaticSnvs=${outputFilenamePrefix}_somatic_snvs_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.vcf
+filenameSomaticSnvsIndbSNP=${outputFilenamePrefix}_somatic_in_dbSNP_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.txt
 filenameIntermutationDistance=${outputFilenamePrefix}_somatic_mutation_dist_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt.tmp
-filenamePCRerrorMatrix=${outputFilenamePrefix}_sequence_specific_error_Matrix_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt
-filenameSequencingErrorMatrix=${outputFilenamePrefix}_sequencing_specific_error_Matrix_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt
-filenameReferenceAlleleBaseQualities=${outputFilenamePrefix}_reference_allele_base_qualities.txt
-filenameAlternativeAlleleBaseQualities=${outputFilenamePrefix}_alternative_allele_base_qualities.txt
+filenamePCRerrorMatrix=${outputFilenamePrefix}_sequence_specific_error_Matrix_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.txt
+filenameSequencingErrorMatrix=${outputFilenamePrefix}_sequencing_specific_error_Matrix_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.txt
+filenameReferenceAlleleBaseQualities=${outputFilenamePrefix_original}_reference_allele_base_qualities.txt.gz
+filenameAlternativeAlleleBaseQualities=${outputFilenamePrefix_original}_alternative_allele_base_qualities.txt.gz
+filenameAlternativeAlleleReadPositions=${outputFilenamePrefix_original}_alternative_allele_read_positions.txt.gz
 
 # plot paths
-filenamePerChromFreq=${outputFilenamePrefix}_perChromFreq_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf
-filenameSnvsWithContext=${outputFilenamePrefix}_snvs_with_context_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf
-filenameIntermutationDistancePlot=${outputFilenamePrefix}_intermutation_distance_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf
-filenameSequenceErrorPlot=${outputFilenamePrefix}_sequence_specific_error_plot_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf
-filenameSequencingErrorPlot=${outputFilenamePrefix}_sequencing_specific_error_plot_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf
-filenameSequenceErrorPlotPreFilter=${outputFilenamePrefix}_sequence_specific_error_plot_before_filter.pdf
-filenameSequencingErrorPlotPreFilter=${outputFilenamePrefix}_sequencing_specific_error_plot_before_filter.pdf
-filenameSequenceErrorPlotFilterOnce=${outputFilenamePrefix}_sequence_specific_error_plot_after_filter_once.pdf
-filenameSequencingErrorPlotFilterOnce=${outputFilenamePrefix}_sequencing_specific_error_plot_after_filter_once.pdf
-filenameBaseScoreDistributions=${outputFilenamePrefix}_base_score_distribution.pdf
+filenamePerChromFreq=${outputFilenamePrefix}_perChromFreq_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.pdf
+filenameSnvsWithContext=${outputFilenamePrefix}_snvs_with_context_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.pdf
+filenameIntermutationDistancePlot=${outputFilenamePrefix}_intermutation_distance_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.pdf
+filenameSequenceErrorPlot=${outputFilenamePrefix}_sequence_specific_error_plot_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.pdf
+filenameSequencingErrorPlot=${outputFilenamePrefix}_sequencing_specific_error_plot_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.pdf
+filenameSequenceErrorPlotPreFilter=${outputFilenamePrefix_original}_sequence_specific_error_plot_before_filter.pdf
+filenameSequencingErrorPlotPreFilter=${outputFilenamePrefix_original}_sequencing_specific_error_plot_before_filter.pdf
+filenameSequenceErrorPlotFilterOnce=${outputFilenamePrefix_original}_sequence_specific_error_plot_after_filter_once.pdf
+filenameSequencingErrorPlotFilterOnce=${outputFilenamePrefix_original}_sequencing_specific_error_plot_after_filter_once.pdf
+filenameBaseScoreBiasPlotPreFilter=${outputFilenamePrefix_original}_base_score_bias_before_filter.pdf
+filenameBaseScoreBiasPlotOnce=${outputFilenamePrefix_original}_base_score_bias_after_filter_once.pdf
+filenameBaseScoreBiasPlotFinal=${outputFilenamePrefix}_base_score_bias_plot_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.pdf
+filenameBaseScoreDistributions=${outputFilenamePrefix}_base_score_distribution${RERUN_SUFFIX}.pdf
+BaseScoreDistributionsPlots_PREFIX=${outputFilenamePrefix}_tripletSpecific_base_score_distribution${RERUN_SUFFIX}
+BaseScoreDistributionsPlots_COMBINED=${BaseScoreDistributionsPlots_PREFIX}.BQD_combined.pdf
+BaseScoreDistributionsPlots_CoV=${BaseScoreDistributionsPlots_PREFIX}.BQD_CoV.pdf
+BaseScoreDistributionsPlots_INDIVIDUAL=${BaseScoreDistributionsPlots_PREFIX}.BQD_individual.pdf
+BaseScoreDistributionsPlots_INDIVIDUAL_ChromColored=${BaseScoreDistributionsPlots_PREFIX}.BQD_individual_CHROMcolored.pdf
+BaseScoreDistributionsPlots_INDIVIDUAL_VAFColored=${BaseScoreDistributionsPlots_PREFIX}.BQD_individual_VAFcolored.pdf
 
 # maf plots
 filenameMafValues=${outputFilenamePrefix}_MAF_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt.tmp
 filenameSeqContextTab=${outputFilenamePrefix}_snvs_with_context_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt.tmp
-filenameMAFconfPlot=${outputFilenamePrefix}_MAF_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf
-filenameSnvDiagnosticsPlot=${outputFilenamePrefix}_allSNVdiagnosticsPlots.pdf
+filenameMAFconfPlot=${outputFilenamePrefix}_MAF_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.pdf
+filenameSnvDiagnosticsPlot=${outputFilenamePrefix}_allSNVdiagnosticsPlots${RERUN_SUFFIX}.pdf
 
-${PERL_BINARY} ${TOOL_SNV_EXTRACTOR} --infile=${FILENAME_VCF} --minconf=${MIN_CONFIDENCE_SCORE} --pid=${outputFilenamePrefix} --bgzip=${BGZIP_BINARY} --tabix=${TABIX_BINARY} ${SNV_FILTER_OPTIONS}
-[[ "$?" != 0 ]] && echo "There was a non-zero exit code in the somatic file and dbSNP counting pipe" && exit 1
+
+
+if [[ ${RERUN_FILTER_STEP} == 1 ]]; then
+
+    # prepare call of base score dist plot script in order to get median-filtered vcf file (skip plotting itself)
+    plotBackgroundBaseScoreDistribution='0'
+    forceRerun='1'
+    combineRevComp='1'
+    channelIndividualGraphs='1'
+    skipPlots='1'
+
+    filenameSomaticSnvs_original=`basename ${outputFilenamePrefix}_somatic_snvs_conf_${MIN_CONFIDENCE_SCORE}_to_10.vcf`
+    SEQUENCE_CONTEXT_COLUMN_INDEX=`cat ${mpileupDirectory}/${filenameSomaticSnvs_original} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "SEQUENCE_CONTEXT"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
+    SNV_FILE_WITH_MAF=${mpileupDirectory}/${filenameSomaticSnvs_original}.withMAF.vcf
+    SNV_FILE_WITH_MAF_filtered=${mpileupDirectory}/${filenameSomaticSnvs_original}.withMAF_filteredAltMedian20.vcf
+    if [[ ! -f ${SNV_FILE_WITH_MAF} ]]; then
+        cat ${mpileupDirectory}/${filenameSomaticSnvs_original} | perl -ne 'chomp; my $line=$_; if (/DP4=(\d+),(\d+),(\d+),(\d+);/) {my $fR=$1; my $rR=$2; my $fA=$3; my $rA=$4; my $MAF=($fA+$rA)/($fR+$rR+$fA+$rA); print "$line\t$MAF\n";} else { if (/^#CHROM/) { print "$line\tMAF\n";} else {print "$line\n";} };' >${SNV_FILE_WITH_MAF}
+    fi
+    MAF_COLUMN_INDEX=`cat ${SNV_FILE_WITH_MAF} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "MAF"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
+    # this script will create a file named ${SNV_FILE_WITH_MAF_filtered}
+    ${RSCRIPT_BINARY} ${TOOL_PLOT_TRIPLET_SPECIFIC_BASE_SCORE_DISTRIBUTION} -v ${SNV_FILE_WITH_MAF} -m ${mpileupDirectory} -a ${ALIGNMENT_FOLDER} -p ${PID} -b ${plotBackgroundBaseScoreDistribution} -o ${BaseScoreDistributionsPlots_PREFIX} -R ${forceRerun} -c ${combineRevComp} -f ${MEDIAN_FILTER_THRESHOLD} -s ${SEQUENCE_CONTEXT_COLUMN_INDEX} --MAFColumnIndex ${MAF_COLUMN_INDEX} -i ${channelIndividualGraphs} -t 'Base score distribution of PID '${PID}'\nafter Median'${MEDIAN_FILTER_THRESHOLD}' filtering' --skipPlots ${skipPlots}
+    mv ${SNV_FILE_WITH_MAF_filtered} ${filenameSomaticSnvs}
+
+    cp ${filenameSomaticSnvs} ${filenameSomaticSnvs}.forSNVExtractor
+    ${PERL_BINARY} ${TOOL_SNV_EXTRACTOR} --infile=${filenameSomaticSnvs}.forSNVExtractor --minconf=${MIN_CONFIDENCE_SCORE} --pid=${outputFilenamePrefix} --suffix=${RERUN_SUFFIX} --bgzip=${BGZIP_BINARY} --tabix=${TABIX_BINARY} ${SNV_FILTER_OPTIONS}
+    [[ "$?" != 0 ]] && echo "There was a non-zero exit code in the somatic file and dbSNP counting pipe" && exit 1
+    rm ${filenameSomaticSnvs}.forSNVExtractor
+    rm ${SNV_FILE_WITH_MAF}
+
+    filenameSomaticFunctionalSnvs_original=`basename ${outputFilenamePrefix}_somatic_functional_snvs_conf_${MIN_CONFIDENCE_SCORE}_to_10.vcf`
+    filenameSomaticFunctionalSnvs_MedianFiltered=`basename ${outputFilenamePrefix}_somatic_functional_snvs_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.vcf`
+    filenameSomaticFunctionalSnvs_RemovedByMedianFilter=`basename ${outputFilenamePrefix}_somatic_functional_snvs_conf_${MIN_CONFIDENCE_SCORE}_to_10_removedByMedian${MEDIAN_FILTER_THRESHOLD}Filter.vcf`
+    grep '^#' ${filenameSomaticFunctionalSnvs_original} >${filenameSomaticFunctionalSnvs_RemovedByMedianFilter}; ${BEDTOOLS_BINARY} subtract -a ${filenameSomaticFunctionalSnvs_original} -b ${filenameSomaticFunctionalSnvs_MedianFiltered} >>${filenameSomaticFunctionalSnvs_RemovedByMedianFilter}
+else
+    ${PERL_BINARY} ${TOOL_SNV_EXTRACTOR} --infile=${FILENAME_VCF} --minconf=${MIN_CONFIDENCE_SCORE} --pid=${outputFilenamePrefix} --bgzip=${BGZIP_BINARY} --tabix=${TABIX_BINARY} ${SNV_FILTER_OPTIONS}
+    [[ "$?" != 0 ]] && echo "There was a non-zero exit code in the somatic file and dbSNP counting pipe" && exit 1
+fi
+
 
 if [ ${RUN_PLOTS} == 1 ]
 then
@@ -142,14 +201,60 @@ then
 
 	[[ "$?" != 0 ]] && echo "There was a non-zero exit code in making the PCR bias files" && exit 11
 
-    # make base score distribution plots - by Gregor Warsow
+    # make base score bias and base score distribution plots - by Gregor Warsow
     if [[ -f ${filenameReferenceAlleleBaseQualities} ]] && [[ -f ${filenameAlternativeAlleleBaseQualities} ]]; then
         basequal=`echo ${MPILEUP_OPTS} | perl -ne '($qual) = $_ =~ /\-Q\s*(\d+)/;print $qual'`
         # really use base score threshold of 13 if variable is not set pr empty? We should expect to get a proper value here...
         basequal=${basequal:-13}
+
+#        ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_BIAS} -v ${filenameSomaticSnvs} -r ${filenameReferenceAlleleBaseQualities} -a ${filenameAlternativeAlleleBaseQualities} -o ${filenameBaseScoreBiasPlot} -d "Final Base Quality Bias Plot for PID ${PID}"
+        ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_BIAS} -v ${filenameSomaticSnvs} -r ${filenameReferenceAlleleBaseQualities} -a ${filenameAlternativeAlleleBaseQualities} -t ${basequal} -p ${PLOT_TYPE} -o ${filenameBaseScoreBiasPlotFinal} -d "Final Base Quality Bias Plot for PID ${PID}"
+        if [[ ! -f ${filenameBaseScoreBiasPlotFinal} ]]; then
+            filenameBaseScoreBiasPlotFinal=''
+        fi
+
         ${RSCRIPT_BINARY} ${TOOL_PLOT_BASE_SCORE_DISTRIBUTION} -v ${filenameSomaticSnvs} -r ${filenameReferenceAlleleBaseQualities} -a ${filenameAlternativeAlleleBaseQualities} -o ${filenameBaseScoreDistributions} -d "for somatic SNVs for PID ${PID}" -t ${basequal}
+        if [[ ! -f ${filenameBaseScoreDistributions} ]]; then
+            filenameBaseScoreDistributions=''
+        fi
+
+        plotBackgroundBaseScoreDistribution='0'
+        if [[ ${RERUN_FILTER_STEP} == 1 ]]; then
+            # do not force rerun as data file has been created in upper part (get median-filtered vcf file)
+            forceRerun='0'
+        else
+            forceRerun='1'
+        fi
+        combineRevComp='1'
+        channelIndividualGraphs='1'
+        skipPlots='0'
+        SNV_FILE_WITH_MAF=${filenameSomaticSnvs}.withMAF.vcf
+        cat ${filenameSomaticSnvs} | perl -ne 'chomp; my $line=$_; if (/DP4=(\d+),(\d+),(\d+),(\d+);/) {my $fR=$1; my $rR=$2; my $fA=$3; my $rA=$4; my $MAF=($fA+$rA)/($fR+$rR+$fA+$rA); print "$line\t$MAF\n";} else { if (/^#CHROM/) { print "$line\tMAF\n";} else {print "$line\n";} };' >${SNV_FILE_WITH_MAF}
+
+        SEQUENCE_CONTEXT_COLUMN_INDEX=`cat ${SNV_FILE_WITH_MAF} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "SEQUENCE_CONTEXT"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
+        MAF_COLUMN_INDEX=`cat ${SNV_FILE_WITH_MAF} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "MAF"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
+        ${RSCRIPT_BINARY} ${TOOL_PLOT_TRIPLET_SPECIFIC_BASE_SCORE_DISTRIBUTION} -v ${SNV_FILE_WITH_MAF} -m ${mpileupDirectory} -a ${ALIGNMENT_FOLDER} -p ${PID} -b ${plotBackgroundBaseScoreDistribution} -o ${BaseScoreDistributionsPlots_PREFIX} -R ${forceRerun} -c ${combineRevComp} -f ${MEDIAN_FILTER_THRESHOLD} -s ${SEQUENCE_CONTEXT_COLUMN_INDEX} --MAFColumnIndex ${MAF_COLUMN_INDEX} -i ${channelIndividualGraphs} -t 'Base score distribution of PID '${PID} --skipPlots ${skipPlots}
+        if [[ ! ${runSecondFilterStep} ]]; then
+            rm ${SNV_FILE_WITH_MAF}
+        fi
+
+
+        [[ ! -f ${BaseScoreDistributionsPlots_COMBINED} ]] && BaseScoreDistributionsPlots_COMBINED=''
+        [[ ! -f ${BaseScoreDistributionsPlots_CoV} ]] && BaseScoreDistributionsPlots_CoV=''
+        [[ ! -f ${BaseScoreDistributionsPlots_INDIVIDUAL} ]] && BaseScoreDistributionsPlots_INDIVIDUAL=''
+        [[ ! -f ${BaseScoreDistributionsPlots_INDIVIDUAL_ChromColored} ]] && BaseScoreDistributionsPlots_INDIVIDUAL_ChromColored=''
+        [[ ! -f ${BaseScoreDistributionsPlots_INDIVIDUAL_VAFColored} ]] && BaseScoreDistributionsPlots_INDIVIDUAL_VAFColored=''
+
     else
         filenameBaseScoreDistributions=''
+        filenameBaseScoreBiasPlotPreFilter=''
+        filenameBaseScoreBiasPlotOnce=''
+        filenameBaseScoreBiasPlotFinal=''
+        BaseScoreDistributionsPlots_COMBINED=''
+        BaseScoreDistributionsPlots_CoV=''
+        BaseScoreDistributionsPlots_INDIVIDUAL=''
+        BaseScoreDistributionsPlots_INDIVIDUAL_ChromColored=''
+        BaseScoreDistributionsPlots_INDIVIDUAL_VAFColored=''
     fi
 
 	# make a pdf containing all plots
@@ -160,8 +265,11 @@ then
 	[[ -f ${filenameSequenceErrorPlot} ]] && biasplots="${filenameSequenceErrorPlot} ${biasplots}"
 	[[ -f ${filenameSequenceErrorPlotFilterOnce} ]] && biasplots="${filenameSequenceErrorPlotFilterOnce} ${biasplots}"
 	[[ -f ${filenameSequenceErrorPlotPreFilter} ]] && biasplots="${filenameSequenceErrorPlotPreFilter} ${biasplots}"
+	[[ -f ${filenameBaseScoreBiasPlotPreFilter} ]] && biasplots="${biasplots} ${filenameBaseScoreBiasPlotPreFilter}"
+	[[ -f ${filenameBaseScoreBiasPlotOnce} ]] && biasplots="${biasplots} ${filenameBaseScoreBiasPlotOnce}"
+	[[ -f ${filenameBaseScoreBiasPlotFinal} ]] && biasplots="${biasplots} ${filenameBaseScoreBiasPlotFinal}"
 	
-	${GHOSTSCRIPT_BINARY} -dBATCH -dNOPAUSE -dAutoRotatePages=false -q -sDEVICE=pdfwrite -sOutputFile=${filenameSnvDiagnosticsPlot} ${filenameIntermutationDistancePlot} ${filenameBaseScoreDistributions} ${filenameMAFconfPlot} ${filenamePerChromFreq} ${filenameSnvsWithContext} ${biasplots}
+	${GHOSTSCRIPT_BINARY} -dBATCH -dNOPAUSE -dAutoRotatePages=false -q -sDEVICE=pdfwrite -sOutputFile=${filenameSnvDiagnosticsPlot} ${filenameIntermutationDistancePlot} ${filenameMAFconfPlot} ${filenamePerChromFreq} ${filenameSnvsWithContext} ${filenameBaseScoreDistributions} ${BaseScoreDistributionsPlots_COMBINED} ${BaseScoreDistributionsPlots_INDIVIDUAL} ${BaseScoreDistributionsPlots_INDIVIDUAL_ChromColored} ${BaseScoreDistributionsPlots_INDIVIDUAL_VAFColored} ${BaseScoreDistributionsPlots_CoV} ${biasplots}
 fi
 
 if [ ${RUN_PUREST} == 1 ]
@@ -169,8 +277,9 @@ then
 	# 3. purityEST - from Florian. Needs the original SNV file because it also considers germline (DP5 field)
 	# has everything hardcoded (in which fields to look and confidence 8)
 	confCol=`${PERL_BINARY} ${TOOL_FIND_CONF_COLUMN} ${FILENAME_VCF}`
-	${PYTHON_BINARY} ${TOOL_PURITY_RELOADED} ${FILENAME_VCF} ${confCol} > ${outputFilenamePrefix}_purityEST.txt
+	${PYTHON_BINARY} ${TOOL_PURITY_RELOADED} ${FILENAME_VCF} ${confCol} > ${outputFilenamePrefix}_purityEST${RERUN_SUFFIX}.txt
 	[[ "$?" != 0 ]] && echo "There was a non-zero exit code in purity estimation" && exit 7
 fi
+
 
 touch ${FILENAME_CHECKPOINT}

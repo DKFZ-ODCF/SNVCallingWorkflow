@@ -6,7 +6,7 @@ library(gridExtra) # for tableGrob
 library(grid) # for unit,gpar
 library(data.table) # for rbindlist
 
-numberOfCores = 2
+numberOfCores = 5
 library(doParallel)
 registerDoParallel(numberOfCores)
 
@@ -22,23 +22,20 @@ opt = getopt(matrix(c(
   'outFile', 'o', 1, "character"
 ),ncol=4,byrow=TRUE));
 
+ 
+checkForMissingParameter = function(parameter, errorText, exitCode=1) {
+  if (is.null(opt[[parameter]])){
+    cat(paste0(errorText,"\n")) 
+    q(exitCode)      # quit, status unequal 0 means error
+  }
+}
 
-if (is.null(opt$vcfInputFile)){
-  cat("Please specify the file that contains the SNVs for which the base score distribution plot shall be created.\n"); 
-  q(status=1);      # quit, status unequal 0 means error
-}
-if (is.null(opt$refScores)){
-  cat("Please specify the file containing reference allele base scores.\n"); 
-  q(status=1);      # quit, status unequal 0 means error
-}
-if (is.null(opt$altScores)){      # no vcf file specified
-  cat("PPlease specify the file containing alternative allele base scores.\n"); 
-  q(status=1);      # quit, status unequal 0 means error
-}
-if (is.null(opt$outFile)){      # no vcf file specified
-  cat("Please specify the output pdf file.\n"); 
-  q(status=2);      # quit, status unequal 0 means error
-}
+
+checkForMissingParameter("vcfInputFile", "Please specify the file that contains the SNVs for which the base score distribution plot shall be created.", 1)
+checkForMissingParameter("refScores", "Please specify the file containing reference allele base scores.", 1)
+checkForMissingParameter("altScores", "Please specify the file containing alternative allele base scores.", 1)
+checkForMissingParameter("outFile", "Please specify the output pdf file.", 1)
+
 
 options(stringsAsFactors = FALSE)
 
@@ -172,8 +169,9 @@ pdf(file = paste0(opt$outFile), 8.27, 11.7) #paper = "a4"
     summedScores = dcast(scores, formula = BaseScores ~ type, value.var="Freq", fun=sum)
     scores = merge(scores, summedScores[,c("BaseScores",standardType)], by="BaseScores")
     scores$FreqNormalized = scores$Freq / scores$REF
-     
-    
+    scores[scores$REF==0,"FreqNormalized"] = 0.0
+    scores = scores[order(scores$BaseScores, scores$type, scores$VAFclassOrdered, decreasing = T),]
+
     relativePlot = ggplot(scores, aes(BaseScoresSplitted, Freq )) + geom_bar(aes(fill = VAFclassOrdered), width = width, position = "fill", stat="identity", alpha = 0.9) + theme(panel.margin = unit(0.125, "lines"))
     relativePlot = relativePlot + scale_fill_manual(values=cbPalette, guide = guide_legend(title = "VAFclass\n[REF/ALT]"), limits = seq(1, 0, -0.1)) + guides(fill=FALSE)
     if (length(unique(scores$BaseScores)) < 10) {

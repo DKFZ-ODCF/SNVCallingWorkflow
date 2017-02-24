@@ -1,6 +1,7 @@
 package de.dkfz.b080.co.files;
 
 import de.dkfz.roddy.knowledge.files.BaseFile;
+import de.dkfz.roddy.knowledge.files.Tuple2;
 import de.dkfz.roddy.knowledge.methods.GenericMethod;
 
 /**
@@ -26,8 +27,13 @@ public class SNVAnnotationFile extends BaseFile {
         return file;
     }
 
-    public VCFFileWithCheckpointFile filter(SNVAnnotationFile rawVCFFile, TumorBamFile tumorBamFile) {
-        VCFFileWithCheckpointFile file = GenericMethod.callGenericTool(COConstants.TOOL_SNV_FILTER, this, rawVCFFile, tumorBamFile, "SNVFILE_PREFIX=snvs_");
-        return file;
+    public Tuple2<SNVAnnotationFile,TextFile> filter(SNVAnnotationFile rawVCFFile, TumorBamFile tumorBamFile) {
+        Tuple2<SNVAnnotationFile,TextFile> tuple = GenericMethod.callGenericTool(COConstants.TOOL_SNV_FILTER, this, rawVCFFile, tumorBamFile);
+        return tuple;
+    }
+
+    public Tuple2<SNVAnnotationFile,TextFile> filterRerun(SNVAnnotationFile rawVCFFile, TumorBamFile tumorBamFile, TextFile firstFilterRunCheckpointFile) {
+        Tuple2<SNVAnnotationFile,TextFile> tuple = GenericMethod.callGenericTool(COConstants.TOOL_SNV_FILTER_RERUN, this, rawVCFFile, tumorBamFile, firstFilterRunCheckpointFile);
+        return tuple;
     }
 }
