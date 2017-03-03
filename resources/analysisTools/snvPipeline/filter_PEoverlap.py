@@ -171,7 +171,11 @@ def performAnalysis(args):
                             if args.altBQF != '':
                                 ALT_baseQualities.append(baseScore)
                             if args.altPosF != '':
-                                ALT_basePositions.append(pileupread.qpos)
+                                readpos = pileupread.qpos
+                                if pileupread.alignment.is_reverse:
+                                    readlength = len(pileupread.alignment.seq)
+                                    readpos = (readlength - readpos)
+                                ALT_basePositions.append(readpos)
                         if pileupread.alignment.seq[pileupread.qpos].lower()  == REF.lower():
                             if args.refBQF != '':
                                 REF_baseQualities.append(baseScore)
