@@ -13,7 +13,7 @@
         <cvalue name='MPILEUPOUT_PREFIX' value='mp_' type="string"/>
         <cvalue name='SNVFILE_PREFIX' value='snvs_' type="string"/>
         <!--<cvalue name='analysisMethodNameOnInput' value='whole_genome_analysis' type='string' />-->
-        <cvalue name='GHOSTSCRIPT_BINARY' value='/usr/bin/gs' type='path'/>
+        <cvalue name='GHOSTSCRIPT_BINARY' value='gs' type='filename'/>
         <cvalue name="RAW_SNV_FILTER_OPTIONS" value='" --minVac=3 --minVaf=0.03 --minVacPS=2"' type="string"/>
         <!--<cvalue name='REFERENCE_GENOME' value="${referenceGenome_hg19_chr}" type="string"/>-->
         <cvalue name="PYPY_LOCAL_LIBPATH" value="~/.local/lib/pypy" type="string"/>
