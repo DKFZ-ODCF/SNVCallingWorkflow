@@ -26,6 +26,8 @@ source ${TOOL_ANALYZE_BAM_HEADER}
 getRefGenomeAndChrPrefixFromHeader ${TUMOR_BAMFILE_FULLPATH_BP} # Sets CHR_PREFIX and REFERENCE_GENOME
 ALIGNMENT_FOLDER=`dirname ${TUMOR_BAMFILE_FULLPATH_BP}`
 
+# bugfix: ensure to interpret CHROMOSOME_INDICES as array - otherwise TOOL_INTERMUTATION_DISTANCE_COORD_COLOR will fail...
+declare -a CHROMOSOME_INDICES="${CHROMOSOME_INDICES}"
 numberOfChromosomes=${CHROMOSOME_INDICES[@]}
 outputFilenamePrefix=${mpileupDirectory}/${SNVFILE_PREFIX}${PID}
 outputFilenamePrefix_original=${outputFilenamePrefix}
@@ -60,9 +62,11 @@ filenameIntermutationDistance=${outputFilenamePrefix}_somatic_mutation_dist_conf
 filenamePCRerrorMatrix=${outputFilenamePrefix}_sequence_specific_error_Matrix_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.txt
 filenameSequencingErrorMatrix=${outputFilenamePrefix}_sequencing_specific_error_Matrix_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.txt
 filenameReferenceAlleleBaseQualities=${outputFilenamePrefix_original}_reference_allele_base_qualities.txt.gz
+filenameReferenceAlleleReadPositions=${outputFilenamePrefix_original}_reference_allele_read_positions.txt.gz
 filenameAlternativeAlleleBaseQualities=${outputFilenamePrefix_original}_alternative_allele_base_qualities.txt.gz
 filenameAlternativeAlleleReadPositions=${outputFilenamePrefix_original}_alternative_allele_read_positions.txt.gz
 filenameTHAArtifactDetected=${outputFilenamePrefix}_is_THA_affected.txt
+filenameQCvalues=${outputFilenamePrefix}_QC_values${RERUN_SUFFIX}.json
 
 # plot paths
 filenamePerChromFreq=${outputFilenamePrefix}_perChromFreq_conf_${MIN_CONFIDENCE_SCORE}_to_10${RERUN_SUFFIX}.pdf
@@ -84,6 +88,7 @@ BaseScoreDistributionsPlots_CoV=${BaseScoreDistributionsPlots_PREFIX}.BQD_CoV.pd
 BaseScoreDistributionsPlots_INDIVIDUAL=${BaseScoreDistributionsPlots_PREFIX}.BQD_individual.pdf
 BaseScoreDistributionsPlots_INDIVIDUAL_ChromColored=${BaseScoreDistributionsPlots_PREFIX}.BQD_individual_CHROMcolored.pdf
 BaseScoreDistributionsPlots_INDIVIDUAL_VAFColored=${BaseScoreDistributionsPlots_PREFIX}.BQD_individual_VAFcolored.pdf
+BaseScoreDistributionsPlots_INDIVIDUAL_ReadPositionColored=${BaseScoreDistributionsPlots_PREFIX}.BQD_individual_ReadPosColored_Q60.pdf
 
 # maf plots
 filenameMafValues=${outputFilenamePrefix}_MAF_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt.tmp
@@ -131,7 +136,7 @@ if [[ ${RERUN_FILTER_STEP} == 1 ]]; then
     grep '^#' ${filenameSomaticFunctionalSnvs_original} >${filenameSomaticFunctionalSnvs_RemovedByMedianFilter}; ${BEDTOOLS_BINARY} subtract -a ${filenameSomaticFunctionalSnvs_original} -b ${filenameSomaticFunctionalSnvs_MedianFiltered} >>${filenameSomaticFunctionalSnvs_RemovedByMedianFilter}
 else
     ${PERL_BINARY} ${TOOL_SNV_EXTRACTOR} --infile=${FILENAME_VCF} --minconf=${MIN_CONFIDENCE_SCORE} --pid=${outputFilenamePrefix} --bgzip=${BGZIP_BINARY} --tabix=${TABIX_BINARY} ${SNV_FILTER_OPTIONS}
-    [[ "$?" != 0 ]] && echo "There was a non-zero exit code in the somatic file and dbSNP counting pipe" && exit 25
+    [[ "$?" != 0 ]] && echo "There was a non-zero exit code in the somatic file and dbSNP counting pipe" && exit 26
 fi
 
 
@@ -177,6 +182,7 @@ then
 	# count the obtained SNVs to output their number in the plot: < 50 will not be reliable!
 	snvnum=`grep -v "^#" ${filenameSomaticSnvs} | wc -l`
 	snvindbSNP=` awk '{FS="\t"}{if(NR==2)print $5}'	${filenameSomaticSnvsIndbSNP}`
+    SNV_IN_DBSNP_RATIO=`echo -e "$snvindbSNP\t$snvnum" | perl -F -ne 'print $F[0]/$F[1];'`
 
 	# make MAF plot - from Natalie
 	if [ "$snvnum" != "0" ]; then
@@ -244,7 +250,8 @@ then
         ${RSCRIPT_BINARY} ${TOOL_PLOT_TRIPLET_SPECIFIC_BASE_SCORE_DISTRIBUTION} -v ${SNV_FILE_WITH_MAF} -m ${mpileupDirectory} -a ${ALIGNMENT_FOLDER} -p ${PID} \
         -b ${plotBackgroundBaseScoreDistribution} -o ${BaseScoreDistributionsPlots_PREFIX} -R ${forceRerun} -c ${combineRevComp} -f ${MEDIAN_FILTER_THRESHOLD} \
         -s ${SEQUENCE_CONTEXT_COLUMN_INDEX} --MAFColumnIndex ${MAF_COLUMN_INDEX} -i ${channelIndividualGraphs} -t 'Base score distribution of PID '${PID} \
-        --skipPlots ${skipPlots} --refBaseQual ${filenameReferenceAlleleBaseQualities} --altBaseQual ${filenameAlternativeAlleleBaseQualities}
+        --skipPlots ${skipPlots} --refBaseQual ${filenameReferenceAlleleBaseQualities} --altBaseQual ${filenameAlternativeAlleleBaseQualities} \
+        --altReadPos ${filenameAlternativeAlleleReadPositions} --refReadPos ${filenameReferenceAlleleReadPositions}
         if [[ ! ${runSecondFilterStep} ]]; then
             rm ${SNV_FILE_WITH_MAF}
         fi
@@ -255,6 +262,7 @@ then
         [[ ! -f ${BaseScoreDistributionsPlots_INDIVIDUAL} ]] && BaseScoreDistributionsPlots_INDIVIDUAL=''
         [[ ! -f ${BaseScoreDistributionsPlots_INDIVIDUAL_ChromColored} ]] && BaseScoreDistributionsPlots_INDIVIDUAL_ChromColored=''
         [[ ! -f ${BaseScoreDistributionsPlots_INDIVIDUAL_VAFColored} ]] && BaseScoreDistributionsPlots_INDIVIDUAL_VAFColored=''
+        [[ ! -f ${BaseScoreDistributionsPlots_INDIVIDUAL_ReadPositionColored} ]] && BaseScoreDistributionsPlots_INDIVIDUAL_ReadPositionColored=''
 
     else
         filenameBaseScoreDistributions=''
@@ -266,6 +274,7 @@ then
         BaseScoreDistributionsPlots_INDIVIDUAL=''
         BaseScoreDistributionsPlots_INDIVIDUAL_ChromColored=''
         BaseScoreDistributionsPlots_INDIVIDUAL_VAFColored=''
+        BaseScoreDistributionsPlots_INDIVIDUAL_ReadPositionColored=''
     fi
 
 	# make a pdf containing all plots
@@ -279,8 +288,9 @@ then
 	[[ -f ${filenameBaseScoreBiasPlotPreFilter} ]] && biasplots="${biasplots} ${filenameBaseScoreBiasPlotPreFilter}"
 	[[ -f ${filenameBaseScoreBiasPlotOnce} ]] && biasplots="${biasplots} ${filenameBaseScoreBiasPlotOnce}"
 	[[ -f ${filenameBaseScoreBiasPlotFinal} ]] && biasplots="${biasplots} ${filenameBaseScoreBiasPlotFinal}"
-	
-	${GHOSTSCRIPT_BINARY} -dBATCH -dNOPAUSE -dAutoRotatePages=false -q -sDEVICE=pdfwrite -sOutputFile=${filenameSnvDiagnosticsPlot} ${filenameIntermutationDistancePlot} ${filenameMAFconfPlot} ${filenamePerChromFreq} ${filenameSnvsWithContext} ${filenameBaseScoreDistributions} ${BaseScoreDistributionsPlots_COMBINED} ${BaseScoreDistributionsPlots_INDIVIDUAL} ${BaseScoreDistributionsPlots_INDIVIDUAL_ChromColored} ${BaseScoreDistributionsPlots_INDIVIDUAL_VAFColored} ${BaseScoreDistributionsPlots_CoV} ${biasplots}
+
+	BaseScoreDistributionsPlots_INDIVIDUAL_ChromColored='' # turn off ChromColored BSD
+	${GHOSTSCRIPT_BINARY} -dBATCH -dNOPAUSE -dAutoRotatePages=false -q -sDEVICE=pdfwrite -sOutputFile=${filenameSnvDiagnosticsPlot} ${filenameIntermutationDistancePlot} ${filenameMAFconfPlot} ${filenamePerChromFreq} ${filenameSnvsWithContext} ${filenameBaseScoreDistributions} ${BaseScoreDistributionsPlots_COMBINED} ${BaseScoreDistributionsPlots_INDIVIDUAL} ${BaseScoreDistributionsPlots_INDIVIDUAL_ChromColored} ${BaseScoreDistributionsPlots_INDIVIDUAL_VAFColored} ${BaseScoreDistributionsPlots_INDIVIDUAL_ReadPositionColored} ${BaseScoreDistributionsPlots_CoV} ${biasplots}
 fi
 
 # infer baseQuality bias (PV4)-related THA score
@@ -299,5 +309,19 @@ then
 	[[ "$?" != 0 ]] && echo "There was a non-zero exit code in purity estimation" && exit 7
 fi
 
+EXONIC_CLASSIFICATION_COLUMN_INDEX=`cat ${filenameSomaticSnvs} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "EXONIC_CLASSIFICATION"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
+export EXONIC_CLASSIFICATION_COLUMN_INDEX=$((${EXONIC_CLASSIFICATION_COLUMN_INDEX}-1))
+ANNOVAR_FUNCTION_COLUMN_INDEX=`cat ${filenameSomaticSnvs} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "ANNOVAR_FUNCTION"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
+export ANNOVAR_FUNCTION_COLUMN_INDEX=$((${ANNOVAR_FUNCTION_COLUMN_INDEX}-1))
+SYNONYMOUS_RATIO=`grep -v '^#' ${filenameSomaticSnvs} | perl -F'\t' -ae 'BEGIN { my $total=0; my $synonymous=0; } if ($F[$ENV{"ANNOVAR_FUNCTION_COLUMN_INDEX"}] eq "exonic" ) {$total++; if ($F[$ENV{"EXONIC_CLASSIFICATION_COLUMN_INDEX"}] eq "synonymous SNV") {$synonymous++;}} END { print $synonymous/$total; }'`
+
+echo -e "{" >$filenameQCvalues
+echo -e "\t\"snvnum\": ${snvnum:-NA}," >>$filenameQCvalues
+echo -e "\t\"snvindbSNP\": ${snvindbSNP:-NA}," >>$filenameQCvalues
+echo -e "\t\"SNV_IN_DBSNP_RATIO\": ${SNV_IN_DBSNP_RATIO:-NA}," >>$filenameQCvalues
+echo -e "\t\"SYNONYMOUS_RATIO\": ${SYNONYMOUS_RATIO:-NA}," >>$filenameQCvalues
+echo -e "\t\"THA_SCORE\": ${THA_SCORE:-NA}" >>$filenameQCvalues
+#echo -e "\t\"GOX_SCORE\": ${GOX_SCORE}" >>$filenameQCvalues
+echo -e "}" >>$filenameQCvalues
 
 touch ${FILENAME_CHECKPOINT}
