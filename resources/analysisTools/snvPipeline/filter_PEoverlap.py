@@ -107,6 +107,9 @@ def performAnalysis(args):
     if args.altPosF != '':
         ALT_basePositions_file = args.altPosF
 
+    if args.refPosF != '':
+        REF_basePositions_file = args.refPosF
+
     if args.altBQF != '':
         ALT_baseQualities_file = args.altBQF
 
@@ -134,6 +137,7 @@ def performAnalysis(args):
         ALTcount=0
 
         ALT_basePositions=[]
+        REF_basePositions=[]
         REF_baseQualities=[]
         ALT_baseQualities=[]
 
@@ -167,11 +171,11 @@ def performAnalysis(args):
                             continue
                         #print '\tbase in read %s = %s' % (pileupread.alignment.qname, pileupread.alignment.seq[pileupread.qpos])
                         baseScore = transformQualStr(pileupread.alignment.qual[pileupread.qpos])[0]
+                        readpos = pileupread.qpos
                         if pileupread.alignment.seq[pileupread.qpos].lower()  == ALT.lower():
                             if args.altBQF != '':
                                 ALT_baseQualities.append(baseScore)
                             if args.altPosF != '':
-                                readpos = pileupread.qpos
                                 if pileupread.alignment.is_reverse:
                                     readlength = len(pileupread.alignment.seq)
                                     readpos = (readlength - readpos)
@@ -179,6 +183,12 @@ def performAnalysis(args):
                         if pileupread.alignment.seq[pileupread.qpos].lower()  == REF.lower():
                             if args.refBQF != '':
                                 REF_baseQualities.append(baseScore)
+                            if args.refPosF != '':
+                                if pileupread.alignment.is_reverse:
+                                    readlength = len(pileupread.alignment.seq)
+                                    readpos = (readlength - readpos)
+                                REF_basePositions.append(readpos)
+
 
                         if pileupread.alignment.mapq >= args.mapq:
                             # http://wwwfgu.anat.ox.ac.uk/~andreas/documentation/samtools/api.html   USE qqual
@@ -288,6 +298,11 @@ def performAnalysis(args):
                         if positionsString != '':
                             ALT_basePositions_file.write("%s\t%s\t%s\n" % (chrom, pos, positionsString))
 
+                    if args.refPosF != '':
+                        positionsString = ",".join([str(readpos) for readpos in REF_basePositions])
+                        if positionsString != '':
+                            REF_basePositions_file.write("%s\t%s\t%s\n" % (chrom, pos, positionsString))
+
                     break # only one pileup for a position
 
             if (DP4[2] + DP4[3]) > ALTcount:    # that the ALTcount is larger  happens often due to BAQ during samtools mpileup which doesn't change the base qual in the BAM file, but decreases base qual during calling
@@ -312,6 +327,7 @@ def performAnalysis(args):
             sys.stdout.write(line)   # write germline and somatic-multiallelic SNVs as is
 
         del ALT_basePositions
+        del REF_basePositions
         del REF_baseQualities
         del ALT_baseQualities
     samfile.close()
@@ -324,6 +340,9 @@ def performAnalysis(args):
 
     if args.altPosF is not None:
         ALT_basePositions_file.close()
+
+    if args.refPosF is not None:
+        REF_basePositions_file.close()
 
     #vcfInFile.close()
     #outFile.close()
@@ -343,6 +362,7 @@ if __name__ == '__main__':
     parser.add_argument('--altBaseQualFile',nargs="?",type=argparse.FileType('w'),dest='altBQF',help='Specify the name of the output file for alternative allele base qualities.',default=None)
     parser.add_argument('--refBaseQualFile',nargs="?",type=argparse.FileType('w'),dest='refBQF',help='Specify the name of the output file for reference allele base qualities.',default=None)
     parser.add_argument('--altBasePositionsFile',nargs="?",type=argparse.FileType('w'),dest='altPosF',help='Specify the name of the output file for position within the reads for alternative bases.',default=None)
+    parser.add_argument('--refBasePositionsFile',nargs="?",type=argparse.FileType('w'),dest='refPosF',help='Specify the name of the output file for position within the reads for reference bases.',default=None)
     parser.add_argument('--nocontrol',action='store_true',dest='no_control',help='Specify the workflow is run without control.',default=False)
     parser.add_argument('--configFile',nargs="?",type=argparse.FileType('r'),dest='configfile',help='Specify the config file which contains header names.',default=None)
 
