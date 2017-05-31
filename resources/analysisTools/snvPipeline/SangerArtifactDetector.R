@@ -1,7 +1,5 @@
 library(getopt)
-# library(ggplot2)
 library(Biostrings) # for reverseComplement
-# library(grid) # for unit,gpar
 library(reshape2)
 
 options(stringsAsFactors = FALSE)
@@ -189,17 +187,6 @@ if ( file.exists(DATA_RESULTS_FILE) ) {
       return(line["Triplet"])
     }
   })
-  
-  
-  # It is correct not to save to file!!!
-  # This is because tripletBased_BQDistribution_plotter will be saved to file.
-  # Do not overwrite these when running SangerArtifactDetector!
-  # if (USE_BACKGROUND_BQs) {
-  #   save(data.bq.triplet, data.bq.background.dens, file = DATA_RESULTS_FILE)
-  #   # write.table(data.bq.triplet.filtered)
-  # } else {
-  #   save(data.bq.triplet, file = DATA_RESULTS_FILE)
-  # }
 }
 
 
@@ -304,70 +291,10 @@ outlier_triplet_text=list()
 
 pdf(file=paste0(MPILEUP_FOLDER,"snvs_",PID,"_zScoreBased_AUC.BQ30_BiasPlot.pdf", collapse = ""), height = 11.7, width = 8.3 )
 par(mfrow=c(length(minTripletCounts),1))
-# for (upperThresholdBQ in c(20,25,30)) {
-#   for (lowerThresholdBQ in c(0,5,13)) {
 for (upperThresholdBQ in c(30)) {
   for (lowerThresholdBQ in c(0)) {    
-    # Residuum_colName = paste0("Residuum.BQ",upperThresholdBQ)
-    # FoldResiduumMean_colname = paste0("FoldResiduumMean.BQ",upperThresholdBQ)
-    # zScore_colname = paste0("zScore.BQ",upperThresholdBQ)
-    # AUC_colName = paste0("AUC.BQ",upperThresholdBQ,".alt")
     mainTitleForPlot = paste0("AUC.BQ",upperThresholdBQ,".alt with zScore-based outlier detection\nfor PID ",PID)
-    
-    # AUC = data.SangerArtifact[,AUC_colName]
-    # AUC.mean = mean(AUC, na.rm=T)
-    # AUC.stdv = sd(AUC,na.rm = T)
-    # AUC.zScore = (AUC - AUC.mean) / AUC.stdv
-    # AUC.alt.DF[,zScore_colname] = AUC.zScore
 
-    # indices_orange = AUC.alt.DF[,zScore_colname] > ORANGE_FLAG_ZSCORE_THRESHOLD
-    # indices_orange = rownames(AUC.alt.DF)[indices_orange]
-    # indices_orange = indices_orange[!is.na(indices_orange)]
-    # indices_red = AUC.alt.DF[,zScore_colname] > RED_FLAG_ZSCORE_THRESHOLD
-    # indices_red = rownames(AUC.alt.DF)[indices_red]    
-    # indices_red = indices_red[!is.na(indices_red)]
-    # indices_orange_butNotRed = setdiff(indices_orange,indices_red)
-    
-    # AUC.alt.DF$printLabel = ""
-    # AUC.alt.DF$printAUC = ""
-    # AUC.alt.DF$color = "black"
-    # outlier_triplet_text=""
-    # if (length(indices_orange)>0) {
-    #   AUC.alt.DF[indices_orange, "printLabel"] = AUC.alt.DF[indices_orange,"Triplet"]
-    #   AUC.alt.DF[indices_orange, "printAUC"] = paste0("AUC: ",data.SangerArtifact[indices_orange,AUC_colName],"  n: ",data.SangerArtifact[indices_orange,"count"])
-    #   AUC.alt.DF[indices_orange, "color"] = "orange"
-    #   for (index in indices_orange_butNotRed) {
-    #     outlier_triplet_text=paste0(outlier_triplet_text,"\nAUC.orangeTriplet\t",AUC.alt.DF[index,"Triplet"],"\tnumberOfSNVs:",data.SangerArtifact[index,"count"],"\tzScore_AUCBQ30:",round(as.numeric(AUC.alt.DF[index,"zScore.BQ30"]),3))
-    #   }
-    # }
-    # if (length(indices_red)) {
-    #   AUC.alt.DF[indices_red, "color"] = "red"
-    #   for (index in indices_red) {
-    #     outlier_triplet_text=paste0(outlier_triplet_text,"\nAUC.redTriplet\t",AUC.alt.DF[index,"Triplet"],"\tnumberOfSNVs:",data.SangerArtifact[index,"count"],"\tzScore_AUCBQ30:",round(as.numeric(AUC.alt.DF[index,"zScore.BQ30"]),3))
-    #   }      
-    # }
-    # outlier_triplet_text = gsub("^\n","",outlier_triplet_text,perl = T)
-    # 
-    # plot(data.SangerArtifact[,AUC_colName], pch="*", cex=2, col=AUC.alt.DF$color, 
-    #      ylab="AUC", xlab="Triplet Index", ylim=c(0,1.05), 
-    #      main=mainTitleForPlot)    
-    # abline(h = ORANGE_FLAG_ZSCORE_THRESHOLD*AUC.stdv+AUC.mean, col="orange")
-    # text(96, ORANGE_FLAG_ZSCORE_THRESHOLD*AUC.stdv+AUC.mean+0.01, paste0("zScore ",ORANGE_FLAG_ZSCORE_THRESHOLD), col="orange", cex=0.6)
-    # abline(h = RED_FLAG_ZSCORE_THRESHOLD*AUC.stdv+AUC.mean, col="red")
-    # text(96, RED_FLAG_ZSCORE_THRESHOLD*AUC.stdv+AUC.mean+0.01, paste0("zScore ",RED_FLAG_ZSCORE_THRESHOLD), col="red", cex=0.6)
-    # abline(h = -ORANGE_FLAG_ZSCORE_THRESHOLD*AUC.stdv+AUC.mean, col="orange")
-    # text(96, -ORANGE_FLAG_ZSCORE_THRESHOLD*AUC.stdv+AUC.mean+0.01, paste0("zScore -",ORANGE_FLAG_ZSCORE_THRESHOLD), col="orange", cex=0.6)
-    # abline(h = -RED_FLAG_ZSCORE_THRESHOLD*AUC.stdv+AUC.mean, col="red")
-    # text(96, -RED_FLAG_ZSCORE_THRESHOLD*AUC.stdv+AUC.mean+0.01, paste0("zScore -",RED_FLAG_ZSCORE_THRESHOLD), col="red", cex=0.6)
-    # 
-    # 
-    # abline(h = AUC.mean, col="grey")
-    # text(95, AUC.mean+0.01, paste0("mean AUC"), col="grey", cex=0.6)
-    # 
-    # # add name of triplet and AUC/number of SNVs
-    # text(x=1:nrow(AUC.alt.DF), y=data.SangerArtifact[,AUC_colName]+0.04, labels=AUC.alt.DF$printLabel, col=AUC.alt.DF$color, cex=0.8)
-    # text(x=1:nrow(AUC.alt.DF), y=data.SangerArtifact[,AUC_colName]+0.021, labels=AUC.alt.DF$printAUC, col=AUC.alt.DF$color, cex=0.6) 
-    
     #calculate a robust AUC by neglecting triplets with low SNV counts:
     for (minTripletCount in minTripletCounts) {
       if (minTripletCount == 0) {
@@ -460,16 +387,6 @@ for (upperThresholdBQ in c(30)) {
         text(x=1:nrow(AUC.alt.DF), y=data.SangerArtifact[,AUC_colName]+0.021, labels=AUC.alt.DF[,paste0("printAUC",ROBUST_SUFFIX)], col=AUC.alt.DF[,paste0("color",ROBUST_SUFFIX)], cex=0.6)
       }      
     }
-
-            
-            # columnsToRemove.data.SangerArtifact = grep("robust", colnames(data.SangerArtifact))
-            # columnsToRemove.AUC.alt.DF = grep("robust", colnames(AUC.alt.DF))
-            # if (length(columnsToRemove.data.SangerArtifact) > 0) {
-            #   data.SangerArtifact = data.SangerArtifact[,-columnsToRemove.data.SangerArtifact]
-            # }
-            # if (length(columnsToRemove.AUC.alt.DF) > 0) {
-            #   AUC.alt.DF = AUC.alt.DF[,-columnsToRemove.AUC.alt.DF]
-            # }            
   }
 }
 dev.off()
@@ -482,20 +399,10 @@ data.SangerArtifact = data.SangerArtifact[order(substr(data.SangerArtifact$Tripl
 write.table(data.SangerArtifact, file = OUTPUT_FILE, sep = "\t", row.names = F, col.names = T, quote = F)
 
 
-
-# writeLines(outlier_triplet_text, fileConn)
-
 for (minTripletCount in minTripletCounts) {
   if (!is.null(outlier_triplet_text[[as.character(minTripletCount)]])) {
     writeLines(outlier_triplet_text[[as.character(minTripletCount)]], fileConn)
     writeLines("---------------------------------", fileConn)
   }
 }
-
-# writeLines(c(
-#   paste0("AUC.mean\t",round(AUC.mean,3)),
-#   paste0("AUC.sd\t",round(AUC.stdv,3)),
-#   paste0("AUC.zScore",ORANGE_FLAG_ZSCORE_THRESHOLD,"\t",round(AUC.mean+ORANGE_FLAG_ZSCORE_THRESHOLD*AUC.stdv,3)),
-#   paste0("AUC.zScore",RED_FLAG_ZSCORE_THRESHOLD,"\t",round(AUC.mean+RED_FLAG_ZSCORE_THRESHOLD*AUC.stdv,3))
-# ), fileConn)
 close(fileConn)
