@@ -32,14 +32,17 @@ opt = getopt(matrix(c(
   'mainTitle', 't', 2, "character",
   'skipPlots', 'x', 2, "integer",
   'refBaseQual', 'k', 1, "character",
-  'altBaseQual', 'l', 1, "character"
+  'altBaseQual', 'l', 1, "character",
+  'altReadPos', 'q', 1, "character",
+  'refReadPos', 'r', 1, "character"
 ),ncol=4,byrow=TRUE));
+
 
 
 checkForMissingParameter = function(parameter, errorText, exitCode=1) {
   if (is.null(opt[[parameter]])){
     cat(paste0(errorText,"\n")) 
-    q(exitCode)      # quit, status unequal 0 means error
+    q(save = "no", status = exitCode)      # quit, status unequal 0 means error
   }
 }
 
@@ -65,6 +68,10 @@ checkForMissingParameter("refBaseQual", "Please specify the reference allel base
     RefAlleleBaseQualitiesFile=opt$refBaseQual
 checkForMissingParameter("altBaseQual", "Please specify the alternative allel base qualities file.", 1)    
     AltAlleleBaseQualitiesFile=opt$altBaseQual
+checkForMissingParameter("altReadPos", "Please specify the alternative allele read positions file.", 1)    
+    AltAlleleReadPositionsFile=opt$altReadPos
+checkForMissingParameter("refReadPos", "Please specify the reference allele read positions file.", 1)    
+    RefAlleleReadPositionsFile=opt$refReadPos
 checkForMissingParameter("outFilePrefix", "Please specify the output pdf file.", 1)
     PDF_OUTPUT_FILE_PREFIX=paste0(opt$outFilePrefix)
 
@@ -124,7 +131,8 @@ if (ALT.MEDIAN.THRESHOLD > -1) {
 
 
 if ( file.exists(DATA_RESULTS_FILE) & ! FORCE_RERUN ) {
-  load(file = DATA_RESULTS_FILE)
+  cat (paste0("Loading triplet-specific data from file ",DATA_RESULTS_FILE,"\n"))
+  lnames = load(file = DATA_RESULTS_FILE)
   if ( USE_BACKGROUND_BQs & !exists("data.bq.background.dens") ) {
     data.bq.background = read.table(paste0(ALIGNMENT_FOLDER,"BaseQualitiesForChosenPositions.1000000.1.txt.gz", collapse = ""))
     colnames(data.bq.background) = "BQ"
@@ -132,6 +140,7 @@ if ( file.exists(DATA_RESULTS_FILE) & ! FORCE_RERUN ) {
     remove(data.bq.background)
   }
 } else {
+  cat (paste0("Extracting triplet-specific data...\n"))
   # GO THROUGH DATA PROCESSING STEPS (either due to missing data file (e.g. first run) or being asked to do it although data file is available)
   if (USE_BACKGROUND_BQs) {
     data.bq.background = read.table(paste0(ALIGNMENT_FOLDER,"BaseQualitiesForChosenPositions.1000000.1.txt.gz", collapse = ""))
@@ -160,6 +169,7 @@ if ( file.exists(DATA_RESULTS_FILE) & ! FORCE_RERUN ) {
   } else {
     colnames(data.bq.triplet) = c("CHROM", "POS","REF","ALT","BaseBefore","BaseAfter")
   }
+  cat (paste0("Finished reading vcf file...\n"))
   data.bq.triplet$Triplet = with(data.bq.triplet, paste0(BaseBefore,REF,ALT,BaseAfter))
   # VCF = data.bq.triplet
   # remove multi alternative 
@@ -170,20 +180,27 @@ if ( file.exists(DATA_RESULTS_FILE) & ! FORCE_RERUN ) {
   
   data.bq.ref = read.table(file = RefAlleleBaseQualitiesFile, stringsAsFactors = F)
   data.bq.alt = read.table(file = AltAlleleBaseQualitiesFile, stringsAsFactors = F)
+  data.rp.alt = read.table(file = AltAlleleReadPositionsFile, stringsAsFactors = F)
+  
   colnames(data.bq.ref) = c("CHROM","POS","BQ_string")
   colnames(data.bq.alt) = c("CHROM","POS","BQ_string")
+  colnames(data.rp.alt) = c("CHROM","POS","RP_string")
   
+  cat ("Merging Base Qualities and Read Positions to dataframe...\n")
   data.bq.triplet = merge(data.bq.triplet, data.bq.ref, by=c("CHROM","POS"), all.x = T)
   colnames(data.bq.triplet)[ncol(data.bq.triplet)] = "BQ_string.ref"
   data.bq.triplet = merge(data.bq.triplet, data.bq.alt, by=c("CHROM","POS"), all.x = T)
   colnames(data.bq.triplet)[ncol(data.bq.triplet)] = "BQ_string.alt"
+  data.bq.triplet = merge(data.bq.triplet, data.rp.alt, by=c("CHROM","POS"), all.x = T)
+  colnames(data.bq.triplet)[ncol(data.bq.triplet)] = "RP_string.alt"
   data.bq.triplet = data.bq.triplet[order(data.bq.triplet$Triplet),]
   
-  
+  cat (paste0("Generating triplet-specific base quality matrix...\n"))
   data.bq.triplet.processed = lapply(seq(nrow(data.bq.triplet)), function(i) {
     line = data.bq.triplet[i,]
     baseScores.ref = as.integer(unlist(strsplit(unlist(strsplit(as.character(line[1,"BQ_string.ref"]), ";"))[1], ",")))
-    baseScores.alt = as.integer(unlist(strsplit(unlist(strsplit(as.character(line[1,"BQ_string.alt"]), ";"))[1], ","))) 
+    baseScores.alt = as.integer(unlist(strsplit(unlist(strsplit(as.character(line[1,"BQ_string.alt"]), ";"))[1], ",")))
+    readPos.alt = as.integer(unlist(strsplit(unlist(strsplit(as.character(line[1,"RP_string.alt"]), ";"))[1], ",")))
     
     countsLine.ref = data.frame(matrix(0, ncol = MAX_BASE_QUALITY+1, nrow = 1))
     colnames(countsLine.ref) = c(paste0("BQ.ref.",sapply(seq(MAX_BASE_QUALITY+1)-1, function(i) {i})))
@@ -233,11 +250,9 @@ if ( file.exists(DATA_RESULTS_FILE) & ! FORCE_RERUN ) {
     
     return (line)
   })
-  
-  
   data.bq.triplet = do.call(rbind, data.bq.triplet.processed)
-  
   remove(data.bq.triplet.processed, data.bq.ref, data.bq.alt)
+  cat (paste0("Finished generation of triplet-specific base quality matrix...\n"))
   
   data.bq.triplet$"BaseBefore" = factor(data.bq.triplet$"BaseBefore", levels=c("A","C","G","T"))
   data.bq.triplet$"REF" = factor(data.bq.triplet$"REF", levels=c("A","C","G","T"))
@@ -248,30 +263,32 @@ if ( file.exists(DATA_RESULTS_FILE) & ! FORCE_RERUN ) {
   }
   data.bq.triplet$"Triplet" = as.factor(as.character(data.bq.triplet$"Triplet"))
   
-
+  
+  data.bq.triplet$REVCOMP_TRIPLET = apply(data.bq.triplet, 1, function(line) {
+    if (COMBINE_REVCOMP) {
+      if (line["REF"] == "C" | line["REF"] == "T") {
+        return(line["Triplet"])
+      } else {
+        triplet = line["Triplet"]
+        triplet.revComp.tmp = as.character(reverseComplement(DNAString(triplet)))
+        triplet.revComp = paste0(substr(triplet.revComp.tmp,1,1),substr(triplet.revComp.tmp,3,3),substr(triplet.revComp.tmp,2,2),substr(triplet.revComp.tmp,4,4))
+        return(triplet.revComp)
+      }    
+    } else {
+      return(line["Triplet"])
+    }
+  })
+  
+  
   if (USE_BACKGROUND_BQs) {
     save(data.bq.triplet, data.bq.background.dens, file = DATA_RESULTS_FILE)
     # write.table(data.bq.triplet.filtered)
   } else {
     save(data.bq.triplet, file = DATA_RESULTS_FILE)
   }
+  cat (paste0("Finished extraction of triplet-specific data...\n"))
 }
 
-
-data.bq.triplet$REVCOMP_TRIPLET = apply(data.bq.triplet, 1, function(line) {
-  if (COMBINE_REVCOMP) {
-    if (line["REF"] == "C" | line["REF"] == "T") {
-      return(line["Triplet"])
-    } else {
-      triplet = line["Triplet"]
-      triplet.revComp.tmp = as.character(reverseComplement(DNAString(triplet)))
-      triplet.revComp = paste0(substr(triplet.revComp.tmp,1,1),substr(triplet.revComp.tmp,3,3),substr(triplet.revComp.tmp,2,2),substr(triplet.revComp.tmp,4,4))
-      return(triplet.revComp)
-    }    
-  } else {
-    return(line["Triplet"])
-  }
-})
 
 
 # Filter SNVs by median ALT BQ
@@ -293,6 +310,8 @@ if (ALT.MEDIAN.THRESHOLD > -1) {
 ######################################################
 # PLOTTING PART BEGINS HERE
 ######################################################
+
+cat (paste0("Starting plot generation...\n"))
 
 ## Add an alpha value to a colour
 add.alpha = function(col, alpha=1){
@@ -316,12 +335,47 @@ POSITIONS.FROMTO.ROW=c("CA"=0,"CG"=0,"CT"=0,"TA"=1,"TC"=1,"TG"=1)
 POSITIONS.AFTER=c("A"=1+offset.col,"C"=2+offset.col,"G"=3+offset.col,"T"=4+offset.col)
 
 
-plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c("BQD","BQ_CoV","BQD_sampleIndividual","BQD_sampleIndividual_ColoredByChromosome", "BQD_sampleIndividual_ColoredByVAF")) {
-  if (! is.na(PDF_OUTPUT_FILE_PREFIX)) {
-    pdf(PDF_OUTPUT_FILE_PREFIX, 8.27, 6.0)
-    # pdf(PDF_OUTPUT_FILE_PREFIX, paper = "a4r")
+
+plot_altBQ_vs_altReadPos = function(data.bq.triplet, transitions, AUC_threshold=0.25, RESULT_PDF = NA) {
+  
+  scatterplot_altBQ_vs_altReadPos_forTriplet = function(data.bq.triplet, triplet, AUC_threshold=AUC_threshold) {
+    subset = data.bq.triplet[data.bq.triplet$REVCOMP_TRIPLET == triplet,]
+    plot(-5, xlab="Read Position", ylab="Base Quality", xlim=c(0,110), ylim=c(1,50), main=triplet)
+    apply(subset, 1, function(line) {
+      BQ = as.integer(unlist(strsplit(unlist(strsplit(as.character(line["BQ_string.alt"]),";"))[1],",")))
+      ReadPos = as.integer(unlist(strsplit(unlist(strsplit(as.character(line["RP_string.alt"]),";"))[1],",")))
+      AUC.alt.BQ30 = as.numeric(line["AuC.alt.BQ30"])
+      color = ifelse(AUC.alt.BQ30 >= AUC_threshold, "red", "black")
+      pch = ifelse(AUC.alt.BQ30 >= AUC_threshold, 20, ".")
+      points(ReadPos, BQ, pch = pch, col=color)
+    })
+  }
+  
+  if (!is.na(RESULT_PDF)) {pdf(RESULT_PDF)}
+  par(mfrow=c(4,4))
+  for (i in seq(nrow(transitions))) {
+    transition = transitions[i,]
+    for (baseBefore in c("A","C","G","T")) {
+      for (baseAfter in c("A","C","G","T")) {
+        triplet = paste0(baseBefore,transition["FROM"],transition["TO"],baseAfter, collapse = "")
+        scatterplot_altBQ_vs_altReadPos_forTriplet(data.bq.triplet = data.bq.triplet, triplet = triplet, AUC_threshold = AUC_threshold)
+      }
+    }
+  }
+  if (!is.na(RESULT_PDF)) {dev.off()}
+}
+
+
+plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet, 
+                           whatToPlot=c("BQD","BQ_CoV","BQD_sampleIndividual","BQD_sampleIndividual_ColoredByChromosome", "BQD_sampleIndividual_ColoredByVAF","BQD_sampleIndividual_ColoredByReadPosition"), 
+                           ReadPositionQuantile=0.75) {
+  if (! is.na(PDF_OUTPUT_FILE)) {
+    print(paste0("Creating output pdf file ",PDF_OUTPUT_FILE))
+    pdf(PDF_OUTPUT_FILE, 8.27, 6.0)
+    # pdf(PDF_OUTPUT_FILE, paper = "a4r")
     # par(mar=c(1,1,1,1)+0.1, mar=c(1,1,1,1))
   }
+  ReadPositionsQuantile_ColName = paste0("ReadPositions.Q",ReadPositionQuantile*100)
   
   
     if (CANNEL_INDIVIDUAL_GRAPHS == T) {
@@ -334,7 +388,7 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c
         gl <- grid.layout(nrow=13, ncol=17, widths = unit(c(3,1,2.6,2,2,2,1,2,2,2,2,1,2,2,2,2,3), "null"), heights = unit(c(2,2,2,2,2,2.5,2.5,2,2,2,2.5,0.5), "null"))
       } else if (whatToPlot == "BQ_CoV") {
         gl <- grid.layout(nrow=13, ncol=17, widths = unit(c(3,1,2,2,2,2,1,2,2,2,2,1,2,2,2,2,3), "null"), heights = unit(c(2,2,2,2,2,2,2.5,2,2,2,2,0.5), "null"))
-      } else if (whatToPlot == "BQD_sampleIndividual" || whatToPlot == "BQD_sampleIndividual_ColoredByChromosome" || whatToPlot == "BQD_sampleIndividual_ColoredByVAF") {
+      } else if (whatToPlot == "BQD_sampleIndividual" || whatToPlot == "BQD_sampleIndividual_ColoredByChromosome" || whatToPlot == "BQD_sampleIndividual_ColoredByVAF" || whatToPlot == "BQD_sampleIndividual_ColoredByReadPosition") {
         gl <- grid.layout(nrow=13, ncol=19, widths = unit(c(2,1,2,2,2,2,1,2,2,2,2,1,2,2,2,2,2,2,1), "null"), heights = unit(c(2,2,2,2,2,2,2.5,2,2,2,2,0.5), "null"))
         legend.x=18
         legend.y=c(5,9)
@@ -355,6 +409,7 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c
       
       legend = NA
       apply(transitions, 1, function(transition) {
+        # transition = transitions[1,]
         from=transition["FROM"]
         to=transition["TO"]
         fromto = paste0(from,to)
@@ -371,7 +426,8 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c
               fontface.numbers = "plain"    
               fontsize.numbers = 1.5
               
-              if (whatToPlot == "BQD_sampleIndividual" || whatToPlot == "BQD_sampleIndividual_ColoredByChromosome" || whatToPlot == "BQD_sampleIndividual_ColoredByVAF") {
+              if (whatToPlot == "BQD_sampleIndividual" || whatToPlot == "BQD_sampleIndividual_ColoredByChromosome" || 
+                  whatToPlot == "BQD_sampleIndividual_ColoredByVAF" || whatToPlot == "BQD_sampleIndividual_ColoredByReadPosition") {
                 
                 baseScores.ref.counts = transitionSubset[,c(paste0("BQ.ref.",sapply(seq(MAX_BASE_QUALITY+1)-1, function(i) {i})))]
                 baseScores.alt.counts = transitionSubset[,c(paste0("BQ.alt.",sapply(seq(MAX_BASE_QUALITY+1)-1, function(i) {i})))]
@@ -390,12 +446,19 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c
                 molten.ref$VAF=transitionSubset[molten.ref$sample,"VAF"]
                 molten.ref$AUC30=transitionSubset[molten.ref$sample,"AuC.ref.BQ30"]
                 molten.ref$nBases=transitionSubset[molten.ref$sample,"nBQ.ref"]
+                molten.ref[,ReadPositionsQuantile_ColName] = -1
+                
                 molten.alt=melt(baseScores.alt.counts.normalized.cumul, id.vars = "sample")
                 molten.alt$BQ=as.numeric(gsub("BQ\\..+\\.(\\d+)$", "\\1", molten.alt$variable, perl=T))
                 molten.alt$type="ALT"
                 molten.alt$VAF=transitionSubset[molten.alt$sample,"VAF"]
                 molten.alt$AUC30=transitionSubset[molten.alt$sample,"AuC.alt.BQ30"]
                 molten.alt$nBases=transitionSubset[molten.alt$sample,"nBQ.alt"]
+                molten.alt[,ReadPositionsQuantile_ColName] = sapply(transitionSubset[molten.alt$sample,"RP_string.alt"], function(positionsString) {
+                  positions = as.integer(unlist(strsplit(positionsString, ",")))
+                  return (round(quantile(positions, ReadPositionQuantile)))
+                })                
+                # molten.altReadPos = melt(baseScores.alt.counts.normalized.cumul, id.vars = "sample")
                 if  (whatToPlot == "BQD_sampleIndividual_ColoredByChromosome") {
                   molten.ref$CHROM = factor(transitionSubset[molten.ref$sample,"CHROM"], levels = c(seq(22),"X","Y"))
                   molten.alt$CHROM = factor(transitionSubset[molten.alt$sample,"CHROM"], levels = c(seq(22),"X","Y"))
@@ -473,7 +536,8 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c
               vp = viewport(layout.pos.row = row, layout.pos.col = col)
               
               axis.label.size=3
-              if (whatToPlot == "BQD_sampleIndividual" || whatToPlot == "BQD_sampleIndividual_ColoredByChromosome" || whatToPlot == "BQD_sampleIndividual_ColoredByVAF") {
+              if (whatToPlot == "BQD_sampleIndividual" || whatToPlot == "BQD_sampleIndividual_ColoredByChromosome" || 
+                  whatToPlot == "BQD_sampleIndividual_ColoredByVAF" || whatToPlot == "BQD_sampleIndividual_ColoredByReadPosition") {
 
                 axis.label.size.x=1.3
                 axis.label.size.y=1.7
@@ -558,9 +622,11 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c
               }
 
               
-              if (whatToPlot == "BQD_sampleIndividual" || whatToPlot == "BQD_sampleIndividual_ColoredByChromosome" || whatToPlot == "BQD_sampleIndividual_ColoredByVAF") {
+              if (whatToPlot == "BQD_sampleIndividual" || whatToPlot == "BQD_sampleIndividual_ColoredByChromosome" || 
+                  whatToPlot == "BQD_sampleIndividual_ColoredByVAF" || whatToPlot == "BQD_sampleIndividual_ColoredByReadPosition") {
                 molten$sample = as.factor(molten$sample)
                 molten$type = factor(molten$type, levels=c("REF","ALT"))
+                molten$log2_nBases = log2(molten$nBases)
                   
                 breaks <- c(0, 0.125, 0.25, 0.375, 0.5, 0.75,1)
                 plot = ggplot(molten, aes(x=BQ,y=value, group=interaction(sample,type)))
@@ -578,8 +644,10 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c
                 } else if (whatToPlot == "BQD_sampleIndividual") {
                   plot = plot + geom_line(aes(size=log2(nBases), colour=type)) + scale_size(range = c(0.01, 0.1), limits = c(0.1,15)) + #scale_size(range = c(0.01, 0.1)
                     scale_color_manual(values=c(greenColor,redColor))                  
+                } else if (whatToPlot == "BQD_sampleIndividual_ColoredByReadPosition") {
+                  plot = plot + geom_line(aes_string(size="log2_nBases", colour=ReadPositionsQuantile_ColName)) + scale_size(range = c(0.01, 0.1), limits = c(0.1,15)) +
+                    scale_color_gradientn( colours = rev(rainbow(7)), limits = c(0,max(molten[,ReadPositionsQuantile_ColName])))
                 }
-
                 plot = plot + 
                   #geom_hline(aes(yintercept=AUC30), size=0.005, linetype=1) +
                   geom_vline(xintercept=30, size=0.02, linetype=1) +
@@ -727,12 +795,13 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c
 
 
 if (ALT.MEDIAN.THRESHOLD > -1) {
+  print("Plotting meadian-filtered data")
   if (! SKIP_PLOTS) {
-    plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_combined.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQD")
-    plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_CoV.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQ_CoV")
-    plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQD_sampleIndividual")
-    plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_CHROMcolored.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQD_sampleIndividual_ColoredByChromosome")
-    plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_VAFcolored.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQD_sampleIndividual_ColoredByVAF")  
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_combined.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQD")
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_CoV.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQ_CoV")
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQD_sampleIndividual")
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_CHROMcolored.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQD_sampleIndividual_ColoredByChromosome")
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_VAFcolored.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQD_sampleIndividual_ColoredByVAF")  
   }
   
   VCF = read.table(pipe(paste0("cat ",vcfInputFile," | grep -v '^##' ")), comment.char = '', sep = "\t", header = T, stringsAsFactors = F, check.names = F)
@@ -748,19 +817,46 @@ if (ALT.MEDIAN.THRESHOLD > -1) {
   write.table(VCF.filtered, file=VCF_OUTPUT_FILE.filtered, quote = F, row.names = F, col.names = T, sep = "\t")  
 } else {
   if (! SKIP_PLOTS) {
+    print("Plotting unfiltered data")
     print("BQD")
-    plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_combined.pdf"), data.bq.triplet = data.bq.triplet, whatToPlot = "BQD")
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_combined.pdf"), data.bq.triplet = data.bq.triplet, whatToPlot = "BQD")
     print("BQD_CoV")
-    plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_CoV.pdf"), data.bq.triplet = data.bq.triplet, whatToPlot = "BQ_CoV")
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_CoV.pdf"), data.bq.triplet = data.bq.triplet, whatToPlot = "BQ_CoV")
     print("BQD_sampleIndividual")
-    plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual.pdf"), data.bq.triplet = data.bq.triplet, whatToPlot = "BQD_sampleIndividual")
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual.pdf"), data.bq.triplet = data.bq.triplet, whatToPlot = "BQD_sampleIndividual")
     print("BQD_sampleIndividual_ColoredByChromosome")
-    plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_CHROMcolored.pdf"), data.bq.triplet = data.bq.triplet, whatToPlot = "BQD_sampleIndividual_ColoredByChromosome")
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_CHROMcolored.pdf"), data.bq.triplet = data.bq.triplet, whatToPlot = "BQD_sampleIndividual_ColoredByChromosome")
     print("BQD_sampleIndividual_ColoredByVAF")
-    plot_BQD_to_pdf(PDF_OUTPUT_FILE_PREFIX = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_VAFcolored.pdf"), data.bq.triplet = data.bq.triplet, whatToPlot = "BQD_sampleIndividual_ColoredByVAF")  
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_VAFcolored.pdf"), data.bq.triplet = data.bq.triplet, whatToPlot = "BQD_sampleIndividual_ColoredByVAF")
+    print("BQD_sampleIndividual_ColoredByReadPosition")
+    ReadPositionQuantile=0.5
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_ReadPosColored_Q",ReadPositionQuantile*100,".pdf"), data.bq.triplet = data.bq.triplet,
+                    whatToPlot = "BQD_sampleIndividual_ColoredByReadPosition", ReadPositionQuantile=ReadPositionQuantile )
+
+    ReadPositionQuantile=0.6
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_ReadPosColored_Q",ReadPositionQuantile*100,".pdf"), data.bq.triplet = data.bq.triplet,
+                    whatToPlot = "BQD_sampleIndividual_ColoredByReadPosition", ReadPositionQuantile=ReadPositionQuantile )
+    
+    ReadPositionQuantile=0.7
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_ReadPosColored_Q",ReadPositionQuantile*100,".pdf"), data.bq.triplet = data.bq.triplet,
+                    whatToPlot = "BQD_sampleIndividual_ColoredByReadPosition", ReadPositionQuantile=ReadPositionQuantile )
+    
+    ReadPositionQuantile=0.8
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_ReadPosColored_Q",ReadPositionQuantile*100,".pdf"), data.bq.triplet = data.bq.triplet,
+                    whatToPlot = "BQD_sampleIndividual_ColoredByReadPosition", ReadPositionQuantile=ReadPositionQuantile )
+    
+    print("BQ vs. ReadPosition Scatterplot")
+    plot_altBQ_vs_altReadPos(data.bq.triplet = data.bq.triplet, 
+                             transitions = transitions, AUC_threshold=0.25, 
+                             RESULT_PDF = paste0(MPILEUP_FOLDER,"Scatterplot_BQ_ReadPos.pdf"))
+    
   }
 }
+print("Finished plotting")
 
 
 
 
+# plot_altBQ_vs_altReadPos(data.bq.triplet = data.bq.triplet, 
+#                          transitions = transitions, AUC_threshold=0.5, 
+#                          RESULT_PDF = NA)
