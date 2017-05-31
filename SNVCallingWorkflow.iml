@@ -4,9 +4,6 @@
     <facet type="Python" name="Python">
       <configuration sdkName="" />
     </facet>
-    <facet type="Python" name="Python2">
-      <configuration sdkName="" />
-    </facet>
   </component>
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
