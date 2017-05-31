@@ -62,6 +62,7 @@ outputFilenamePrefix=${outputDirectory}/${SNVFILE_PREFIX}${PID}
 declare -r filenameReferenceAlleleBaseScores=${outputFilenamePrefix}_reference_allele_base_qualities.txt.gz
 declare -r filenameAlternativeAlleleBaseScores=${outputFilenamePrefix}_alternative_allele_base_qualities.txt.gz
 declare -r filenameAlternativeAlleleReadPositions=${outputFilenamePrefix}_alternative_allele_read_positions.txt.gz
+declare -r filenameReferenceAlleleReadPositions=${outputFilenamePrefix}_reference_allele_read_positions.txt.gz
 
 
 declare -r filenamePCRerrorMatrixFirst=${outputDirectory}/`basename ${filenameSNVVCF} .vcf`_sequence_error_matrix_first.txt
@@ -212,15 +213,16 @@ if [[ ! -d `echo ${PYPY_LOCAL_LIBPATH}/site-packages/hts-*.egg` ]]; then
     cd -
 fi
 
-mkfifo ${filenameAlternativeAlleleBaseScores}_NP ${filenameReferenceAlleleBaseScores}_NP ${filenameAlternativeAlleleReadPositions}_NP
+mkfifo ${filenameAlternativeAlleleBaseScores}_NP ${filenameReferenceAlleleBaseScores}_NP ${filenameAlternativeAlleleReadPositions}_NP ${filenameReferenceAlleleReadPositions}_NP
 cat ${filenameAlternativeAlleleBaseScores}_NP | ${BGZIP_BINARY} -f >${filenameAlternativeAlleleBaseScores} & zipAlternativeAlleleBaseScores=$!
 cat ${filenameReferenceAlleleBaseScores}_NP | ${BGZIP_BINARY} -f >${filenameReferenceAlleleBaseScores} & zipReferenceAlleleBaseScores=$!
 cat ${filenameAlternativeAlleleReadPositions}_NP | ${BGZIP_BINARY} -f >${filenameAlternativeAlleleReadPositions} & zipAlternativeAlleleReadPositions=$!
+cat ${filenameReferenceAlleleReadPositions}_NP | ${BGZIP_BINARY} -f >${filenameReferenceAlleleReadPositions} & zipReferenceAlleleReadPositions=$!
 
 # If this is for the pancancer workflow, then also create a DKFZ specific file.
 if [[ ${runArtifactFilter-true} == true ]]
 then
-	cat ${npConfidence} | ${TOOL_COPYSAM_WRAPPER} ${PYPY_LOCAL_LIBPATH} ${PYPY_BINARY} -u ${TOOL_FILTER_PE_OVERLAP} ${noControlFlag} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} --altBaseQualFile=${filenameAlternativeAlleleBaseScores}_NP --refBaseQualFile=${filenameReferenceAlleleBaseScores}_NP --altBasePositionsFile=${filenameAlternativeAlleleReadPositions}_NP \
+	cat ${npConfidence} | ${TOOL_COPYSAM_WRAPPER} ${PYPY_LOCAL_LIBPATH} ${PYPY_BINARY} -u ${TOOL_FILTER_PE_OVERLAP} ${noControlFlag} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} --altBaseQualFile=${filenameAlternativeAlleleBaseScores}_NP --refBaseQualFile=${filenameReferenceAlleleBaseScores}_NP --altBasePositionsFile=${filenameAlternativeAlleleReadPositions}_NP --refBasePositionsFile ${filenameReferenceAlleleReadPositions}_NP \
 						| ${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 0 -f ${filenameSomaticSNVsTmp} > ${filenameSNVVCFTemp}.tmp
 
     [[ $? != 0 ]] && echo "Error in first iteration of confidence annotation" && exit 2
@@ -233,7 +235,8 @@ then
     wait ${zipAlternativeAlleleBaseScores} ; [[ $? -gt 0 ]] && echo "Error from zipAlternativeAlleleBaseScores" && exit 31
     wait ${zipReferenceAlleleBaseScores} ; [[ $? -gt 0 ]] && echo "Error from zipReferenceAlleleBaseScores" && exit 32
     wait ${zipAlternativeAlleleReadPositions} ; [[ $? -gt 0 ]] && echo "Error from zipAlternativeAlleleReadPositions" && exit 33
-    rm ${filenameAlternativeAlleleBaseScores}_NP ${filenameReferenceAlleleBaseScores}_NP ${filenameAlternativeAlleleReadPositions}_NP
+    wait ${zipReferenceAlleleReadPositions} ; [[ $? -gt 0 ]] && echo "Error from zipReferenceAlleleReadPositions" && exit 34
+    rm ${filenameAlternativeAlleleBaseScores}_NP ${filenameReferenceAlleleBaseScores}_NP ${filenameAlternativeAlleleReadPositions}_NP ${filenameReferenceAlleleReadPositions}_NP
 
 	${PYTHON_BINARY} ${TOOL_CREATE_ERROR_PLOTS} --vcfFile=${filenameSomaticSNVsTmp} --referenceFile=NA --outputFile=${filenameSequencingErrorPlotPreFilter} --errorType=sequencing_specific --errorFile=${filenameSequencingErrorMatrix} --plot_title='Sequencing strand bias before guanine oxidation filter'
 
@@ -291,7 +294,8 @@ then
     wait ${plotBaseScoreBiasAfterFirstFiltering} ; [[ $? -gt 0 ]] && echo "Error in second creation of base score bias plot" && exit 38
     rm ${filenameSomaticSNVsTmp}.forBSBPlotsAfter1stFiltering
 else
-	cat ${npConfidence} | ${TOOL_COPYSAM_WRAPPER} ${PYPY_LOCAL_LIBPATH} ${PYPY_BINARY}  -u ${TOOL_FILTER_PE_OVERLAP} ${noControlFlag} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} --altBaseQualFile=${filenameAlternativeAlleleBaseScores}_NP --refBaseQualFile=${filenameReferenceAlleleBaseScores}_NP --altBasePositionsFile=${filenameAlternativeAlleleReadPositions}_NP | ${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS_PANCAN} > ${filenameSNVVCFTemp}
+	cat ${npConfidence} | ${TOOL_COPYSAM_WRAPPER} ${PYPY_LOCAL_LIBPATH} ${PYPY_BINARY}  -u ${TOOL_FILTER_PE_OVERLAP} ${noControlFlag} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} --altBaseQualFile=${filenameAlternativeAlleleBaseScores}_NP --refBaseQualFile=${filenameReferenceAlleleBaseScores}_NP --altBasePositionsFile=${filenameAlternativeAlleleReadPositions}_NP --refBasePositionsFile=${filenameReferenceAlleleReadPositions}_NP | \
+	${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS_PANCAN} > ${filenameSNVVCFTemp}
 
     exitCode=$?
     [[ $exitCode == 0 ]] && [[ -f ${filenameSNVVCFTemp} ]] && mv ${filenameSNVVCFTemp} ${filenameSNVVCF}
@@ -301,8 +305,9 @@ else
     wait ${zipAlternativeAlleleBaseScores} ; [[ $? -gt 0 ]] && echo "Error from zipAlternativeAlleleBaseScores" && exit 31
     wait ${zipReferenceAlleleBaseScores} ; [[ $? -gt 0 ]] && echo "Error from zipReferenceAlleleBaseScores" && exit 32
     wait ${zipAlternativeAlleleReadPositions} ; [[ $? -gt 0 ]] && echo "Error from zipAlternativeAlleleReadPositions" && exit 33
+    wait ${zipReferenceAlleleReadPositions} ; [[ $? -gt 0 ]] && echo "Error from zipReferenceAlleleReadPositions" && exit 34
 
-    rm ${filenameAlternativeAlleleBaseScores}_NP ${filenameReferenceAlleleBaseScores}_NP ${filenameAlternativeAlleleReadPositions}_NP
+    rm ${filenameAlternativeAlleleBaseScores}_NP ${filenameReferenceAlleleBaseScores}_NP ${filenameAlternativeAlleleReadPositions}_NP ${filenameReferenceAlleleReadPositions}_NP
 fi
 rm ${npConfidence}
 
