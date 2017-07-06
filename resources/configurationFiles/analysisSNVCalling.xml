@@ -1,5 +1,6 @@
 <configuration name='snvCallingAnalysis' description='SNV Calling for NGS data.'
                configurationType='analysis' class='de.dkfz.roddy.core.Analysis' workflowClass='de.dkfz.b080.co.snvpipeline.SNVCallingWorkflow'
+               runtimeServiceClass='de.dkfz.b080.co.common.COProjectsRuntimeService'
                imports="commonCOWorkflowsSettings"
                canCreateTestdata='true'
                listOfUsedTools="snvCalling,snvJoinVcfFiles,snvAnnotation,snvDeepAnnotation,snvFilter"
