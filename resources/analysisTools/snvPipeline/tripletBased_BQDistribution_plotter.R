@@ -593,12 +593,19 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE_PREFIX, data.bq.triplet, whatToPlot=c
                 }
                 
                 plot = plot + theme
-                
                 g <- ggplot_gtable(ggplot_build(plot))
-                t = subset(g$layout, name == "strip_t-1")$t
-                l = (subset(g$layout, name == "axis_l-1")$l)-1
-                b = subset(g$layout, name == "axis_b-1")$b
-                r = subset(g$layout, name == "panel-2")$r
+                # changes necessary due to changes in ggplot2 as used in Rv3.3.1 ?
+                if (as.integer(R.Version()["major"]) >= 3 & as.integer(unlist(strsplit(as.character(R.Version()["minor"]),"\\."))[1]) >= 3) {
+                  t = subset(g$layout, name == "strip-t-1-1")$t
+                  l = (subset(g$layout, name == "axis-l-1-1")$l)-1
+                  b = subset(g$layout, name == "axis-b-1-1")$b
+                  r = subset(g$layout, name == "panel-2-1")$r
+                } else {
+                  t = subset(g$layout, name == "strip_t-1")$t
+                  l = (subset(g$layout, name == "axis_l-1")$l)-1
+                  b = subset(g$layout, name == "axis_b-1")$b
+                  r = subset(g$layout, name == "panel-2")$r
+                }
                 panel  = g[t:b, l:r]
                 panel$vp = vp
                 grid.draw(panel)                
