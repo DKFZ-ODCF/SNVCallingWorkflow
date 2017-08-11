@@ -1,11 +1,14 @@
 # ATTENTION: In the output files of this script multi alternative SNVs have been removed!
+# This script creates QC plots
+# More specific: cumulative distributions of base qualities of the somatic SNVs.
+# Distribution are grouped according to the context triplet.
 
 library(getopt)
 library(ggplot2)
 library(Biostrings) # for reverseComplement
 library(grid) # for unit,gpar
 library(reshape2)
-library("RColorBrewer")
+library(RColorBrewer)
 
 
 CANNEL_INDIVIDUAL_GRAPHS=T
@@ -88,7 +91,7 @@ if (is.null(opt$forceRerun)){
   FORCE_RERUN = ifelse(opt$forceRerun==1, TRUE, FALSE)
 }
 
-if (is.null(opt$combineRevcomp)){     
+if (is.null(opt$combineRevcomp)){
   COMBINE_REVCOMP = TRUE
 } else {
   COMBINE_REVCOMP = ifelse(opt$combineRevcomp==1, TRUE, FALSE)
@@ -107,8 +110,9 @@ setIntegerValueFromParameter(parameterName = "MAFColumnIndex", valueName = "VAF_
 setIntegerValueFromParameter(parameterName = "filterThreshold", valueName = "ALT.MEDIAN.THRESHOLD")
 setIntegerValueFromParameter(parameterName = "sequenceContextColumnIndex", valueName = "SEQUENCE_CONTEXT_COLUMN_INDEX")
 
-
+# Define possible transitions
 if (COMBINE_REVCOMP) {
+  # combine SNVs of a certain triplet class with the SNVs of the reverse complement triplet class?
   transitions = data.frame( c(rep("C",3),rep("T",3)), c("A","G","T","A","C","G"), stringsAsFactors = F)  
   possible_mutations = c("CA", "CG", "CT", "TA", "TC", "TG")
   forbidden_mutations = sapply(possible_mutations, function(mutation) {as.character(complement(DNAString(mutation)))})
@@ -121,7 +125,7 @@ colnames(transitions) = c("FROM", "TO")
 
 
 
-
+# ALT.MEDIAN.THRESHOLD
 if (ALT.MEDIAN.THRESHOLD > -1) {
   DATA_RESULTS_FILE=paste0(MPILEUP_FOLDER,"BQ_TripletSpecific_MedianFiltered",ALT.MEDIAN.THRESHOLD,".RData")
   VCF_OUTPUT_FILE.filtered = sub(".vcf$", paste0("_filteredAltMedian",ALT.MEDIAN.THRESHOLD,".vcf"), vcfInputFile)  
@@ -141,7 +145,7 @@ if ( file.exists(DATA_RESULTS_FILE) & ! FORCE_RERUN ) {
   }
 } else {
   cat (paste0("Extracting triplet-specific data...\n"))
-  # GO THROUGH DATA PROCESSING STEPS (either due to missing data file (e.g. first run) or being asked to do it although data file is available)
+  # GO THROUGH DATA PROCESSING STEPS (either due to missing data file (e.g. first run) or being forced to do it although data file is available)
   if (USE_BACKGROUND_BQs) {
     data.bq.background = read.table(paste0(ALIGNMENT_FOLDER,"BaseQualitiesForChosenPositions.1000000.1.txt.gz", collapse = ""))
     colnames(data.bq.background) = "BQ"
@@ -171,12 +175,10 @@ if ( file.exists(DATA_RESULTS_FILE) & ! FORCE_RERUN ) {
   }
   cat (paste0("Finished reading vcf file...\n"))
   data.bq.triplet$Triplet = with(data.bq.triplet, paste0(BaseBefore,REF,ALT,BaseAfter))
-  # VCF = data.bq.triplet
-  # remove multi alternative 
+
   if (length(grep(',', data.bq.triplet$"Triplet"))>0) {
     data.bq.triplet = data.bq.triplet[-grep(',', data.bq.triplet$"Triplet"),]
   }
-  
   
   data.bq.ref = read.table(file = RefAlleleBaseQualitiesFile, stringsAsFactors = F)
   data.bq.alt = read.table(file = AltAlleleBaseQualitiesFile, stringsAsFactors = F)
@@ -292,6 +294,7 @@ if ( file.exists(DATA_RESULTS_FILE) & ! FORCE_RERUN ) {
 
 
 # Filter SNVs by median ALT BQ
+# data.bq.triplet.filtered will contain only those SNVs whose median of alternative-allele base qualities is at least ALT.MEDIAN.THRESHOLD
 if (ALT.MEDIAN.THRESHOLD > -1) {
   data.bq.triplet.filtered = do.call(rbind, apply(transitions, 1, function(TRANSITION) {
     if ( "THIS SNV IS ARTIFACTED" == "THIS SNV IS ARTIFACTED" ) {
@@ -336,21 +339,25 @@ POSITIONS.AFTER=c("A"=1+offset.col,"C"=2+offset.col,"G"=3+offset.col,"T"=4+offse
 
 
 
+
+
+
+scatterplot_altBQ_vs_altReadPos_forTriplet = function(data.bq.triplet, triplet, AUC_threshold=AUC_threshold) {
+# plot base quality (alternative allele) vs. read position for a single triplet
+  subset = data.bq.triplet[data.bq.triplet$REVCOMP_TRIPLET == triplet,]
+  plot(-5, xlab="Read Position", ylab="Base Quality", xlim=c(0,110), ylim=c(1,50), main=triplet)
+  apply(subset, 1, function(line) {
+    BQ = as.integer(unlist(strsplit(unlist(strsplit(as.character(line["BQ_string.alt"]),";"))[1],",")))
+    ReadPos = as.integer(unlist(strsplit(unlist(strsplit(as.character(line["RP_string.alt"]),";"))[1],",")))
+    AUC.alt.BQ30 = as.numeric(line["AuC.alt.BQ30"])
+    color = ifelse(AUC.alt.BQ30 >= AUC_threshold, "red", "black")
+    pch = ifelse(AUC.alt.BQ30 >= AUC_threshold, 20, ".")
+    points(ReadPos, BQ, pch = pch, col=color)
+  })
+}
+
 plot_altBQ_vs_altReadPos = function(data.bq.triplet, transitions, AUC_threshold=0.25, RESULT_PDF = NA) {
-  
-  scatterplot_altBQ_vs_altReadPos_forTriplet = function(data.bq.triplet, triplet, AUC_threshold=AUC_threshold) {
-    subset = data.bq.triplet[data.bq.triplet$REVCOMP_TRIPLET == triplet,]
-    plot(-5, xlab="Read Position", ylab="Base Quality", xlim=c(0,110), ylim=c(1,50), main=triplet)
-    apply(subset, 1, function(line) {
-      BQ = as.integer(unlist(strsplit(unlist(strsplit(as.character(line["BQ_string.alt"]),";"))[1],",")))
-      ReadPos = as.integer(unlist(strsplit(unlist(strsplit(as.character(line["RP_string.alt"]),";"))[1],",")))
-      AUC.alt.BQ30 = as.numeric(line["AuC.alt.BQ30"])
-      color = ifelse(AUC.alt.BQ30 >= AUC_threshold, "red", "black")
-      pch = ifelse(AUC.alt.BQ30 >= AUC_threshold, 20, ".")
-      points(ReadPos, BQ, pch = pch, col=color)
-    })
-  }
-  
+# plot base quality (alternative allele) vs. read position for all triplets (calls single triplet plotter function)
   if (!is.na(RESULT_PDF)) {pdf(RESULT_PDF)}
   par(mfrow=c(4,4))
   for (i in seq(nrow(transitions))) {
@@ -369,6 +376,8 @@ plot_altBQ_vs_altReadPos = function(data.bq.triplet, transitions, AUC_threshold=
 plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet, 
                            whatToPlot=c("BQD","BQ_CoV","BQD_sampleIndividual","BQD_sampleIndividual_ColoredByChromosome", "BQD_sampleIndividual_ColoredByVAF","BQD_sampleIndividual_ColoredByReadPosition"), 
                            ReadPositionQuantile=0.75) {
+# function to plot cumulative base quality distributions with different color schemes
+# triplets with a AUC.BQ30.alt (area under the curve BQ 30 = proportion of alternative allele reads with base quality <= 30) value above 30%/40%/50% will be highlighted in the plots
   if (! is.na(PDF_OUTPUT_FILE)) {
     print(paste0("Creating output pdf file ",PDF_OUTPUT_FILE))
     pdf(PDF_OUTPUT_FILE, 8.27, 6.0)
@@ -487,6 +496,7 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet,
                 AUC.BQ30.ref = round(sum(molten[with(molten, BQ <= 30 & type == 'REF'),"value"])*100,1)
                 AUC.BQ30.alt = round(sum(molten[with(molten, BQ <= 30 & type == 'ALT'),"value"])*100,1)                
                 
+                # Define highlighting of triplets due to high number of reads with low quality alternative base calls
                 # black | >30%:orange font | >40%:red font | >50% red font+border
                 if (AUC.BQ30.alt > 30) {
                   fontface.numbers = "bold"
@@ -508,7 +518,7 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet,
                 remove(molten.Cov.ref, molten.Cov.alt)                
               }
               
-              
+              # Make density plot lines less visible for a certain triplet if only few SNVs represent this triplet
               if (n<=3) {
                 alpha = 0.2
               } else if (n<7) {
@@ -854,9 +864,3 @@ if (ALT.MEDIAN.THRESHOLD > -1) {
 }
 print("Finished plotting")
 
-
-
-
-# plot_altBQ_vs_altReadPos(data.bq.triplet = data.bq.triplet, 
-#                          transitions = transitions, AUC_threshold=0.5, 
-#                          RESULT_PDF = NA)

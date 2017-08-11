@@ -213,6 +213,8 @@ if [[ ! -d `echo ${PYPY_LOCAL_LIBPATH}/site-packages/hts-*.egg` ]]; then
     cd -
 fi
 
+# create BaseScore FIFOs and their consumer processes (zip and write to target file)
+# BaseScore FIFOS will be filled by ${TOOL_FILTER_PE_OVERLAP}
 mkfifo ${filenameAlternativeAlleleBaseScores}_NP ${filenameReferenceAlleleBaseScores}_NP ${filenameAlternativeAlleleReadPositions}_NP ${filenameReferenceAlleleReadPositions}_NP
 cat ${filenameAlternativeAlleleBaseScores}_NP | ${BGZIP_BINARY} -f >${filenameAlternativeAlleleBaseScores} & zipAlternativeAlleleBaseScores=$!
 cat ${filenameReferenceAlleleBaseScores}_NP | ${BGZIP_BINARY} -f >${filenameReferenceAlleleBaseScores} & zipReferenceAlleleBaseScores=$!
