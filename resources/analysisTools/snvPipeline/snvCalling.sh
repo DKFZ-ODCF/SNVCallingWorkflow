@@ -2,8 +2,6 @@
 
 #PBS -l walltime=20:00:00,nodes=1
 
-source ${CONFIG_FILE}
-
 set -o pipefail
 
 # Create variables and check input parameters

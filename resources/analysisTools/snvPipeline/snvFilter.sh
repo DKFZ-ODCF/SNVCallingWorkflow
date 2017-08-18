@@ -5,8 +5,6 @@
 #PBS -l mem=2g
 #PBS -m a
 
-source ${CONFIG_FILE}
-
 set -o pipefail
 
 [[ -f ${FILENAME_CHECKPOINT} ]] && rm ${FILENAME_CHECKPOINT}
