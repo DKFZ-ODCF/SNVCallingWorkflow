@@ -182,6 +182,7 @@ then
 	# count the obtained SNVs to output their number in the plot: < 50 will not be reliable!
 	snvnum=`grep -v "^#" ${filenameSomaticSnvs} | wc -l`
 	snvindbSNP=` awk '{FS="\t"}{if(NR==2)print $5}'	${filenameSomaticSnvsIndbSNP}`
+	# QC value $SNV_IN_DBSNP_RATIO will be written to $filenameQCvalues
     SNV_IN_DBSNP_RATIO=`echo -e "$snvindbSNP\t$snvnum" | perl -F -ne 'print $F[0]/$F[1];'`
 
 	# make MAF plot - from Natalie
@@ -293,7 +294,7 @@ then
 	${GHOSTSCRIPT_BINARY} -dBATCH -dNOPAUSE -dAutoRotatePages=false -q -sDEVICE=pdfwrite -sOutputFile=${filenameSnvDiagnosticsPlot} ${filenameIntermutationDistancePlot} ${filenameMAFconfPlot} ${filenamePerChromFreq} ${filenameSnvsWithContext} ${filenameBaseScoreDistributions} ${BaseScoreDistributionsPlots_COMBINED} ${BaseScoreDistributionsPlots_INDIVIDUAL} ${BaseScoreDistributionsPlots_INDIVIDUAL_ChromColored} ${BaseScoreDistributionsPlots_INDIVIDUAL_VAFColored} ${BaseScoreDistributionsPlots_INDIVIDUAL_ReadPositionColored} ${BaseScoreDistributionsPlots_CoV} ${biasplots}
 fi
 
-# infer baseQuality bias (PV4)-related THA score
+    # infer baseQuality bias (PV4)-related THA score (QC value)
     THA_SCORE=`${RSCRIPT_BINARY} ${TOOL_THA_DETECTOR} -i ${filenameSomaticSnvs}`
     [[ "$?" != 0 ]] && echo "There was a non-zero exit code in THA score determination script." && exit 24
     [[ -f ${filenameTHAArtifactDetected} ]] && rm ${filenameTHAArtifactDetected}
@@ -309,6 +310,7 @@ then
 	[[ "$?" != 0 ]] && echo "There was a non-zero exit code in purity estimation" && exit 7
 fi
 
+# determine fraction of SNVs called as "synonymous SNV" among all exonic SNVs (QC value)
 EXONIC_CLASSIFICATION_COLUMN_INDEX=`cat ${filenameSomaticSnvs} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "EXONIC_CLASSIFICATION"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
 export EXONIC_CLASSIFICATION_COLUMN_INDEX=$((${EXONIC_CLASSIFICATION_COLUMN_INDEX}-1))
 ANNOVAR_FUNCTION_COLUMN_INDEX=`cat ${filenameSomaticSnvs} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "ANNOVAR_FUNCTION"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
