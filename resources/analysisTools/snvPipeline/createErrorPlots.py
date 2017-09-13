@@ -216,6 +216,8 @@ def calculateErrorMatrix(vcfFilename, referenceFilename, errorType):
 				elif(element[0] == "ACGTNacgtnMINUS"):
 					ACGTNacgtnMINUS = [int(i) for i in element[1].split(",")]
 
+			if (len(ACGTNacgtnPLUS)==0 or len(ACGTNacgtnMINUS)==0):
+				continue
 			# Count number of alternative bases
 			possible_bases = ["A", "C", "G", "T", "N", "a", "c", "g", "t", "n"]
 			read1_nr = ACGTNacgtnPLUS[possible_bases.index(current_mutation[1])]
