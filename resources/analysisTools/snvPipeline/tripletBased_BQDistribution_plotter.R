@@ -863,4 +863,3 @@ if (ALT.MEDIAN.THRESHOLD > -1) {
   }
 }
 print("Finished plotting")
-
