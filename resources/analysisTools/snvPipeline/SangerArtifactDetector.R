@@ -1,3 +1,8 @@
+# Rscript SangerArtifactDetector.R -v vcfInputFile -m mpileupFolder -p PID -o outFile [-c 1 -s 11]
+# 
+# 
+# Author: G. Warsow
+
 library(getopt)
 library(Biostrings) # for reverseComplement
 library(reshape2)
