@@ -166,6 +166,20 @@
                 <output type="file" typeof="de.dkfz.b080.co.files.TextFile" scriptparameter="FILENAME_VCF_SNVS_CHECKPOINT"/>
             </output>
         </tool>
+        <tool name="snvCallingNoControl" value="snvCalling.sh" basepath="snvPipeline">
+            <resourcesets>
+                <rset size="s" memory="1" cores="1" nodes="1" walltime="4"/>
+                <rset size="m" memory="1" cores="1" nodes="1" walltime="4"/>
+                <rset size="l" memory="1" cores="1" nodes="1" walltime="24"/>
+                <rset size="xl" memory="4" cores="1" nodes="1" walltime="48"/>
+            </resourcesets>
+            <input type="file" typeof="de.dkfz.b080.co.files.TumorBamFile" scriptparameter="TUMOR_BAMFILE_FULLPATH_BP"/>
+            <input type="string" setby="callingCode" scriptparameter="PARM_CHR_INDEX"/>
+            <output type="tuple">
+                <output type="file" typeof="de.dkfz.b080.co.files.VCFFileForSNVs" check="false" scriptparameter="FILENAME_VCF_SNVS"/>
+                <output type="file" typeof="de.dkfz.b080.co.files.TextFile" scriptparameter="FILENAME_VCF_SNVS_CHECKPOINT"/>
+            </output>
+        </tool>
         <tool name="snvJoinVcfFiles" value="joinSNVVCFFiles.sh" basepath="snvPipeline">
             <resourcesets>
                 <rset size="s" memory="1" cores="1" nodes="1" walltime="4"/>

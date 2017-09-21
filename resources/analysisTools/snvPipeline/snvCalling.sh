@@ -14,7 +14,9 @@ CONTROL_BAMFILE_FULLPATH_BP=${CONTROL_BAMFILE_FULLPATH_BP-}
 FILENAME_VCF_SNVS=${FILENAME_VCF_SNVS-}
 
 [[ -z $TUMOR_BAMFILE_FULLPATH_BP ]] && echo "Parameter is missing: TUMOR_BAMFILE_FULLPATH_BP" && exit -10
-[[ -z $CONTROL_BAMFILE_FULLPATH_BP ]] && echo "Parameter is missing: CONTROL_BAMFILE_FULLPATH_BP" && exit -10
+if [[ ${GERMLINE_AVAILABLE} == "1" || ${isNoControlWorkflow-false} == "false" ]] ; then
+    [[ -z $CONTROL_BAMFILE_FULLPATH_BP ]] && echo "Parameter is missing: CONTROL_BAMFILE_FULLPATH_BP" && exit -10
+fi
 [[ -z $FILENAME_VCF_SNVS ]] && echo "Parameter is missing: FILENAME_VCF_SNVS" && exit -10
 
 PARM_CHR_INDEX=${PARM_CHR_INDEX-}
