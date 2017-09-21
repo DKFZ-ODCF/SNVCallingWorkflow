@@ -33,7 +33,7 @@ public class SNVAnnotationFile extends BaseFile {
     }
 
     public Tuple2<SNVAnnotationFile,TextFile> filterRerun(SNVAnnotationFile rawVCFFile, TumorBamFile tumorBamFile, TextFile firstFilterRunCheckpointFile) {
-        Tuple2<SNVAnnotationFile,TextFile> tuple = GenericMethod.callGenericTool(COConstants.TOOL_SNV_FILTER_RERUN, this, rawVCFFile, tumorBamFile, firstFilterRunCheckpointFile);
+        Tuple2<SNVAnnotationFile,TextFile> tuple = GenericMethod.callGenericTool("snvFilterRerun", this, rawVCFFile, tumorBamFile, firstFilterRunCheckpointFile);
         return tuple;
     }
 }

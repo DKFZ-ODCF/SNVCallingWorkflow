@@ -18,7 +18,7 @@ public class SNVCallingWorkflow extends WorkflowUsingMergedBams {
         boolean runMetaCallingStep =  context.getConfiguration().getConfigurationValues().getBoolean("runSNVMetaCallingStep", false);
         boolean runDeepAnnotation = context.getConfiguration().getConfigurationValues().getBoolean("runDeepAnnotation", true);
         boolean runFilter = context.getConfiguration().getConfigurationValues().getBoolean("runFilter", true);
-        final boolean runSecondFilterStep = getflag(context,COConstants.FLAG_RUN_SECOND_FILTER_STEP, false);
+        final boolean runSecondFilterStep = getflag(context,"runSecondFilterStep", false);
 
         SNVAnnotationFile rawVCFFile = null;
         if(!runMetaCallingStep) {
