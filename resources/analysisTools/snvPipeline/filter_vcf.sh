@@ -120,7 +120,8 @@ if [[ ${RERUN_FILTER_STEP} == 1 ]]; then
         -p ${PID} -b ${plotBackgroundBaseScoreDistribution} -o ${BaseScoreDistributionsPlots_PREFIX} -R ${forceRerun} -c ${combineRevComp} \
         -f ${MEDIAN_FILTER_THRESHOLD} -s ${SEQUENCE_CONTEXT_COLUMN_INDEX} --MAFColumnIndex ${MAF_COLUMN_INDEX} -i ${channelIndividualGraphs} \
         -t 'Base score distribution of PID '${PID}'\nafter Median'${MEDIAN_FILTER_THRESHOLD}' filtering' --skipPlots ${skipPlots} \
-        --refBaseQual ${filenameReferenceAlleleBaseQualities} --altBaseQual ${filenameAlternativeAlleleBaseQualities}
+        --refBaseQual ${filenameReferenceAlleleBaseQualities} --altBaseQual ${filenameAlternativeAlleleBaseQualities} \
+        --altReadPos ${filenameAlternativeAlleleReadPositions} --refReadPos ${filenameReferenceAlleleReadPositions}
     [[ "$?" != 0 ]] && "There was a non-zero exit code in the generation of the tripletBased BQ distribution plot." && exit 21
     mv ${SNV_FILE_WITH_MAF_filtered} ${filenameSomaticSnvs}
 
