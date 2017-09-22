@@ -158,7 +158,7 @@ then
 	
 	[[ "$?" != 0 ]] && echo "There was a non-zero exit code in making the rainfall plot file" && exit 4
 	
-	${RSCRIPT_BINARY} ${TOOL_SNVS_PER_CHROM_PLOT} -i ${filenameIntermutationDistance} -s ${PID}_${anno} -o ${filenamePerChromFreq}
+	${RSCRIPT_BINARY} ${TOOL_SNVS_PER_CHROM_PLOT} -i ${filenameIntermutationDistance} -l ${CHROMOSOME_LENGTH_FILE} -s ${PID}_${anno} -o ${filenamePerChromFreq}
 
 	[[ "$?" != 0 ]] && echo "There was a non-zero exit code in making the SNVs per chromosome plot file" && exit 5
 
