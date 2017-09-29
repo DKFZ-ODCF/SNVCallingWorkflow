@@ -5,14 +5,19 @@ import de.dkfz.b080.co.common.WorkflowUsingMergedBams;
 import de.dkfz.b080.co.files.*;
 import de.dkfz.roddy.core.ExecutionContext;
 import de.dkfz.roddy.knowledge.files.Tuple2;
+import de.dkfz.roddy.tools.LoggerWrapper;
 
 /**
  */
 public class SNVCallingWorkflow extends WorkflowUsingMergedBams {
 
+private static LoggerWrapper logger = LoggerWrapper.getLogger(SNVCallingWorkflow.class.getName());
+
+
     @Override
     public boolean execute(ExecutionContext context, BasicBamFile _bamControlMerged, BasicBamFile _bamTumorMerged) {
         boolean noControlFLAG = getflag(context, IS_NO_CONTROL_WORKFLOW, false);
+logger.postAlwaysInfo("noControlFLAG is " + noControlFLAG);
         ControlBamFile bamControlMerged = noControlFLAG && _bamControlMerged == null ? null : new ControlBamFile(_bamControlMerged);
         TumorBamFile bamTumorMerged = new TumorBamFile(_bamTumorMerged);
 
