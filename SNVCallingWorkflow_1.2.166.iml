@@ -6,25 +6,20 @@
     </facet>
   </component>
   <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <perl5 />
     <exclude-output />
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="COWorkflows" />
     <orderEntry type="module" module-name="BatchEuphoria" />
-    <orderEntry type="module" module-name="Roddy" />
-    <orderEntry type="module" module-name="RoddyToolLib" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../Roddy/dist/plugins/PluginBase_1.0.24-1/PluginBase_1.0.24-1.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
     <orderEntry type="library" name="roddyBundledLibraries" level="project" />
+    <orderEntry type="module" module-name="COWorkflows_1.2.3" />
+    <orderEntry type="module" module-name="PluginBase" />
+    <orderEntry type="module" module-name="RoddyCore" />
+    <orderEntry type="library" name="R User Library" level="project" />
+    <orderEntry type="library" name="R Skeletons" level="application" />
+    <orderEntry type="module" module-name="RoddyToolLib_main" />
   </component>
 </module>
