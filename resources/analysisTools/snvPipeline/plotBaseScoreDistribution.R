@@ -154,7 +154,7 @@ pdf(file = paste0(opt$outFile), 8.27, 11.7) #paper = "a4"
     legend = g_legend(density)
     density = density + guides(fill=FALSE)
     if (length(unique(scores$BaseScores)) < 10) {
-      density = density + scale_x_discrete(breaks=scores$BaseScores)
+      density = density + scale_x_continuous(breaks=unique(scores$BaseScores))
     } else {
       density = density + scale_x_continuous(breaks = seq(min(scores$BaseScores), max(scores$BaseScores), 2))
     }
@@ -162,6 +162,7 @@ pdf(file = paste0(opt$outFile), 8.27, 11.7) #paper = "a4"
     if (! is.null(threshold)) {
       density = density + geom_vline(xintercept = threshold, colour="red")
     }
+    density = density + theme(plot.title = element_text(hjust = 0.5))
     
     # calculate frequencies for relative representation;
     # relative means means that each Freq will be plotted relative to sum(Frequencies)[BaseScore].
@@ -175,7 +176,7 @@ pdf(file = paste0(opt$outFile), 8.27, 11.7) #paper = "a4"
     relativePlot = ggplot(scores, aes(BaseScoresSplitted, Freq )) + geom_bar(aes(fill = VAFclassOrdered), width = width, position = "fill", stat="identity", alpha = 0.9) + theme(panel.margin = unit(0.125, "lines"))
     relativePlot = relativePlot + scale_fill_manual(values=cbPalette, guide = guide_legend(title = "VAFclass\n[REF/ALT]"), limits = seq(1, 0, -0.1)) + guides(fill=FALSE)
     if (length(unique(scores$BaseScores)) < 10) {
-      relativePlot = relativePlot + scale_x_discrete(breaks=scores$BaseScores)
+      relativePlot = relativePlot + scale_x_continuous(breaks=unique(scores$BaseScores))
     } else {
       relativePlot = relativePlot + scale_x_continuous(breaks = seq(min(scores$BaseScores), max(scores$BaseScores), 2))
     }
@@ -183,12 +184,13 @@ pdf(file = paste0(opt$outFile), 8.27, 11.7) #paper = "a4"
     if (! is.null(threshold)) {
       relativePlot = relativePlot + geom_vline(xintercept = threshold, colour="red")
     }
+    relativePlot = relativePlot + theme(plot.title = element_text(hjust = 0.5))
 
     relativePlot_facet = ggplot(scores, aes(BaseScores, Freq )) + geom_bar(aes(fill = VAFclassOrdered), width = 0.75, position = "fill", stat="identity", alpha = 0.9) + theme(panel.margin = unit(0.125, "lines")) +
       facet_wrap(~type, nrow=1)
     relativePlot_facet = relativePlot_facet + scale_fill_manual(values=cbPalette, guide = guide_legend(title = "VAFclass\n[REF/ALT]"), limits = seq(1, 0, -0.1)) + guides(fill=FALSE)
     if (length(unique(scores$BaseScores)) < 10) {
-      relativePlot_facet = relativePlot_facet + scale_x_discrete(breaks=scores$BaseScores)
+      relativePlot_facet = relativePlot_facet + scale_x_continuous(breaks=unique(scores$BaseScores))
     } else {
       relativePlot_facet = relativePlot_facet + scale_x_continuous(breaks = seq(min(scores$BaseScores), max(scores$BaseScores), 3))
     }
@@ -196,12 +198,12 @@ pdf(file = paste0(opt$outFile), 8.27, 11.7) #paper = "a4"
     if (! is.null(threshold)) {
       relativePlot_facet = relativePlot_facet + geom_vline(xintercept = threshold, colour="red")
     }
-
+    relativePlot_facet = relativePlot_facet + theme(plot.title = element_text(hjust = 0.5))
     
     relativePlot_RefNormalized = ggplot(scores, aes(BaseScoresSplitted, FreqNormalized )) + geom_bar(aes(fill = VAFclassOrdered), width = width, position = "stack", stat="identity", alpha = 0.9) + theme(panel.margin = unit(0.125, "lines"))    
     relativePlot_RefNormalized = relativePlot_RefNormalized + scale_fill_manual(values=cbPalette, guide = guide_legend(title = "VAFclass\n[REF/ALT]"), limits = seq(1, 0, -0.1)) + guides(fill=FALSE)
     if (length(unique(scores$BaseScores)) < 10) {
-      relativePlot_RefNormalized = relativePlot_RefNormalized + scale_x_discrete(breaks=scores$BaseScores)
+      relativePlot_RefNormalized = relativePlot_RefNormalized + scale_x_continuous(breaks=unique(scores$BaseScores))
     } else {
       relativePlot_RefNormalized = relativePlot_RefNormalized + scale_x_continuous(breaks = seq(min(scores$BaseScores), max(scores$BaseScores), 2))
     }    
@@ -209,12 +211,13 @@ pdf(file = paste0(opt$outFile), 8.27, 11.7) #paper = "a4"
     if (! is.null(threshold)) {
       relativePlot_RefNormalized = relativePlot_RefNormalized + geom_vline(xintercept = threshold, colour="red")
     }
+    relativePlot_RefNormalized = relativePlot_RefNormalized + theme(plot.title = element_text(hjust = 0.5))
     
     relativePlot_RefNormalized_facet = ggplot(scores, aes(BaseScores, FreqNormalized )) + geom_bar(aes(fill = VAFclassOrdered), width = 0.75, position = "stack", stat="identity", alpha = 0.9) + theme(panel.margin = unit(0.125, "lines")) +
       facet_wrap(~type, nrow=1) 
     relativePlot_RefNormalized_facet = relativePlot_RefNormalized_facet + scale_fill_manual(values=cbPalette, guide = guide_legend(title = "VAFclass\n[REF/ALT]"), limits = seq(1, 0, -0.1)) + guides(fill=FALSE)
     if (length(unique(scores$BaseScores)) < 10) {
-      relativePlot_RefNormalized_facet = relativePlot_RefNormalized_facet + scale_x_discrete(breaks=scores$BaseScores)
+      relativePlot_RefNormalized_facet = relativePlot_RefNormalized_facet + scale_x_continuous(breaks=unique(scores$BaseScores))
     } else {
       relativePlot_RefNormalized_facet = relativePlot_RefNormalized_facet + scale_x_continuous(breaks = seq(min(scores$BaseScores), max(scores$BaseScores), 3))
     }    
@@ -222,6 +225,7 @@ pdf(file = paste0(opt$outFile), 8.27, 11.7) #paper = "a4"
     if (! is.null(threshold)) {
       relativePlot_RefNormalized_facet = relativePlot_RefNormalized_facet + geom_vline(xintercept = threshold, colour="red")
     }      
+    relativePlot_RefNormalized_facet = relativePlot_RefNormalized_facet + theme(plot.title = element_text(hjust = 0.5))
     
     if (length(unique(scores$BaseScores)) < 10) {
       mytheme <- gridExtra::ttheme_default(
