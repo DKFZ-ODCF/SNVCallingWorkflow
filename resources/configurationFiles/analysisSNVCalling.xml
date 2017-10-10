@@ -7,6 +7,7 @@
                usedToolFolders="snvPipeline,tools"
                cleanupScript="cleanupScript">
     <configurationvalues>
+        <cvalue name='mpileupOutputDirectory' value='mpileup' type="path"/>
         <cvalue name='MPILEUP_OPTS' value='"-REI -q 30 -ug"' type="string"/>
         <cvalue name='BCFTOOLS_OPTS' value='"-vcgN -p 2.0"' type="string"/>
         <cvalue name='MPILEUPCONTROL_OPTS' value='"-ABRI -Q 0 -q 1"' type="string"/>
@@ -176,7 +177,7 @@
             <input type="file" typeof="de.dkfz.b080.co.files.TumorBamFile" scriptparameter="TUMOR_BAMFILE_FULLPATH_BP"/>
             <input type="string" setby="callingCode" scriptparameter="PARM_CHR_INDEX"/>
             <output type="tuple">
-                <output type="file" typeof="de.dkfz.b080.co.files.VCFFileForSNVs" check="false" scriptparameter="FILENAME_VCF_SNVS"/>
+                <output type="file" typeof="de.dkfz.b080.co.files.VCFFileForSNVsNoControl" check="false" scriptparameter="FILENAME_VCF_SNVS"/>
                 <output type="file" typeof="de.dkfz.b080.co.files.TextFile" scriptparameter="FILENAME_VCF_SNVS_CHECKPOINT"/>
             </output>
         </tool>
@@ -295,6 +296,7 @@
     <filenames package='de.dkfz.b080.co.files' filestagesbase='de.dkfz.b080.co.files.COFileStage'>
         <!--<filename class='VCFFileForSNVs' derivedFrom="BamFile" pattern="${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvs_${pid}.${RODDY_JOBARRAYINDEX}.vcf" />-->
         <filename class='VCFFileForSNVs' derivedFrom="ControlBamFile" pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvs_${pid}.${jobParameter,name="PARM_CHR_INDEX"}.vcf'/>
+        <filename class='VCFFileForSNVsNoControl' derivedFrom="TumorBamFile" pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvs_${pid}.${jobParameter,name="PARM_CHR_INDEX"}.vcf'/>
         <filename class='TextFile' derivedFrom="TumorBamFile" pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/.snvs_${pid}.${jobParameter,name="PARM_CHR_INDEX"}.vcf_checkpoint'/>
 
         <filename class="TextFile" derivedFrom="SNVAnnotationFile" pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvCallingCheckPoint_${jobParameter,name="TOOL_ID"}'/>
