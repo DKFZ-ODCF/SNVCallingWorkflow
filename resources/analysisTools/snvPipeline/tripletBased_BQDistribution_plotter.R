@@ -209,10 +209,12 @@ if ( file.exists(DATA_RESULTS_FILE) & ! FORCE_RERUN ) {
     countsLine.alt = data.frame(matrix(0, ncol = MAX_BASE_QUALITY+1, nrow = 1))
     colnames(countsLine.alt) = c(paste0("BQ.alt.",sapply(seq(MAX_BASE_QUALITY+1)-1, function(i) {i})))    
     counts.ref = table(baseScores.ref);  if (length(counts.ref)>0) {countsLine.ref[1,paste0("BQ.ref.",names(counts.ref))] = as.integer(unlist(counts.ref))}
+    if(length(counts.ref)==0) {counts.ref=NA}
     counts.alt = table(baseScores.alt);  if (length(counts.alt)>0) {countsLine.alt[1,paste0("BQ.alt.",names(counts.alt))] = as.integer(unlist(counts.alt))}
+    if(length(counts.alt)==0) {counts.alt=NA}
     
-    line[1,"nBQ.ref"] = length(baseScores.ref)
-    line[1,"nBQ.alt"] = length(baseScores.alt)
+    line[1,"nBQ.ref"] = ifelse(length(baseScores.ref)==1 && is.na(baseScores.ref),0,length(baseScores.ref))
+    line[1,"nBQ.alt"] = ifelse(length(baseScores.alt)==1 && is.na(baseScores.alt),0,length(baseScores.alt))
     
     baseScores.ref.mean = mean(baseScores.ref)
     baseScores.alt.mean = mean(baseScores.alt)
@@ -805,15 +807,37 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet,
 
 
 if (ALT.MEDIAN.THRESHOLD > -1) {
-  print("Plotting meadian-filtered data")
   if (! SKIP_PLOTS) {
+    print("Plotting meadian-filtered data")
     plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_combined.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQD")
     plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_CoV.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQ_CoV")
     plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQD_sampleIndividual")
     plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_CHROMcolored.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQD_sampleIndividual_ColoredByChromosome")
-    plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_VAFcolored.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQD_sampleIndividual_ColoredByVAF")  
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_VAFcolored.pdf"), data.bq.triplet = data.bq.triplet.filtered, whatToPlot = "BQD_sampleIndividual_ColoredByVAF")
+
+    ReadPositionQuantile=0.5
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_ReadPosColored_Q",ReadPositionQuantile*100,".pdf"), data.bq.triplet = data.bq.triplet.filtered,
+    whatToPlot = "BQD_sampleIndividual_ColoredByReadPosition", ReadPositionQuantile=ReadPositionQuantile )
+
+    ReadPositionQuantile=0.6
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_ReadPosColored_Q",ReadPositionQuantile*100,".pdf"), data.bq.triplet = data.bq.triplet.filtered,
+    whatToPlot = "BQD_sampleIndividual_ColoredByReadPosition", ReadPositionQuantile=ReadPositionQuantile )
+
+    ReadPositionQuantile=0.7
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_ReadPosColored_Q",ReadPositionQuantile*100,".pdf"), data.bq.triplet = data.bq.triplet.filtered,
+    whatToPlot = "BQD_sampleIndividual_ColoredByReadPosition", ReadPositionQuantile=ReadPositionQuantile )
+
+    ReadPositionQuantile=0.8
+    plot_BQD_to_pdf(PDF_OUTPUT_FILE = paste0(PDF_OUTPUT_FILE_PREFIX,".BQD_individual_ReadPosColored_Q",ReadPositionQuantile*100,".pdf"), data.bq.triplet = data.bq.triplet.filtered,
+    whatToPlot = "BQD_sampleIndividual_ColoredByReadPosition", ReadPositionQuantile=ReadPositionQuantile )
+
+    print("BQ vs. ReadPosition Scatterplot")
+    plot_altBQ_vs_altReadPos(data.bq.triplet = data.bq.triplet.filtered,
+    transitions = transitions, AUC_threshold=0.25,
+    RESULT_PDF = paste0(MPILEUP_FOLDER,"Scatterplot_BQ_ReadPos.pdf"))
   }
-  
+
+# write out the filtered file named ${SNV_FILE_WITH_MAF_filtered}
   VCF = read.table(pipe(paste0("cat ",vcfInputFile," | grep -v '^##' ")), comment.char = '', sep = "\t", header = T, stringsAsFactors = F, check.names = F)
   colnames(VCF)[1] = "CHROM"
   VCF.filtered = merge(VCF, data.bq.triplet.filtered[,c("CHROM","POS","REF","ALT")])
