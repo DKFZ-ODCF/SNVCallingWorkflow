@@ -197,7 +197,7 @@
                 <rset size="s" memory="5" cores="3" nodes="1" walltime="4"/>
                 <rset size="m" memory="5" cores="3" nodes="1" walltime="6"/>
                 <rset size="l" memory="5" cores="3" nodes="1" walltime="10"/>
-                <rset size="xl" memory="5" cores="3" nodes="1" walltime="20"/>
+                <rset size="xl" memory="6" cores="3" nodes="1" walltime="48"/>
             </resourcesets>
             <input type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_VCF_IN"/>
             <input type="file" typeof="de.dkfz.b080.co.files.TumorBamFile" scriptparameter="TUMOR_BAMFILE_FULLPATH_BP"/>
