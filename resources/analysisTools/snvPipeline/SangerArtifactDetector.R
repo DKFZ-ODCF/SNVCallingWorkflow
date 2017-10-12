@@ -1,4 +1,4 @@
-# Rscript SangerArtifactDetector.R -v vcfInputFile -m mpileupFolder -p PID -o outFile [-c 1 -s 11]
+# Rscript SangerArtifactDetector.R -v vcfInputFile -m mpileupFolder -p PID -o outFile -q pdfout [-c 1 -s 11 -f medianFilterSuffix]
 # 
 # 
 # Author: G. Warsow
@@ -22,10 +22,11 @@ opt = getopt(matrix(c(
   'mpileupFolder', 'm', 1, "character",
   'PID', 'p', 1, "character",
   'outFile', 'o', 1, "character",
+  'pdfout', 'q', 1, "character",
   'combineRevcomp', 'c', 2, "integer",
-  'sequenceContextColumnIndex', 's', 2, "integer"
+  'sequenceContextColumnIndex', 's', 2, "integer",
+  'filterSuffix', 'f', 2, "character"
 ),ncol=4,byrow=TRUE));
-
 
 
 if (is.null(opt$vcfInputFile)){
@@ -51,7 +52,11 @@ if (is.null(opt$combineRevcomp)){
   }
 }
 if (is.null(opt$outFile)){      # no vcf file specified
-  cat("Please specify the output file.\n"); 
+  cat("Please specify the text output file.\n"); 
+  q(status=2);      # quit, status unequal 0 means error
+}
+if (is.null(opt$pdfout)){      # no vcf file specified
+  cat("Please specify the pdf output file.\n"); 
   q(status=2);      # quit, status unequal 0 means error
 }
 if (! is.null(opt$sequenceContextColumnIndex)){
@@ -60,6 +65,10 @@ if (! is.null(opt$sequenceContextColumnIndex)){
     SEQUENCE_CONTEXT_COLUMN_INDEX = tmp
   }
 }
+if (is.null(opt$filterSuffix)){
+  opt$filterSuffix = ""
+}
+
 
 if (COMBINE_REVCOMP) {
   transitions = data.frame( c(rep("C",3),rep("T",3)), c("A","G","T","A","C","G"), stringsAsFactors = F)  
@@ -78,15 +87,25 @@ MPILEUP_FOLDER=paste0(opt$mpileupFolder,"/")
 vcfInputFile = paste0(opt$vcfInputFile)
 RefAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_reference_allele_base_qualities.txt.gz", collapse = "")
 AltAlleleBaseQualitiesFile=paste0(MPILEUP_FOLDER,"snvs_",PID,"_alternative_allele_base_qualities.txt.gz", collapse = "")
-AUCBQ30File=paste0(MPILEUP_FOLDER,"snvs_",PID,"_AUCBQ30.txt", collapse = "")
+AUCBQ30File=paste0(MPILEUP_FOLDER,"snvs_",PID,"_AUCBQ30",opt$filterSuffix,".txt", collapse = "")
 OUTPUT_FILE=paste0(opt$outFile)
 fileConn<-file(AUCBQ30File,"w")
 
-DATA_RESULTS_FILE=paste0(MPILEUP_FOLDER,"BQ_TripletSpecific.RData")
+DATA_RESULTS_FILE=paste0(MPILEUP_FOLDER,"BQ_TripletSpecific",opt$filterSuffix,".RData")
+print(paste0("Trying to use file ",DATA_RESULTS_FILE))
 if ( file.exists(DATA_RESULTS_FILE) ) {
   lnames = load(file = DATA_RESULTS_FILE)
+  # DATA_RESULTS_FILE contains all triplets, not only those represented in the vcf file
+  # Therefore, we have to remove those triplets that are not parte of the (e.g. median-filtered) vcf file
+  # We apply the merge command in order to identify common SNVs
+  data.vcf = read.table(vcfInputFile, comment.char = '', sep = "\t", header = T, stringsAsFactors = F, check.names = F)
+  data.vcf = data.vcf[,c("#CHROM","POS","REF","ALT")]
+  rownames(data.bq.triplet) = gsub(" ", "", apply(data.bq.triplet[,c("CHROM","POS","REF","ALT")], 1, paste, collapse = "|"))
+  rownames(data.vcf) = gsub(" ", "", apply(data.vcf[,c("#CHROM","POS","REF","ALT")], 1, paste, collapse = "|"))
+  wanted_SNVs = merge(data.bq.triplet, data.vcf, by = 0)[,"Row.names"]
+  data.bq.triplet = data.bq.triplet[wanted_SNVs,]
 } else {
-  
+  print(paste0("Have to create BQ_TripletSpecific data on my own..."))
   # READ IN DATA FOR CHANNEL-SPECIFIC BQs
   #--------------------------------------------------------------------------------------------------------CHR----POS----REF---ALT---------------------BaseBefore-----BaseAfter
   data.bq.triplet = read.table(pipe(paste0("cat ",vcfInputFile, " | grep -v '^##' | cut -f 1,2,4,5,",SEQUENCE_CONTEXT_COLUMN_INDEX," | perl -ne '$_ =~ /^(.*?)\t(.*?)\t(.*?)\t(.*?)\t[ACGTNacgtn]{9}([ACGTNacgtn]),([ACGTNacgtn])[ACGTNacgtn]{9}/; print \"$1\t$2\t$3\t$4\t$5\t$6\n\";' ")), comment.char = '', sep = "\t", header = T, stringsAsFactors = F)
@@ -294,7 +313,8 @@ AUC.alt.DF$const = 1
 minTripletCounts=c(0,5,10)
 outlier_triplet_text=list()
 
-pdf(file=paste0(MPILEUP_FOLDER,"snvs_",PID,"_zScoreBased_AUC.BQ30_BiasPlot.pdf", collapse = ""), height = 11.7, width = 8.3 )
+# pdf(file=paste0(MPILEUP_FOLDER,"snvs_",PID,"_zScoreBased_AUC.BQ30_BiasPlot.pdf", collapse = ""), height = 11.7, width = 8.3 )
+pdf(file=opt$pdfout, height = 11.7, width = 8.3 )
 par(mfrow=c(length(minTripletCounts),1))
 for (upperThresholdBQ in c(30)) {
   for (lowerThresholdBQ in c(0)) {    
