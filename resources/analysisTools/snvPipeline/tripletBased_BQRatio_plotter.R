@@ -209,13 +209,13 @@ for (triplet in rownames(tripletSpecificBaseQualities.ref)) {
   } else {
     if(length(scores.alt)>1 & length(scores.ref)==1) {
       tripletSpecificBaseQualityRatios[triplet,"tTest_pval"] = t.test(scores.alt, mu = scores.ref)$p.value
-    } else if(length(scores.alt)>1 & length(scores.ref)==1) {
+    } else if(length(scores.alt)==1 & length(scores.ref)>1) {
       tripletSpecificBaseQualityRatios[triplet,"tTest_pval"] = t.test(scores.ref, mu = scores.alt)$p.value
     } else if(length(scores.alt)==1 & length(scores.ref)==1) {
       tripletSpecificBaseQualityRatios[triplet,"tTest_pval"] = 1
     } else {
       tripletSpecificBaseQualityRatios[triplet,"tTest_pval"] = NA
-      stop("something is strange here. We did not find a single value for REF and/or ALT. Please check the base score files!")
+      stop(paste0("something is strange here. We did not find a single value for REF and/or ALT for triplet",triplet,". Please check the base score files!"))
     }
   }
 }
