@@ -148,6 +148,17 @@ def main(args):
 
         confidence = 10 # start with maximum value and subtract something for each "bad" feature
                         # "high" = 9-10, "medium" = 6-8, low <= 5
+
+        # in order to work with vcf files originating from mutect2 snv calling, we set confidence to 999 for these files
+        # to prevent mutect2-calls from being filtered with our in house filters
+        # with this means we are able to compare in house SNV calls with mutect2 SNV calls directly
+        if (header_indices["CONFIDENCE"] != -1):
+            confidence_string = help["CONFIDENCE"]
+            if (confidence_string != ''):
+                confidence_tmp = int(confidence_string)
+                if confidence_tmp > 10:
+                    confidence = confidence_tmp
+
         reasons = ""
         dbsnp_pos = None
         dbsnp_id = None

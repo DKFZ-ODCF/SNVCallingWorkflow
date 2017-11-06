@@ -82,6 +82,7 @@
         <cvalue name="biasRatioThreshold" value="0.63" type="float" description="threshold for fraction of reads in direction of bias / total variant reads above which it will be considered a strong bias"/>
         <cvalue name="nReads" value="20" type="integer" description=" number of reads in one field above which a bias is possible"/>
         <cvalue name="nMuts" value="4" type="integer" description=" number of muts above which a bias is possible"/>
+        <cvalue name="THA_SCORE_THRESHOLD" value="0.15" type="float" description="Threshold for calling sample THA affected. Threshold refers to fraction of SNVs with BaseQ pVal below 0.05"/>
 
         <!--## Thresholds to determine if a variant call is an artifact-->
         <!--#max mumber of reads we will tolerate in the direction opposite to the bias for it to be called an artefact-->
@@ -92,6 +93,7 @@
         <cvalue name="rVcf" value="0.1" type="float" description="max fraction of reads (reads/total reads) we tolerate in the direction opposite to the bias for it to be called an artefact"/>
 
         <cvalue name="SNVFILE_PREFIX" value="snvs_" type="string"/>
+        <cvalue name='runSecondFilterStep' value='false' type="boolean" />
         <cvalue name="MEDIAN_FILTER_THRESHOLD" value='20' type="integer" description="SNVs with median of alternative base qualities below this threshold will be removed in the rerun filter step. Value of -1 means no filtering."/>
         <cvalue name="RERUN_SUFFIX" value="_filteredAltMedian${MEDIAN_FILTER_THRESHOLD}" type="string"/>
 
@@ -165,6 +167,20 @@
                 <output type="file" typeof="de.dkfz.b080.co.files.TextFile" scriptparameter="FILENAME_VCF_SNVS_CHECKPOINT"/>
             </output>
         </tool>
+        <tool name="snvCallingNoControl" value="snvCalling.sh" basepath="snvPipeline">
+            <resourcesets>
+                <rset size="s" memory="1" cores="1" nodes="1" walltime="4"/>
+                <rset size="m" memory="1" cores="1" nodes="1" walltime="4"/>
+                <rset size="l" memory="1" cores="1" nodes="1" walltime="24"/>
+                <rset size="xl" memory="4" cores="1" nodes="1" walltime="48"/>
+            </resourcesets>
+            <input type="file" typeof="de.dkfz.b080.co.files.TumorBamFile" scriptparameter="TUMOR_BAMFILE_FULLPATH_BP"/>
+            <input type="string" setby="callingCode" scriptparameter="PARM_CHR_INDEX"/>
+            <output type="tuple">
+                <output type="file" typeof="de.dkfz.b080.co.files.VCFFileForSNVsNoControl" check="false" scriptparameter="FILENAME_VCF_SNVS"/>
+                <output type="file" typeof="de.dkfz.b080.co.files.TextFile" scriptparameter="FILENAME_VCF_SNVS_CHECKPOINT"/>
+            </output>
+        </tool>
         <tool name="snvJoinVcfFiles" value="joinSNVVCFFiles.sh" basepath="snvPipeline">
             <resourcesets>
                 <rset size="s" memory="1" cores="1" nodes="1" walltime="4"/>
@@ -181,7 +197,7 @@
                 <rset size="s" memory="5" cores="3" nodes="1" walltime="4"/>
                 <rset size="m" memory="5" cores="3" nodes="1" walltime="6"/>
                 <rset size="l" memory="5" cores="3" nodes="1" walltime="10"/>
-                <rset size="xl" memory="5" cores="3" nodes="1" walltime="20"/>
+                <rset size="xl" memory="6" cores="3" nodes="1" walltime="48"/>
             </resourcesets>
             <input type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_VCF_IN"/>
             <input type="file" typeof="de.dkfz.b080.co.files.TumorBamFile" scriptparameter="TUMOR_BAMFILE_FULLPATH_BP"/>
@@ -208,8 +224,8 @@
             <resourcesets>
                 <rset size="s" memory="1" cores="1" nodes="1" walltime="1"/>
                 <rset size="m" memory="1" cores="1" nodes="1" walltime="2"/>
-                <rset size="l" memory="1" cores="1" nodes="1" walltime="3"/>
-                <rset size="xl" memory="4" cores="1" nodes="1" walltime="4"/>
+                <rset size="l" memory="1" cores="1" nodes="1" walltime="4"/>
+                <rset size="xl" memory="4" cores="1" nodes="1" walltime="8"/>
             </resourcesets>
             <input type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_VCF"/>
             <input type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_RAW_VCF"/>
@@ -273,12 +289,14 @@
         <tool name="plotBaseScoreBias" value="tripletBased_BQRatio_plotter.R" basepath="snvPipeline"/>
         <tool name="plotTripletSpecificBaseScoreDistribution" value="tripletBased_BQDistribution_plotter.R" basepath="snvPipeline"/>
         <tool name="sangerArtifactDetector" value="SangerArtifactDetector.R" basepath="snvPipeline"/>
+        <tool name="ThaDetector" value="determine_THA_score.R" basepath="snvPipeline"/>
         <tool name="analyzeBamHeader" value="analyzeBamHeader.sh" basepath="tools"/>
         <tool name="copysamWrapper" value="copysam_wrapper.sh" basepath="snvPipeline"/>
     </processingTools>
     <filenames package='de.dkfz.b080.co.files' filestagesbase='de.dkfz.b080.co.files.COFileStage'>
         <!--<filename class='VCFFileForSNVs' derivedFrom="BamFile" pattern="${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvs_${pid}.${RODDY_JOBARRAYINDEX}.vcf" />-->
         <filename class='VCFFileForSNVs' derivedFrom="ControlBamFile" pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvs_${pid}.${jobParameter,name="PARM_CHR_INDEX"}.vcf'/>
+        <filename class='VCFFileForSNVsNoControl' derivedFrom="TumorBamFile" pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvs_${pid}.${jobParameter,name="PARM_CHR_INDEX"}.vcf'/>
         <filename class='TextFile' derivedFrom="TumorBamFile" pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/.snvs_${pid}.${jobParameter,name="PARM_CHR_INDEX"}.vcf_checkpoint'/>
 
         <filename class="TextFile" derivedFrom="SNVAnnotationFile" pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvCallingCheckPoint_${jobParameter,name="TOOL_ID"}'/>

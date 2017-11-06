@@ -4,9 +4,6 @@
     <facet type="Python" name="Python">
       <configuration sdkName="" />
     </facet>
-    <facet type="Python" name="Python2">
-      <configuration sdkName="" />
-    </facet>
   </component>
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
@@ -16,8 +13,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="COWorkflows" />
-    <orderEntry type="library" name="roddyBundledLibraries" level="project" />
-    <orderEntry type="module" module-name="PluginBase" />
-    <orderEntry type="module" module-name="Roddy" />
+    <orderEntry type="library" name="Roddy2.3.140" level="application" />
+    <orderEntry type="library" name="roddyBundledLibraries" level="application" />
   </component>
 </module>

@@ -204,7 +204,20 @@ for (triplet in rownames(tripletSpecificBaseQualities.ref)) {
   tripletSpecificBaseQualityRatios[triplet,"diff.mean"] = mean.alt - mean.ref
   tripletSpecificBaseQualityRatios[triplet,"diff.median"] = median.alt - median.ref  
   
-  tripletSpecificBaseQualityRatios[triplet,"tTest_pval"] = t.test(scores.alt, scores.ref)$p.value
+  if(length(scores.alt)>1 & length(scores.ref)>1) {
+    tripletSpecificBaseQualityRatios[triplet,"tTest_pval"] = t.test(scores.alt, scores.ref)$p.value
+  } else {
+    if(length(scores.alt)>1 & length(scores.ref)==1) {
+      tripletSpecificBaseQualityRatios[triplet,"tTest_pval"] = t.test(scores.alt, mu = scores.ref)$p.value
+    } else if(length(scores.alt)==1 & length(scores.ref)>1) {
+      tripletSpecificBaseQualityRatios[triplet,"tTest_pval"] = t.test(scores.ref, mu = scores.alt)$p.value
+    } else if(length(scores.alt)==1 & length(scores.ref)==1) {
+      tripletSpecificBaseQualityRatios[triplet,"tTest_pval"] = 1
+    } else {
+      tripletSpecificBaseQualityRatios[triplet,"tTest_pval"] = NA
+      stop(paste0("something is strange here. We did not find a single value for REF and/or ALT for triplet",triplet,". Please check the base score files!"))
+    }
+  }
 }
 
 # adjust tTest pVals for multiple testing

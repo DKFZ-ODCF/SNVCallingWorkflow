@@ -15,10 +15,22 @@ import java.util.List;
  */
 public class Methods {
 
+
+    @ScriptCallingMethod
+    public static VCFFileGroupForSNVs callSNVsNoControl(TumorBamFile tumorBam) {
+        IndexedFileObjects<Tuple2<VCFFileForSNVs, TextFile>> indexedFileObjects = ParallelizationHelper.runParallel(COConstants.CVALUE_CHROMOSOME_INDICES, "snvCallingNoControl", tumorBam, null, "PARM_CHR_INDEX=");
+
+        return getVcfFileGroupForSNVs(indexedFileObjects);
+    }
+
     @ScriptCallingMethod
     public static VCFFileGroupForSNVs callSNVs(ControlBamFile controlBam, TumorBamFile tumorBam) {
         IndexedFileObjects<Tuple2<VCFFileForSNVs, TextFile>> indexedFileObjects = ParallelizationHelper.runParallel(COConstants.CVALUE_CHROMOSOME_INDICES, COConstants.TOOL_SNV_CALLING, tumorBam, controlBam, "PARM_CHR_INDEX=");
 
+        return getVcfFileGroupForSNVs(indexedFileObjects);
+    }
+
+    private static VCFFileGroupForSNVs getVcfFileGroupForSNVs(IndexedFileObjects<Tuple2<VCFFileForSNVs, TextFile>> indexedFileObjects) {
         for (String chromosome : indexedFileObjects.getIndices()) {
             indexedFileObjects.getIndexedFileObjects().get(chromosome);
         }
