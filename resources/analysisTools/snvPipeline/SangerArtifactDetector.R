@@ -326,12 +326,14 @@ for (upperThresholdBQ in c(30)) {
         ROBUST_SUFFIX = ""
         AUC_colName = paste0("AUC.BQ",upperThresholdBQ,".alt")
         zScore_colname = paste0("zScore.BQ",upperThresholdBQ)
+        modifiedzScore_colname = paste0("modifiedzScore.BQ",upperThresholdBQ)
         mainTitle = paste0(mainTitleForPlot)
       } else {
         ROBUST_SUFFIX = paste0(".robust",minTripletCount)
         AUC_colName.withoutFiltering = paste0("AUC.BQ",upperThresholdBQ,".alt")
         AUC_colName = paste0("AUC",ROBUST_SUFFIX,".BQ",upperThresholdBQ,".alt")
         zScore_colname = paste0("zScore",ROBUST_SUFFIX,".BQ",upperThresholdBQ)
+      modifiedzScore_colname = paste0("modifiedzScore",ROBUST_SUFFIX,".BQ",upperThresholdBQ)
         mainTitle = paste0("robust ",mainTitleForPlot," [minTripletCount:",minTripletCount,"]")
       }
       
@@ -345,9 +347,15 @@ for (upperThresholdBQ in c(30)) {
         }
         AUC = data.SangerArtifact[,AUC_colName]
         AUC.mean = mean(AUC, na.rm=T)
+        AUC.median = median(AUC, na.rm=T)
         AUC.stdv = sd(AUC,na.rm = T)
+        AUC.mad = mad(AUC, na.rm = T)
         AUC.zScore = (AUC - AUC.mean) / AUC.stdv
+        AUC.modifiedzScore = (AUC - AUC.median) / AUC.mad
+        # AUC.modifiedzScore_equivalent = 0.6745 * (AUC - AUC.median) / mad(AUC, na.rm = T, constant = 1)
+
         AUC.alt.DF[,zScore_colname] = AUC.zScore
+        AUC.alt.DF[,modifiedzScore_colname] = AUC.modifiedzScore
         
         indices_orange = AUC.alt.DF[,zScore_colname] > ORANGE_FLAG_ZSCORE_THRESHOLD
         indices_orange = rownames(AUC.alt.DF)[indices_orange]
@@ -395,17 +403,25 @@ for (upperThresholdBQ in c(30)) {
              ylab="AUC", xlab="Triplet Index", ylim=c(0,1.05),
              main=mainTitle)
         abline(h = ORANGE_FLAG_ZSCORE_THRESHOLD*AUC.stdv+AUC.mean, col="orange")
+        abline(h = ORANGE_FLAG_ZSCORE_THRESHOLD*AUC.mad+AUC.median, col="blue")
         text(96, ORANGE_FLAG_ZSCORE_THRESHOLD*AUC.stdv+AUC.mean+0.01, paste0("zScore ",ORANGE_FLAG_ZSCORE_THRESHOLD), col="orange", cex=0.6)
         abline(h = RED_FLAG_ZSCORE_THRESHOLD*AUC.stdv+AUC.mean, col="red")
+        abline(h = RED_FLAG_ZSCORE_THRESHOLD*AUC.mad+AUC.median, col="aquamarine2")
         text(96, RED_FLAG_ZSCORE_THRESHOLD*AUC.stdv+AUC.mean+0.01, paste0("zScore ",RED_FLAG_ZSCORE_THRESHOLD), col="red", cex=0.6)
         abline(h = -ORANGE_FLAG_ZSCORE_THRESHOLD*AUC.stdv+AUC.mean, col="orange")
+        abline(h = -ORANGE_FLAG_ZSCORE_THRESHOLD*AUC.mad+AUC.median, col="blue")
         text(96-0.3, -ORANGE_FLAG_ZSCORE_THRESHOLD*AUC.stdv+AUC.mean+0.01, paste0("zScore -",ORANGE_FLAG_ZSCORE_THRESHOLD), col="orange", cex=0.6)
         abline(h = -RED_FLAG_ZSCORE_THRESHOLD*AUC.stdv+AUC.mean, col="red")
+        abline(h = -RED_FLAG_ZSCORE_THRESHOLD*AUC.mad+AUC.median, col="aquamarine2")
         text(96-0.3, -RED_FLAG_ZSCORE_THRESHOLD*AUC.stdv+AUC.mean+0.01, paste0("zScore -",RED_FLAG_ZSCORE_THRESHOLD), col="red", cex=0.6)
         
         
         abline(h = AUC.mean, col="grey")
         text(95, AUC.mean+0.01, paste0("mean AUC"), col="grey", cex=0.6)
+        
+        abline(h = AUC.median, col="cornflowerblue")
+        text(95, AUC.median+0.01, paste0("median AUC"), col="cornflowerblue", cex=0.6)
+        
         
         # add name of triplet and AUC/number of SNVs
         text(x=1:nrow(AUC.alt.DF), y=data.SangerArtifact[,AUC_colName]+0.04, labels=AUC.alt.DF[,paste0("printLabel",ROBUST_SUFFIX)], col=AUC.alt.DF[,paste0("color",ROBUST_SUFFIX)], cex=0.8)
