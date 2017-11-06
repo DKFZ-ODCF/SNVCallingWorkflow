@@ -209,15 +209,20 @@ def main(args):
                 is_commonSNP = True
 
         if args.no_control:
+            if indbSNP and is_commonSNP and not is_clinic:
+                reasons += "dbSNP(NoControl)"
             if help["ExAC_COL_VALID"] and any(af > 0.001 for af in map(float, extract_info(help["ExAC_COL"], "AF").split(','))):
                 inExAC = True
                 infofield["ExAC"] = "ExAC"
+                reasons += "ExAC(NoControl)"
             if help["EVS_COL_VALID"] and any(af > 1.0 for af in map(float, extract_info(help["EVS_COL"], "MAF").split(','))):
                 inEVS = True
                 infofield["EVS"] = "EVS"
+                reasons += "EVS(NoControl)"
             if help["LOCALCONTROL_COL_VALID"] and any(af > 0.02 for af in map(float, extract_info(help["LOCALCONTROL_COL"], "AF").split(','))):
                 inLocalControl = True
                 infofield["LocalControl"] = "LocalControl"
+                reasons += "LocalControl(NoControl)"
 
         # Punish for biases round 1
         if idx_pcrbias != -1 and idx_seqbias != -1 and args.round == 1:

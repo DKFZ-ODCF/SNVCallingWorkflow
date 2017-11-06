@@ -78,41 +78,48 @@ else
     snvOut=${FILENAME_VCF_SNVS_TEMP}
 fi
 
-# filter out mutations with strand bias next to the motif GGnnGG (or CCnnCC if snv is on reverse strand)
-${PERL_BINARY} ${TOOL_SEQ_CONTEXT_ANNOTATOR} ${FASTAFROMBED_BINARY} ${filenameMPileupTemp} ${REFERENCE_GENOME} 10 ${TOOLS_DIR} |
-${PYTHON_BINARY} ${TOOL_RAW_SNV_FILTER} --outf=${snvOut} ${RAW_SNV_FILTER_OPTIONS} # --inf=$MPILEUP_SUBDIR/forStrandBiasFilter.${chr}.bed
+firstLineVCF=`cat $filenameMPileupTemp | grep -v "^#" | head -n1`
+if [[ $firstLineVCF ]]; then
+    # filter out mutations with strand bias next to the motif GGnnGG (or CCnnCC if snv is on reverse strand)
+    ${PERL_BINARY} ${TOOL_SEQ_CONTEXT_ANNOTATOR} ${FASTAFROMBED_BINARY} ${filenameMPileupTemp} ${REFERENCE_GENOME} 10 ${TOOLS_DIR} |
+    ${PYTHON_BINARY} ${TOOL_RAW_SNV_FILTER} --outf=${snvOut} ${RAW_SNV_FILTER_OPTIONS} # --inf=$MPILEUP_SUBDIR/forStrandBiasFilter.${chr}.bed
 
-if [[ "$?" == 0 ]]
-then
-	rm ${filenameMPileupTemp}
-else
-	echo "There was a non-zero exit code in the seqContext_annotator / rawSnvFilter pipe; copying mpileup tmp to snv subdir and exiting..."
-	mv ${filenameMPileupTemp} ${filenameMPileupTempError}
-	exit 2
-fi
+    if [[ "$?" == 0 ]]
+    then
+	    rm ${filenameMPileupTemp}
+    else
+	    echo "There was a non-zero exit code in the seqContext_annotator / rawSnvFilter pipe; copying mpileup tmp to snv subdir and exiting..."
+	    mv ${filenameMPileupTemp} ${filenameMPileupTempError}
+	    exit 2
+    fi
 
-if [[ ${GERMLINE_AVAILABLE} == "1" ]]; then
-    if [[ ${runCompareGermline} == true ]]; then
-        NP_MPILEUP=${SCRATCH_DIR}/NP_MPILEUP_CHR${chr}
-        mkfifo $NP_MPILEUP
+    if [[ ${GERMLINE_AVAILABLE} == "1" ]]; then
+        if [[ ${runCompareGermline} == true ]]; then
+            NP_MPILEUP=${SCRATCH_DIR}/NP_MPILEUP_CHR${chr}
+            mkfifo $NP_MPILEUP
 
-        # if there is a germline BAM, first look up these positions in the control file by just piling up the bases, this is NO SNV calling
-        ${SAMTOOLS_BINARY} mpileup ${MPILEUPCONTROL_OPTS} -r ${chr} -l ${filenameMPileupOut} -f ${REFERENCE_GENOME} ${CONTROL_BAMFILE_FULLPATH_BP} > ${NP_MPILEUP} &
-        ${PERL_BINARY} ${TOOL_VCF_PILEUP_COMPARE} ${filenameMPileupOut} $NP_MPILEUP "Header" > ${FILENAME_VCF_SNVS_TEMP}
+            # if there is a germline BAM, first look up these positions in the control file by just piling up the bases, this is NO SNV calling
+            ${SAMTOOLS_BINARY} mpileup ${MPILEUPCONTROL_OPTS} -r ${chr} -l ${filenameMPileupOut} -f ${REFERENCE_GENOME} ${CONTROL_BAMFILE_FULLPATH_BP} > ${NP_MPILEUP} &
+            ${PERL_BINARY} ${TOOL_VCF_PILEUP_COMPARE} ${filenameMPileupOut} $NP_MPILEUP "Header" > ${FILENAME_VCF_SNVS_TEMP}
 
-        rm $NP_MPILEUP
+            rm $NP_MPILEUP
 
-        if [[ "$?" == 0  ]]; then
-            rm ${filenameMPileupOut}
-        else
-            echo "vcf_pileup_compare pipe returned non-zero exit code; not moving tmp output files  (${FILENAME_VCF_SNVS_TEMP} to final name; moving $filenameMPileupOut to $MPILEUP_SUBDIR/"
-            mv ${filenameMPileupOut} ${filenameMPileupError}
-            exit 2
+            if [[ "$?" == 0  ]]; then
+                rm ${filenameMPileupOut}
+            else
+                echo "vcf_pileup_compare pipe returned non-zero exit code; not moving tmp output files  (${FILENAME_VCF_SNVS_TEMP} to final name; moving $filenameMPileupOut to $MPILEUP_SUBDIR/"
+                mv ${filenameMPileupOut} ${filenameMPileupError}
+                exit 2
+            fi
         fi
     fi
+    mv ${FILENAME_VCF_SNVS_TEMP} ${FILENAME_VCF_SNVS}
+else
+    echo "No SNV was found in ${chr}."
+    awk '{print $0"\tSEQUENCE_CONTEXT"}' ${filenameMPileupTemp} > ${FILENAME_VCF_SNVS}
+    rm ${filenameMPileupTemp}
 fi
 
-mv ${FILENAME_VCF_SNVS_TEMP} ${FILENAME_VCF_SNVS}
 touch ${FILENAME_VCF_SNVS_CHECKPOINT}
 [[ ${FILENAME_VCF_SNVS_CHECKPOINT_OLD} ]] && touch ${FILENAME_VCF_SNVS_CHECKPOINT_OLD}
 
