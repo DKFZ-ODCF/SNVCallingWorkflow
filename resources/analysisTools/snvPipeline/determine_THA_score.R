@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 # This script determins the THA artifact score for the given snvs vcf file.
-# The score is calculated as the fraction of SNVs with a baseQbias (PV4) p-value of at most 0.05 minus 0.15.
+# The score is calculated as the fraction of SNVs with a baseQbias (PV4) p-value of at most 0.05 among all high quality somatic SNVs.
 # See Phabricator Task 597 and related tasks.
 # Author: G. Warsow
 

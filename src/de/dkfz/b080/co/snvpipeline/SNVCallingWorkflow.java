@@ -26,7 +26,9 @@ private static LoggerWrapper logger = LoggerWrapper.getLogger(SNVCallingWorkflow
         final boolean runSecondFilterStep = context.getConfiguration().getConfigurationValues().getBoolean("runSecondFilterStep", false);
 
         SNVAnnotationFile rawVCFFile = null;
-        if (!runMetaCallingStep) {
+        if (runMetaCallingStep && !noControlFLAG) {
+            rawVCFFile = (SNVAnnotationFile) call("snvCallingMetaScript", bamTumorMerged, bamControlMerged);
+        } else {
             final VCFFileGroupForSNVs vcfFilesForSNVs;
             if (noControlFLAG) {
                 vcfFilesForSNVs = Methods.callSNVsNoControl(bamTumorMerged);
@@ -34,8 +36,6 @@ private static LoggerWrapper logger = LoggerWrapper.getLogger(SNVCallingWorkflow
                 vcfFilesForSNVs = Methods.callSNVs(bamControlMerged, bamTumorMerged);
             }
             rawVCFFile = vcfFilesForSNVs.join();
-        } else {
-            rawVCFFile = (SNVAnnotationFile) call("snvCallingMetaScript", bamTumorMerged, bamControlMerged);
         }
 
         Tuple2<SNVAnnotationFile, TextFile> firstFilterRunResult = null;
