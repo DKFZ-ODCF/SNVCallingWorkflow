@@ -1,7 +1,5 @@
 package de.dkfz.b080.co.files;
 
-import de.dkfz.roddy.execution.jobs.JobDependencyID;
-import de.dkfz.roddy.execution.jobs.JobResult;
 import de.dkfz.roddy.knowledge.files.BaseFile;
 
 /**
