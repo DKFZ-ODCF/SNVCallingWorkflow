@@ -9,6 +9,8 @@ import copysam as pysam
 import sys, os
 from vcfparser import *
 
+
+
 def listToTabsep(listItems, sep='\t'):
     return sep.join(listItems)
 

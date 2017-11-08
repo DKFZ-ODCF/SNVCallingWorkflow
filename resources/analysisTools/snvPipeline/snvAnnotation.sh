@@ -1,7 +1,5 @@
 #!/bin/bash
 
-source ${CONFIG_FILE}
-
 PLOT_TYPE=${BASE_SCORE_BIAS_PLOT_TYPE:-Differences}
 
 set -xuv

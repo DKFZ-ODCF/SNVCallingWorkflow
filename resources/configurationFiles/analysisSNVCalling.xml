@@ -139,11 +139,13 @@
     <processingTools>
         <tool name="cleanupScript" value="cleanupScript.sh" basepath="snvPipeline">
             <resourcesets>
+                <rset size="t" memory="0.1" cores="1" nodes="1" walltime="1" queue="devel"/>
                 <rset size="l" memory="0.1" cores="1" nodes="1" walltime="1"/>
             </resourcesets>
         </tool>
         <tool name="snvCallingMetaScript" value="snvCallingMetaScript.sh" basepath="snvPipeline">
             <resourcesets>
+                <rset size="t" memory="1" cores="1" nodes="1" walltime="1" queue="devel"/>
                 <rset size="l" memory="12" cores="12" nodes="1" walltime="8"/>
                 <rset size="xl" memory="12" cores="12" nodes="1" walltime="16"/>
             </resourcesets>
@@ -154,7 +156,8 @@
         </tool>
         <tool name="snvCalling" value="snvCalling.sh" basepath="snvPipeline">
             <resourcesets>
-                <rset size="s" memory="1" cores="1" nodes="1" walltime="4"/>
+                <rset size="t" memory="0.5" cores="1" nodes="1" walltime="1" queue="devel"/>
+                <rset size="s" memory="1" cores="1" nodes="1" walltime="1"/>
                 <rset size="m" memory="1" cores="1" nodes="1" walltime="4"/>
                 <rset size="l" memory="1" cores="1" nodes="1" walltime="24"/>
                 <rset size="xl" memory="4" cores="1" nodes="1" walltime="48"/>
@@ -183,6 +186,7 @@
         </tool>
         <tool name="snvJoinVcfFiles" value="joinSNVVCFFiles.sh" basepath="snvPipeline">
             <resourcesets>
+                <rset size="t" memory="1" cores="1" nodes="1" walltime="1" queue="devel"/>
                 <rset size="s" memory="1" cores="1" nodes="1" walltime="4"/>
                 <rset size="m" memory="1" cores="1" nodes="1" walltime="4"/>
                 <rset size="l" memory="1" cores="1" nodes="1" walltime="4"/>
@@ -194,7 +198,8 @@
         </tool>
         <tool name="snvAnnotation" value="snvAnnotation.sh" basepath="snvPipeline">
             <resourcesets>
-                <rset size="s" memory="5" cores="3" nodes="1" walltime="4"/>
+                <rset size="t" memory="1" cores="1" nodes="1" walltime="1" queue="devel"/>
+                <rset size="s" memory="3" cores="2" nodes="1" walltime="4"/>
                 <rset size="m" memory="5" cores="3" nodes="1" walltime="6"/>
                 <rset size="l" memory="5" cores="3" nodes="1" walltime="10"/>
                 <rset size="xl" memory="6" cores="3" nodes="1" walltime="48"/>
@@ -209,6 +214,7 @@
         </tool>
         <tool name="snvDeepAnnotation" value="vcf_pipeAnnotator.sh" basepath="tools">
             <resourcesets>
+                <rset size="t" memory="1" cores="1" nodes="1" walltime="1" queue="devel"/>
                 <rset size="s" memory="1" cores="3" nodes="1" walltime="1"/>
                 <rset size="m" memory="1" cores="3" nodes="1" walltime="2"/>
                 <rset size="l" memory="1" cores="3" nodes="1" walltime="3"/>
@@ -222,6 +228,7 @@
         </tool>
         <tool name="snvFilter" value="filter_vcf.sh" basepath="snvPipeline">
             <resourcesets>
+                <rset size="t" memory="1" cores="1" nodes="1" walltime="1" queue="devel"/>
                 <rset size="s" memory="1" cores="1" nodes="1" walltime="1"/>
                 <rset size="m" memory="1" cores="1" nodes="1" walltime="2"/>
                 <rset size="l" memory="1" cores="1" nodes="1" walltime="4"/>

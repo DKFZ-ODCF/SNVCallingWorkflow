@@ -32,7 +32,7 @@ GetOptions (	"infile=s"	 		=> \$infile,		# vcf file, can be bgzipped
 
 if($region ne "0" && (!-f $region || $infile !~ /\.gz$/ || !-f $infile.".tbi")){die "region-file: $region is not a valid file or, infile: $infile is not zipped or there is no index for the infile $infile.tbi\n";}
 if(!-f $infile){die "The provided infile: $infile is not a valid file\n";}
-if(-f $infile && $infile =~ /\.gz$/){open(IN, "zcat $infile |");}
+if(-f $infile && $infile =~ /\.gz$/) { open(IN, "zcat $infile |") or die "Could not open the infile: $infile\n"; }
 else{open(IN, "<$infile") or die "Could not open the infile: $infile\n";}
 
 if($region ne "0"){print "Region file provided: $region\n";}
@@ -56,6 +56,7 @@ while(<IN>)
 	$head=$_;
 	last if($_ =~ /^#CHR/);
 }
+print STDERR "NOTE: The reading of the VCF will end with a broken pipe error, because we only read the header and then stop.\n";
 close IN;
 
 my @head=split("\t", $head);
@@ -82,8 +83,8 @@ if($extractsyn == 1){print SYN $head, "\n";}
 if($extractNcRNA == 1){print NCRNA $head, "\n";}
 
 if($region ne "0"){open(IN, "$tabix $infile -B $region |") or die "Could not open the file with tabix and regions\n";}
-elsif($infile =~ /\.gz$/){open(IN, "zcat $infile |");}
-else{open(IN, "<$infile");}
+elsif($infile =~ /\.gz$/){open(IN, "zcat $infile |") or die "Could not open the infile: $infile\n";}
+else{open(IN, "<$infile") or die "Could not open the infile: $infile\n";}
 
 while(<IN>)
 {

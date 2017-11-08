@@ -162,7 +162,8 @@ my $mapp = 0;	# Mapability
 my $is_repeat = 0;	# true if SNP conicides with any of the suspicious repeat classes simple, low and satellite, which are partially redundant to other annotations
 my $is_STR = 0;	# also short tandem repeats from Tandem Repeats Finder are suspicious and can conincide with other classes
 my $is_weird = 0;	# coindicende with known artefact-producing regions
-my $is_germline = 0;
+my $in1KG = 0;
+my $indbSNP = 0;
 my $precious = 0;
 my $class = "";	# for germline/somatic classification (e.g. in dbSNP => probably germline)
 
@@ -170,7 +171,8 @@ while (<FH>)
 {
 	$confidence=10;	# start with maximum value
 	# reset global variables
-	$is_germline = 0;
+	$in1KG = 0;
+	$indbSNP = 0;
 	$precious = 0;
 	$is_repeat = 0;
 	$is_STR = 0;
@@ -185,13 +187,13 @@ while (<FH>)
 	#if ($help[$IN1KG] ne "." && $help[$IN1KG] ne "0")
 	if ($help[$IN1KG] =~ /MATCH=exact/)	# verified somatic SNVs have MATCH=position instead of exact, so it would be bad to classify them as SNP_support_germline!
 	{
-		$is_germline = 1;	# good for germline, bad for "somatic"
+		$in1KG = 1;	# good for germline, bad for "somatic"
 	}
 	# dbSNP
 	#if ($help[$DBSBP] ne "." && $help[$DBSBP] ne "0")	# verified somatic SNVs have MATCH=position instead of exact, so it would be bad to reclassify them as SNP_support_germline!
 	if ($help[$DBSBP] =~ /MATCH=exact/)
 	{
-		$is_germline = 1;	# good for germline, bad for "somatic"
+		$indbSNP = 1;	# good for germline, bad for "somatic"
 		# precious!
 		#INFO=<ID=CLN,Number=0,Type=Flag,Description="SNP is Clinical(LSDB,OMIM,TPA,Diagnostic)">
 		#INFO=<ID=PM,Number=0,Type=Flag,Description="SNP is Precious(Clinical,Pubmed Cited)">

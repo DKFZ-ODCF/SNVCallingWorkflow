@@ -1,7 +1,5 @@
 #!/bin/bash
 
-source ${CONFIG_FILE}
-
 PLOT_TYPE=${BASE_SCORE_BIAS_PLOT_TYPE:-Differences}
 
 if [[ ${FILENAME_CHECKPOINT_FIRST_FILTER_RUN:-0} == 0 ]]; then
