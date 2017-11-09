@@ -19,7 +19,7 @@
         <cvalue name='GHOSTSCRIPT_BINARY' value='gs' type='filename'/>
 
 
-        <cvalue name='workflowEnvironmentScript' value="${TOOL_WORKFLOW_ENVIRONMENT_TBI_LSF}" type='string'/>
+        <cvalue name='workflowEnvironmentScript' value="workflowEnvironment_tbiLsf" type='string'/>
 
 
 
