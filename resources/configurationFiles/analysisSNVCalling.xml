@@ -15,6 +15,7 @@
         <cvalue name='BEDTOOLS_VERSION' value='2.16.2' type="string"/>
         <cvalue name='HTSLIB_VERSION' value='0.2.5' type="string"/>
         <cvalue name='BWA_VERSION' value='0.7.15' type="string"/>
+        <cvalue name='PYPY_VERSION' value='5.0.1' type="string"/>
 
         <cvalue name='GHOSTSCRIPT_BINARY' value='gs' type='filename'/>
 
