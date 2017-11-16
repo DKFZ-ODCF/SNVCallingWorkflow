@@ -203,7 +203,7 @@ if [[ ! -d `echo ${PYPY_LOCAL_LIBPATH}/site-packages/hts-*.egg` ]]; then
     echo "Installing hts-python on your local directory..."
     mkdir -p ${PYPY_LOCAL_LIBPATH}/site-packages
 
-    git clone "https://github.com/pjb7687/hts-python" ${RODDY_SCRATCH}/hts-python
+    ${GIT_BINARY} clone "https://github.com/pjb7687/hts-python" ${RODDY_SCRATCH}/hts-python
     # Below assume that 'nose' is already installed with PyPy
     cd ${RODDY_SCRATCH}/hts-python
     ${TOOL_COPYSAM_WRAPPER} ${PYPY_LOCAL_LIBPATH} ${PYPY_BINARY} setup.py build

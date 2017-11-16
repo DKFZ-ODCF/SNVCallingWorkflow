@@ -8,6 +8,7 @@ module load perl/"${PERL_VERSION:?PERL_VERSION undefined}"
 module load bedtools/"${BEDTOOLS_VERSION:?BEDTOOLS_VERSION undefined}"
 module load bwa/"${BWA_VERSION:?BWA_VERSION undefined}"
 module load pypy/"${PYPY_VERSION:?PYPY_VERSION undefined}"
+module load git/"${GIT_VERSION:?GIT_VERSION undefined}"
 
 
 export BGZIP_BINARY=bgzip
@@ -26,4 +27,5 @@ export GHOSTSCRIPT_BINARY=gs
 export BWA_BINARY=bwa
 export BWA_ACCELERATED_BINARY=bwaBinary_bwa078_accelerated
 export PYPY_BINARY=pypy-c
+export GIT_BINARY=git
 
