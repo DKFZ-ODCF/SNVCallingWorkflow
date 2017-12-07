@@ -195,16 +195,9 @@ else
     cat ${filenameSNVVCF} | ${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 0 > ${npConfidence} &
 fi
 
-#if [[ -e /etc/SuSE-release ]]; then
-#    # Needed for CFFI
-#    suseVer=`grep -oP '(?<=VERSION \= ).*(?=$)' /etc/SuSE-release`
-#    export C_INCLUDE_PATH=/ibios/tbi_cluster/${suseVer}/x86_64/htslib/htslib-1.2.1/include
-#else
-#    elVer=`grep -oP '(?<=CentOS Linux release )\d+' /etc/redhat-release`
-#    export C_INCLUDE_PATH=/tbi/software/x86_64/htslib/htslib-1.2/el${elVer}/lib
-#fi
+# Needed for CFFI
 export C_INCLUDE_PATH=${HTSLIB_INCLUDE_PATH}
-
+module switch htslib/${HTSLIB_VERSION_FOR_HTS_PYTHON}
 if [[ ! -d `echo ${PYPY_LOCAL_LIBPATH}/site-packages/hts-*.egg` ]]; then
     echo "Installing hts-python on your local directory..."
     mkdir -p ${PYPY_LOCAL_LIBPATH}/site-packages
@@ -328,5 +321,7 @@ annofile=$(ls ${FILEBASE}*Annovar* 2> /dev/null | wc -l)
 [[ "$annofile" != 0 ]] && rm ${FILEBASE}*Annovar*
 
 [[ ${relinked} == true ]] && rm ${TUMOR_BAMFILE_FULLPATH_BP}.bai && rm ${TUMOR_BAMFILE_FULLPATH_BP}
+
+module switch htslib/${HTSLIB_VERSION}
 
 touch ${FILENAME_CHECKPOINT}

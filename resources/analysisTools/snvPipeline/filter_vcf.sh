@@ -318,10 +318,10 @@ SYNONYMOUS_RATIO=`grep -v '^#' ${filenameSomaticSnvs} | perl -F'\t' -ae 'BEGIN {
 echo -e "{" >$filenameQCvalues
 echo -e "\t\"snvnum\": ${snvnum:-NA}," >>$filenameQCvalues
 echo -e "\t\"snvindbSNP\": ${snvindbSNP:-NA}," >>$filenameQCvalues
-echo -e "\t\"SNV_IN_DBSNP_RATIO\": ${SNV_IN_DBSNP_RATIO:-NA}," >>$filenameQCvalues
-echo -e "\t\"SYNONYMOUS_RATIO\": ${SYNONYMOUS_RATIO:-NA}," >>$filenameQCvalues
-echo -e "\t\"THA_SCORE\": ${THA_SCORE:-NA}" >>$filenameQCvalues
-#echo -e "\t\"GOX_SCORE\": ${GOX_SCORE}" >>$filenameQCvalues
+echo -e "\t\"snvInDbsnpRatio\": ${SNV_IN_DBSNP_RATIO:-NA}," >>$filenameQCvalues
+echo -e "\t\"synonymousRatio\": ${SYNONYMOUS_RATIO:-NA}," >>$filenameQCvalues
+echo -e "\t\"thaScore\": ${THA_SCORE:-NA}" >>$filenameQCvalues
+#echo -e "\t\"goxScore\": ${GOX_SCORE}" >>$filenameQCvalues
 echo -e "}" >>$filenameQCvalues
 
 touch ${FILENAME_CHECKPOINT}
