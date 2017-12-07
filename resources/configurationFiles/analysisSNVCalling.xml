@@ -7,14 +7,23 @@
                usedToolFolders="snvPipeline,tools"
                cleanupScript="cleanupScript">
     <configurationvalues>
+
+        <cvalue name='RSCRIPT_VERSION' value='3.0.0' type="string"/>
+        <cvalue name='PERL_VERSION' value='5.20.2' type="string"/>
+        <cvalue name='SAMTOOLS_VERSION' value='0.1.19' type="string"/>
+        <cvalue name='PYTHON_VERSION' value='2.7.9' type="string"/>
+        <cvalue name='BEDTOOLS_VERSION' value='2.16.2' type="string"/>
+        <cvalue name='HTSLIB_VERSION' value='0.2.5' type="string"/>
+        <cvalue name='PYPY_VERSION' value='5.0.1' type="string"/>
+
+        <cvalue name='workflowEnvironmentScript' value="workflowEnvironment_tbiLsf" type='string'/>
+
         <cvalue name='MPILEUP_OPTS' value='"-REI -q 30 -ug"' type="string"/>
         <cvalue name='BCFTOOLS_OPTS' value='"-vcgN -p 2.0"' type="string"/>
         <cvalue name='MPILEUPCONTROL_OPTS' value='"-ABRI -Q 0 -q 1"' type="string"/>
         <cvalue name='MPILEUPOUT_PREFIX' value='mp_' type="string"/>
         <cvalue name='INDELFILE_PREFIX' value='indel_' type="string"/>
-        <cvalue name='SNVFILE_PREFIX' value='snvs_' type="string"/>
         <!--<cvalue name='analysisMethodNameOnInput' value='whole_genome_analysis' type='string' />-->
-        <cvalue name='GHOSTSCRIPT_BINARY' value='gs' type='filename'/>
         <cvalue name="RAW_SNV_FILTER_OPTIONS" value='" --minVac=3 --minVaf=0.03 --minVacPS=2"' type="string"/>
         <!--<cvalue name='REFERENCE_GENOME' value="${referenceGenome_hg19_chr}" type="string"/>-->
 
@@ -96,6 +105,7 @@
 
     </configurationvalues>
     <processingTools>
+        <tool name='workflowEnvironment_tbiLsf' value="tbi-lsf-cluster.sh" basepath='snvPipeline/environments'/>
         <tool name="cleanupScript" value="cleanupScript.sh" basepath="snvPipeline">
             <resourcesets>
                 <rset size="t" memory="0.1" cores="1" nodes="1" walltime="1" queue="devel"/>
