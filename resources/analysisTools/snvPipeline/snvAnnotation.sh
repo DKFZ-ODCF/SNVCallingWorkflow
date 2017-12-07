@@ -195,9 +195,15 @@ else
     cat ${filenameSNVVCF} | ${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 0 > ${npConfidence} &
 fi
 
-# Needed for CFFI
-suseVer=`grep -oP '(?<=VERSION \= ).*(?=$)' /etc/SuSE-release`
-export C_INCLUDE_PATH=/ibios/tbi_cluster/${suseVer}/x86_64/htslib/htslib-1.2.1/include
+#if [[ -e /etc/SuSE-release ]]; then
+#    # Needed for CFFI
+#    suseVer=`grep -oP '(?<=VERSION \= ).*(?=$)' /etc/SuSE-release`
+#    export C_INCLUDE_PATH=/ibios/tbi_cluster/${suseVer}/x86_64/htslib/htslib-1.2.1/include
+#else
+#    elVer=`grep -oP '(?<=CentOS Linux release )\d+' /etc/redhat-release`
+#    export C_INCLUDE_PATH=/tbi/software/x86_64/htslib/htslib-1.2/el${elVer}/lib
+#fi
+export C_INCLUDE_PATH=${HTSLIB_INCLUDE_PATH}
 
 if [[ ! -d `echo ${PYPY_LOCAL_LIBPATH}/site-packages/hts-*.egg` ]]; then
     echo "Installing hts-python on your local directory..."
