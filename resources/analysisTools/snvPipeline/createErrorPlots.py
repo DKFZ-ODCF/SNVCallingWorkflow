@@ -201,6 +201,9 @@ def calculateErrorMatrix(vcfFilename, referenceFilename, errorType):
 			base_before = context[0].upper()
 			base_after = context[2].upper()
 
+			if base_before=='N' or base_after=='N':
+				continue
+
 			info_list = [i.split("=") for i in split_line[header.index("INFO")].split(";")]
 
 			# Get strand specific counts
