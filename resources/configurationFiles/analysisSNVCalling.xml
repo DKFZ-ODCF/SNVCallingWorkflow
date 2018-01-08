@@ -44,6 +44,7 @@
 
         <!--## If GERMLINE_AVAILABLE is set, then the extra filtering step will be omitted -->
         <cvalue name="GERMLINE_AVAILABLE" value="1" type="string"/>
+        <cvalue name="isNoControlWorkflow" value="false" type="boolean"/>
 
         <!--#### EXTRA FILTERING -->
         <!--#### BELOW VALUES WILL BE NEGLECTED WHEN GERMLINE_AVAILABLE IS SET -->
