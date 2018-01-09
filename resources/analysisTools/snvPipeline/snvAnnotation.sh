@@ -1,7 +1,5 @@
 #!/bin/bash
 
-source ${CONFIG_FILE}
-
 set -xuv
 set -o pipefail
 [[ -z ${TUMOR_BAMFILE_FULLPATH_BP-} ]] && echo "Parameter is missing: TUMOR_BAMFILE_FULLPATH_BP" && exit -10

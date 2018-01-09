@@ -5,8 +5,6 @@
 #PBS -l mem=2g
 #PBS -m a
 
-source ${CONFIG_FILE}
-
 set -o pipefail
 
 [[ -z ${TUMOR_BAMFILE_FULLPATH_BP-} ]] && echo "Parameter is missing: TUMOR_BAMFILE_FULLPATH_BP" && exit -10

@@ -1,7 +1,5 @@
 #!/bin/bash
 
-source ${CONFIG_FILE}
-
 set -o pipefail
 
 [[ -f ${FILENAME_CHECKPOINT} ]] && rm ${FILENAME_CHECKPOINT}
