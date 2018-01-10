@@ -14,7 +14,6 @@
         <cvalue name='PYTHON_VERSION' value='2.7.9' type="string"/>
         <cvalue name='BEDTOOLS_VERSION' value='2.16.2' type="string"/>
         <cvalue name='HTSLIB_VERSION' value='0.2.5' type="string"/>
-        <cvalue name='PYPY_VERSION' value='5.0.1' type="string"/>
 
         <cvalue name='workflowEnvironmentScript' value="workflowEnvironment_tbiLsf" type='string'/>
 
