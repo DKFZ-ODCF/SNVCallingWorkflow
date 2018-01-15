@@ -12,6 +12,7 @@ source /ibios/tbi_cluster/virtualenvs/warsow/python_2.7.9_SNVCalling_1.2.166-1/b
 export BGZIP_BINARY=bgzip
 export TABIX_BINARY=tabix
 export INTERSECTBED_BINARY=intersectBed
+export FASTAFROMBED_BINARY=fastaFromBed
 export BCFTOOLS_BINARY=bcftools
 export BEDTOOLS_BINARY=bedtools
 export VCFTOOLS_SORT_BINARY=vcf-sort
