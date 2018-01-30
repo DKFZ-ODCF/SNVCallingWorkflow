@@ -11,6 +11,8 @@ RUN_PUREST=${RUN_PUREST-1}
 source ${TOOL_ANALYZE_BAM_HEADER}
 getRefGenomeAndChrPrefixFromHeader ${TUMOR_BAMFILE_FULLPATH_BP} # Sets CHR_PREFIX and REFERENCE_GENOME
 
+# bugfix: ensure to interpret CHROMOSOME_INDICES as array - otherwise TOOL_INTERMUTATION_DISTANCE_COORD_COLOR will fail...
+declare -a CHROMOSOME_INDICES="${CHROMOSOME_INDICES}"
 numberOfChromosomes=${CHROMOSOME_INDICES[@]}
 outputFilenamePrefix=${mpileupDirectory}/${SNVFILE_PREFIX}${PID}
 
