@@ -125,7 +125,7 @@ exitCode=$?
 [[ $exitCode == 0 ]] && mv ${filenameSNVVCFTemp} ${filenameSNVVCF}
 [[ $exitCode != 0 ]] && echo "There was a non-zero exit code in the Annovar annotation pipe; temp file ${filenameSNVVCFTemp} not moved back" && exit 2
 
-snv_reliability_pipe=`perl ${TOOL_CREATEPIPES} ${filenameSNVVCF} ${CONFIG_FILE} ${TOOL_ANNOTATE_VCF_FILE} SNV_RELIABILITY ${TABIX_BINARY}`
+snv_reliability_pipe=`perl ${TOOL_CREATEPIPES} ${filenameSNVVCF} ${PARAMETER_FILE} ${TOOL_ANNOTATE_VCF_FILE} SNV_RELIABILITY ${TABIX_BINARY}`
 
 if [[ "$?" != 0 ]] || [[ -z "$snv_reliability_pipe" ]]; then echo "problem when generating SNV_RELIABILITY pipe. Exiting..."; exit 2; fi
 
@@ -227,7 +227,7 @@ then
 
 else	# no germline information available
 
-	${PERL_BINARY} ${TOOL_CONFIDENCE_ANNOTATION_NO_GERMLINE} ${filenameSNVVCF} ${CONFIG_FILE} > ${filenameSNVVCFTemp}
+	${PERL_BINARY} ${TOOL_CONFIDENCE_ANNOTATION_NO_GERMLINE} ${filenameSNVVCF} ${PARAMETER_FILE} > ${filenameSNVVCFTemp}
 	[[ $exitCode == 0 ]] && [[ -f ${filenameSNVVCFTemp} ]] && mv ${filenameSNVVCFTemp} ${filenameSNVVCF}
     [[ $exitCode != 0 ]] && echo "SNV confidenceAnnotation returned non-zero exit code; temp file ${filenameSNVVCFTemp} not moved back" && exit 21
 	${BGZIP_BINARY} -f ${filenameSNVVCF} && ${TABIX_BINARY} -f -p vcf ${FILENAME_VCF_OUT}

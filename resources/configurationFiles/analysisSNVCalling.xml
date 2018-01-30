@@ -4,8 +4,7 @@
                imports="commonCOWorkflowsSettings"
                canCreateTestdata='true'
                listOfUsedTools="snvCalling,snvJoinVcfFiles,snvAnnotation,snvDeepAnnotation,snvFilter"
-               usedToolFolders="snvPipeline,tools"
-               cleanupScript="cleanupScript">
+               usedToolFolders="snvPipeline,tools">
     <configurationvalues>
 
         <cvalue name='RSCRIPT_VERSION' value='3.0.0' type="string"/>
@@ -106,12 +105,6 @@
     </configurationvalues>
     <processingTools>
         <tool name='workflowEnvironment_tbiLsf' value="tbi-lsf-cluster.sh" basepath='snvPipeline/environments'/>
-        <tool name="cleanupScript" value="cleanupScript.sh" basepath="snvPipeline">
-            <resourcesets>
-                <rset size="t" memory="0.1" cores="1" nodes="1" walltime="1" queue="devel"/>
-                <rset size="l" memory="0.1" cores="1" nodes="1" walltime="1"/>
-            </resourcesets>
-        </tool>
         <tool name="snvCallingMetaScript" value="snvCallingMetaScript.sh" basepath="snvPipeline">
             <resourcesets>
                 <rset size="t" memory="1" cores="1" nodes="1" walltime="1" queue="devel"/>
