@@ -17,8 +17,8 @@ import java.util.List;
  */
 public class Methods {
 
-    final String CHR_NAME = "CHR_NAME";
-    final String CHR_NR = "CHR_NR";
+    final String CHR_NAME = SNVCallingConstants.CHR_NAME;
+    final String CHR_NR = SNVCallingConstants.CHR_NR;
 
     static LinkedHashMap<String, String> getGlobalJobSpecificParameters(Configuration config) {
         LinkedHashMap<String, String> results = new LinkedHashMap<String, String>();
@@ -29,14 +29,14 @@ public class Methods {
 
     @ScriptCallingMethod
     public static VCFFileGroupForSNVs callSNVsNoControl(TumorBamFile tumorBam) {
-        IndexedFileObjects<Tuple2<VCFFileForSNVs, TextFile>> indexedFileObjects = ParallelizationHelper.runParallel(COConstants.CVALUE_CHROMOSOME_INDICES, "snvCallingNoControl", tumorBam, null, "PARM_CHR_INDEX", getGlobalJobSpecificParameters(tumorBam.getExecutionContext().getConfiguration()));
+        IndexedFileObjects<Tuple2<VCFFileForSNVs, TextFile>> indexedFileObjects = ParallelizationHelper.runParallel(COConstants.CVALUE_CHROMOSOME_INDICES, SNVCallingConstants.TOOL_SNV_CALLING_NOCONTROL, tumorBam, null, SNVCallingConstants.PARM_CHR_INDEX, getGlobalJobSpecificParameters(tumorBam.getExecutionContext().getConfiguration()));
 
         return getVcfFileGroupForSNVs(indexedFileObjects);
     }
 
     @ScriptCallingMethod
     public static VCFFileGroupForSNVs callSNVs(ControlBamFile controlBam, TumorBamFile tumorBam) {
-        IndexedFileObjects<Tuple2<VCFFileForSNVs, TextFile>> indexedFileObjects = ParallelizationHelper.runParallel(COConstants.CVALUE_CHROMOSOME_INDICES, COConstants.TOOL_SNV_CALLING, tumorBam, controlBam, "PARM_CHR_INDEX", getGlobalJobSpecificParameters(controlBam.getExecutionContext().getConfiguration()));
+        IndexedFileObjects<Tuple2<VCFFileForSNVs, TextFile>> indexedFileObjects = ParallelizationHelper.runParallel(COConstants.CVALUE_CHROMOSOME_INDICES, SNVCallingConstants.TOOL_SNV_CALLING, tumorBam, controlBam, SNVCallingConstants.PARM_CHR_INDEX, getGlobalJobSpecificParameters(controlBam.getExecutionContext().getConfiguration()));
 
         return getVcfFileGroupForSNVs(indexedFileObjects);
     }

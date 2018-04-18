@@ -4,6 +4,7 @@
 */
 package de.dkfz.b080.co.files;
 
+import de.dkfz.b080.co.snvpipeline.SNVCallingConstants;
 import de.dkfz.roddy.knowledge.files.FileGroup;
 import de.dkfz.roddy.knowledge.methods.GenericMethod;
 
@@ -22,7 +23,7 @@ public class VCFFileGroupForSNVs extends FileGroup<VCFFileForSNVs> {
 
     public SNVAnnotationFile join() {
         TumorBamFile bf = (TumorBamFile) filesInGroup.get(0).getParentFiles().get(0); //Should be merged tumor bam file
-        SNVAnnotationFile file = GenericMethod.callGenericTool(COConstants.TOOL_JOIN_SNV_VCF_FILES, bf, this);
+        SNVAnnotationFile file = GenericMethod.callGenericTool(SNVCallingConstants.TOOL_JOIN_SNV_VCF_FILES, bf, this);
         return file;
 //    }
 //
