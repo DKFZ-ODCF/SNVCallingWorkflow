@@ -28,7 +28,7 @@ declare -a CHROMOSOME_INDICES="${CHROMOSOME_INDICES}"
 numberOfChromosomes=${CHROMOSOME_INDICES[@]}
 outputFilenamePrefix=${mpileupDirectory}/${SNVFILE_PREFIX}${PID}
 outputFilenamePrefix_original=${outputFilenamePrefix}
-if [[ "$GERMLINE_AVAILABLE" == 0 ]]; then
+if [[ ${isNoControlWorkflow-false} == "true" ]]; then
     FILTER_VALUES=""
     [[ ${FILTER_ExAC} == 'true' ]]          && FILTER_VALUES="${FILTER_VALUES} ${ExAC_COL} AF ${CRIT_ExAC_maxMAF}+"
     [[ ${FILTER_EVS} == 'true' ]]           && FILTER_VALUES="${FILTER_VALUES} ${EVS_COL} MAF ${CRIT_EVS_maxMAF}+"

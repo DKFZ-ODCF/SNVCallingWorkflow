@@ -12,7 +12,7 @@ CONTROL_BAMFILE_FULLPATH_BP=${CONTROL_BAMFILE_FULLPATH_BP-}
 FILENAME_VCF_SNVS=${FILENAME_VCF_SNVS-}
 
 [[ -z $TUMOR_BAMFILE_FULLPATH_BP ]] && echo "Parameter is missing: TUMOR_BAMFILE_FULLPATH_BP" && exit -10
-if [[ ${GERMLINE_AVAILABLE} == "1" || ${isNoControlWorkflow-false} == "false" ]] ; then
+if [[ ${isNoControlWorkflow-false} == "false" ]] ; then
     [[ -z $CONTROL_BAMFILE_FULLPATH_BP ]] && echo "Parameter is missing: CONTROL_BAMFILE_FULLPATH_BP" && exit -10
 fi
 [[ -z $FILENAME_VCF_SNVS ]] && echo "Parameter is missing: FILENAME_VCF_SNVS" && exit -10
@@ -72,7 +72,7 @@ then
 	exit 2
 fi
 
-if [[ ${GERMLINE_AVAILABLE} == "1" ]]; then
+if [[ ${isNoControlWorkflow-false} == "false" ]]; then
     snvOut=${filenameMPileupOut}
 else
     snvOut=${FILENAME_VCF_SNVS_TEMP}
@@ -93,7 +93,7 @@ if [[ $firstLineVCF ]]; then
 	    exit 2
     fi
 
-    if [[ ${GERMLINE_AVAILABLE} == "1" ]]; then
+    if [[ ${isNoControlWorkflow-false} == "false" ]]; then
         if [[ ${runCompareGermline} == true ]]; then
             NP_MPILEUP=${SCRATCH_DIR}/NP_MPILEUP_CHR${chr}
             mkfifo $NP_MPILEUP

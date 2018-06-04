@@ -60,19 +60,18 @@
         <cvalue name="RECURRENCE" value="${outputAnalysisBaseDirectory}/../Recurrence/recurrent_SNVs_among_allPIDs_withoutMultiAlt.vcf.gz" type="path" />
         <cvalue name="RECURRENCE_COL" value="RecurrenceInPIDs" type="string"/>
 
-        <!--## If GERMLINE_AVAILABLE is set, then the extra filtering step will be omitted -->
-        <cvalue name="GERMLINE_AVAILABLE" value="1" type="string"/>
+        <!--## If isNoControlWorkflow is false, then the extra filtering step will be omitted -->
         <cvalue name="isNoControlWorkflow" value="false" type="boolean"/>
 
         <!--#### EXTRA FILTERING -->
-        <!--#### BELOW VALUES WILL BE NEGLECTED WHEN GERMLINE_AVAILABLE IS SET -->
+        <!--#### BELOW VALUES WILL BE NEGLECTED WHEN isNoControlWorkflow IS SET TO FALSE -->
             <!--## Filter switch -->
-            <cvalue name="FILTER_ExAC" value="false" type="boolean" />
-            <cvalue name="FILTER_EVS" value="false" type="boolean" />
-            <cvalue name="FILTER_1KGENOMES" value="false" type="boolean" />
-            <cvalue name="FILTER_RECURRENCE" value="false" type="boolean" />
-            <cvalue name="FILTER_LOCALCONTROL" value="false" type="boolean" />
-            <cvalue name="FILTER_NON_CLINIC" value="false" type="boolean" />
+            <cvalue name="FILTER_ExAC" value="${isNoControlWorkflow}" type="boolean" />
+            <cvalue name="FILTER_EVS" value="${isNoControlWorkflow}" type="boolean" />
+            <cvalue name="FILTER_1KGENOMES" value="${isNoControlWorkflow}" type="boolean" />
+            <cvalue name="FILTER_RECURRENCE" value="${isNoControlWorkflow}" type="boolean" />
+            <cvalue name="FILTER_LOCALCONTROL" value="${isNoControlWorkflow}" type="boolean" />
+            <cvalue name="FILTER_NON_CLINIC" value="${isNoControlWorkflow}" type="boolean" />
 
             <!--## Filter criteria -->
             <!--## The rows with corresponding values larger than below criteria will be filtered out. -->

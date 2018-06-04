@@ -80,7 +80,7 @@ declare -r filenameControlMedian=${outputDirectory}/`basename ${filenameSNVVCF} 
 
 cmdFilter="zcat ${FILENAME_VCF_IN}"
 
-if [[ "$GERMLINE_AVAILABLE" == 1 ]]; then
+if [[ ${isNoControlWorkflow-false} == "false" ]]; then
     cmdFilter="${cmdFilter} | perl ${TOOL_MEDIAN} - ${filenameControlMedian}"
 fi
 
@@ -157,7 +157,7 @@ exitCode=$?
 [[ $exitCode != 0 ]] && echo "There was a non-zero exit code in the SNV_RELIABILITY pipe; temp file ${filenameSNVVCFTemp} not moved back" && exit 2
 
 # confidence annotation with/without germline
-if [[ "$GERMLINE_AVAILABLE" == 1 ]]
+if [[ ${isNoControlWorkflow-false} == "false" ]]
 then
     MAX_CONTROL_COV=0
     MAX_CONTROL_COV=`cat ${filenameControlMedian}`
@@ -189,7 +189,7 @@ fi
 
 npConfidence=${RODDY_SCRATCH}/snvAnnotationFIFO
 mkfifo ${npConfidence}
-if [[ "$GERMLINE_AVAILABLE" == 1 ]]; then
+if [[ ${isNoControlWorkflow-false} == "false" ]]; then
     cat ${filenameSNVVCF} > ${npConfidence} &
 else
     cat ${filenameSNVVCF} | ${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 0 > ${npConfidence} &
