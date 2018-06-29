@@ -7,7 +7,7 @@ import de.dkfz.roddy.plugins.BasePlugin;
 public class SNVCallingWorkflowPlugin extends BasePlugin {
 
     public static final String CURRENT_VERSION_STRING = "1.2.166";
-    public static final String CURRENT_VERSION_BUILD_DATE = "Fri Aug 18 19:36:35 CEST 2017";
+    public static final String CURRENT_VERSION_BUILD_DATE = "Fri Jun 29 16:52:52 CEST 2018";
 
     @Override
     public String getVersionInfo() {

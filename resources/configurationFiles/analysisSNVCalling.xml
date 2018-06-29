@@ -16,7 +16,7 @@
 
         <cvalue name='workflowEnvironmentScript' value="workflowEnvironment_tbiLsf" type='string'/>
 
-        <cvalue name='mpileupOutputDirectory' value='mpileup'/>
+        <cvalue name='mpileupOutputDirectory' value='mpileup_${tumorSample}_vs_${controlSample}'/>
 
         <cvalue name='MPILEUP_OPTS' value='"-REI -q 30 -ug"' type="string"/>
         <cvalue name='BCFTOOLS_OPTS' value='"-vcgN -p 2.0"' type="string"/>
