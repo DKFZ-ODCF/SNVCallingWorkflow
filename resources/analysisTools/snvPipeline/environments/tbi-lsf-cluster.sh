@@ -10,7 +10,7 @@ module load pypy/"${PYPY_VERSION:?PYPY_VERSION undefined}"
 module load git/"${GIT_VERSION:?GIT_VERSION undefined}"
 
 
-source /ibios/tbi_cluster/virtualenvs/warsow/python_2.7.9_SNVCalling/bin/activate
+source /odcf/cluster/virtualenvs/warsow/python_2.7.9_SNVCalling/bin/activate
 
 
 export BGZIP_BINARY=bgzip
