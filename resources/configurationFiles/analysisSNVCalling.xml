@@ -69,7 +69,7 @@
             <cvalue name="FILTER_ExAC" value="${isNoControlWorkflow}" type="boolean" />
             <cvalue name="FILTER_EVS" value="${isNoControlWorkflow}" type="boolean" />
             <cvalue name="FILTER_1KGENOMES" value="${isNoControlWorkflow}" type="boolean" />
-            <cvalue name="FILTER_RECURRENCE" value="${isNoControlWorkflow}" type="boolean" />
+            <cvalue name="FILTER_RECURRENCE" value="false" type="boolean" />
             <cvalue name="FILTER_LOCALCONTROL" value="${isNoControlWorkflow}" type="boolean" />
             <cvalue name="FILTER_NON_CLINIC" value="${isNoControlWorkflow}" type="boolean" />
 
