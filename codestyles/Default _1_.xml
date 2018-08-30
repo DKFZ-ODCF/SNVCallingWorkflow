@@ -11,4 +11,7 @@
       <option name="USE_RELATIVE_INDENTS" value="false" />
     </value>
   </option>
+  <XML>
+    <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
+  </XML>
 </code_scheme>
