@@ -1,3 +1,10 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2018 German Cancer Research Center (DKFZ).
+#
+# Distributed under the MIT License (https://opensource.org/licenses/MIT).
+#
+
 # Demo for TableExtractor
 # Script extracts nonsynonymous, stopgain and splicing SNVs from VCF
 # Script takes VCF file produced by SNV pipeline as input

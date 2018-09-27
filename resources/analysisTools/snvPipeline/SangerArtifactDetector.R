@@ -1,3 +1,10 @@
+#!/usr/bin/env Rscript
+#
+# Copyright (c) 2018 German Cancer Research Center (DKFZ).
+#
+# Distributed under the GPL-2 License (http://www.gnu.de/documents/gpl-2.0.en.html).
+#
+#
 # Rscript SangerArtifactDetector.R -v vcfInputFile -m mpileupFolder -p PID -o outFile -q pdfout [-c 1 -s 11 -f medianFilterSuffix]
 # 
 # 

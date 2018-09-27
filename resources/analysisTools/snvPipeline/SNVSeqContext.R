@@ -1,3 +1,11 @@
+#!/usr/bin/env Rscript
+#
+# Copyright (c) 2018 German Cancer Research Center (DKFZ).
+#
+# Distributed under the GPL-2/GPL-3 License (http://www.gnu.de/documents/gpl-2.0.en.html, https://www.gnu.org/licenses/gpl-3.0.en.html).
+#
+
+
 cmdArgs = commandArgs(TRUE)
 print(cmdArgs)
 if (length(cmdArgs) < 3) print(paste("Incorrect number of arguments (3 expected): ",length(cmdArgs)))

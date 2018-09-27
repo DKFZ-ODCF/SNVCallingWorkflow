@@ -1,4 +1,9 @@
 #!/usr/bin/env Rscript
+#
+# Copyright (c) 2018 German Cancer Research Center (DKFZ).
+#
+# Distributed under the GPL-2/GPL-3 License (http://www.gnu.de/documents/gpl-2.0.en.html, https://www.gnu.org/licenses/gpl-3.0.en.html).
+#
 
 ### to call this script: Rscript --vanilla ~/org/Bioinfo/rainfallPlots/intermutationDistance_Coord_color.r -i snvFile.vcf -s MB1000 -o MB1000_intermutationDistance_snvs
 ### pay attention with the chrLengthFile; there is a default which is either set to hg19 or hs37d5 

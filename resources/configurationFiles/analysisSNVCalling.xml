@@ -8,23 +8,22 @@
                cleanupScript="cleanupScript">
     <configurationvalues>
 
+        <cvalue name='workflowEnvironmentScript' value="workflowEnvironment_tbiLsf" type='string'/>
+        <cvalue name='snvAnnotationEnvironmentScript' value="snvAnnotationEnvironment_tbiLsf" type="string"/>
+
         <cvalue name='RSCRIPT_VERSION' value='3.3.1' type="string"/>
         <cvalue name='PERL_VERSION' value='5.20.2' type="string"/>
         <cvalue name='SAMTOOLS_VERSION' value='0.1.19' type="string"/>
         <cvalue name='PYTHON_VERSION' value='2.7.9' type="string"/>
         <cvalue name='BEDTOOLS_VERSION' value='2.16.2' type="string"/>
         <cvalue name='HTSLIB_VERSION' value='0.2.5' type="string"/>
-        <cvalue name='HTSLIB_VERSION_FOR_HTS_PYTHON' value='1.2' type="string"/>
+        <cvalue name='HTSLIB_VERSION_FOR_HTS_PYTHON' value='1.2' type="string"
+                description="Only used if PYPY_OR_PYTHON_BINARY evaluates to a PyPy binary."/>
         <cvalue name='PYPY_VERSION' value='5.8.0' type="string"/>
         <cvalue name='GIT_VERSION' value='2.9.4' type="string"/>
 
-        <cvalue name='GHOSTSCRIPT_BINARY' value='gs' type='filename'/>
-
-
-        <cvalue name='workflowEnvironmentScript' value="workflowEnvironment_tbiLsf" type='string'/>
-
-
-        <cvalue name="HTSLIB_INCLUDE_PATH" value="/tbi/software/x86_64/htslib/htslib-${HTSLIB_VERSION_FOR_HTS_PYTHON}/el7/include" type="string"/>
+        <cvalue name="PYPY_OR_PYTHON_BINARY" value="python" type="string"
+                description="If you use a CPython binary here, no hts-python but pysam will be used. All scripts are interpreted by CPython. If you use a PyPy binary here, some scripts are interpreted with higher performance by PyPy and hts-python is used instead of pysam in the filter_PEoverlap.py script."/>
 
         <cvalue name='mpileupOutputDirectory' value='mpileup' type="path"/>
         <cvalue name='MPILEUP_OPTS' value='"-REI -q 30 -ug"' type="string"/>
@@ -35,7 +34,6 @@
         <!--<cvalue name='analysisMethodNameOnInput' value='whole_genome_analysis' type='string' />-->
         <cvalue name="RAW_SNV_FILTER_OPTIONS" value='" --minVac=3 --minVaf=0.03 --minVacPS=2"' type="string"/>
         <!--<cvalue name='REFERENCE_GENOME' value="${referenceGenome_hg19_chr}" type="string"/>-->
-        <cvalue name="PYPY_LOCAL_LIBPATH" value="~/.local/lib/pypy" type="string"/>
 
         <!--## Databases -->
         <!-- hg19DatabasesDirectory=/icgc/ngs_share/assemblies/hg19_GRCh37_1000genomes/databases -->
@@ -277,8 +275,8 @@
             </output>
         </tool>
 
-
         <tool name='workflowEnvironment_tbiLsf' value="tbi-lsf-cluster.sh" basepath='snvPipeline/environments'/>
+        <tool name='snvAnnotationEnvironment_tbiLsf' value="tbi-lsf-cluster_snvAnnotation.sh" basepath='snvPipeline/environments'/>
 
         <!--Tools for the SNV Calling workflow. Those tools are not used by Roddy directly-->
         <tool name="headeredFileConcatenator" value="headeredFileConcatenator.pl" basepath="tools"/>

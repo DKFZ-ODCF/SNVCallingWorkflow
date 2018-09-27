@@ -1,5 +1,9 @@
 #!/bin/bash
-
+#
+# Copyright (c) 2018 German Cancer Research Center (DKFZ).
+#
+# Distributed under the MIT License (https://opensource.org/licenses/MIT).
+#
 #PBS -l walltime=20:00:00,nodes=1
 
 set -o pipefail

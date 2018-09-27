@@ -45,7 +45,7 @@ if [[ ${isNoControlWorkflow-false} == "true" ]]; then
         echo ${FILTER_VALUES} > "${outputFilenamePrefix}_postFilter_criteria.txt"
         outputFilenamePrefix="${outputFilenamePrefix}_postFiltered"
         FILTERED_VCF="${outputFilenamePrefix}.vcf"
-        ${PYPY_BINARY} -u ${TOOL_VCF_FILTER_BY_CRIT} ${FILENAME_VCF} ${FILTERED_VCF}${FILTER_VALUES}
+        ${PYPY_OR_PYTHON_BINARY} -u ${TOOL_VCF_FILTER_BY_CRIT} ${FILENAME_VCF} ${FILTERED_VCF}${FILTER_VALUES}
         ${BGZIP_BINARY} -f ${FILTERED_VCF} && ${TABIX_BINARY} -f -p vcf ${FILTERED_VCF}.gz
         FILENAME_VCF=${FILTERED_VCF}.gz
     fi

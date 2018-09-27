@@ -1,3 +1,10 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2018 German Cancer Research Center (DKFZ).
+#
+# Distributed under the MIT License (https://opensource.org/licenses/MIT).
+#
+
 import string, sys, math, time
 
 #Call: python PurityReloaded.py IN_VCF_FILE CONFIDENCE_COLUMN(0 based)

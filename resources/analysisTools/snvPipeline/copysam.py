@@ -1,3 +1,9 @@
+#
+# Copyright (c) 2018 German Cancer Research Center (DKFZ).
+#
+# Distributed under the MIT License (https://opensource.org/licenses/MIT).
+#
+
 from hts import Bam
 from hts.htsffi import libhts 
 

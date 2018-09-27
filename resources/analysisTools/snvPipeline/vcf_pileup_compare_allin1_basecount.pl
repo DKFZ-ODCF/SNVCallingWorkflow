@@ -1,4 +1,9 @@
 #!/usr/bin/env perl
+#
+# Copyright (c) 2018 German Cancer Research Center (DKFZ).
+#
+# Distributed under the MIT License (https://opensource.org/licenses/MIT).
+#
 
 # "somatic call": tumor vcf from mpileup+bcftools+filter <-> control from normal pileup
 # call somatic if variant is in tumor and control

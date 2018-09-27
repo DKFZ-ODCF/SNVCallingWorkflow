@@ -1,4 +1,9 @@
 #!/usr/bin/env perl
+#
+# Copyright (c) 2018 German Cancer Research Center (DKFZ).
+#
+# Distributed under the MIT License (https://opensource.org/licenses/MIT).
+#
 
 # count how many / what percentage of somatic SNVs of certain confidence score (default >= 8) are in dbSNP and 1KG
 
