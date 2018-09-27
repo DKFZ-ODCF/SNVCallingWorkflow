@@ -32,6 +32,8 @@ if [[ ${isNoControlWorkflow-false} == "true" ]]; then
     FILTER_VALUES=""
     [[ ${FILTER_ExAC} == 'true' ]]          && FILTER_VALUES="${FILTER_VALUES} ${ExAC_COL} AF ${CRIT_ExAC_maxMAF}+"
     [[ ${FILTER_EVS} == 'true' ]]           && FILTER_VALUES="${FILTER_VALUES} ${EVS_COL} MAF ${CRIT_EVS_maxMAF}+"
+    [[ ${FILTER_GNOMAD_EXOMES} == 'true' ]]         && FILTER_VALUES="${FILTER_VALUES} ${GNOMAD_WES_COL} AF ${CRIT_GNOMAD_EXOMES_maxMAF}+"
+    [[ ${FILTER_GNOMAD_GENOMES} == 'true' ]]          && FILTER_VALUES="${FILTER_VALUES} ${GNOMAD_WGS_COL} AF ${CRIT_GNOMAD_GENOMES_maxMAF}+"
     #[[ ${FILTER_1KGENOMES} == 'true' ]]     && FILTER_VALUES="${FILTER_VALUES} ${KGENOMES_COL} AF ${CRIT_1KGENOMES_maxMAF}+"
     #[[ ${FILTER_1KGENOMES} == 'true' ]]     && FILTER_VALUES="${FILTER_VALUES} ${KGENOMES_COL} ASN_AF ${CRIT_1KGENOMES_maxMAF}+"
     #[[ ${FILTER_1KGENOMES} == 'true' ]]     && FILTER_VALUES="${FILTER_VALUES} ${KGENOMES_COL} AMR_AF ${CRIT_1KGENOMES_maxMAF}+"

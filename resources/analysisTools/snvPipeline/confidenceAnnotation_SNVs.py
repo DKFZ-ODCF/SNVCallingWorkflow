@@ -19,10 +19,13 @@ def extract_info(info, keys, sep=";"):
         rtn = []
         for key in keys:
             rtn.append(info_kv.get(key, None))
+            rtn = [0 if i == 'None' else i for i in rtn]
         return rtn
 
     if type(keys) is str:
-        return info_kv.get(keys, None)
+        rtn = info_kv.get(keys, None)
+        rtn = 0 if rtn == "None" else rtn
+        return rtn
 
 def main(args):
     if args.pancanout is not None and not args.no_makehead:
@@ -99,6 +102,8 @@ def main(args):
             if args.no_control:
                 variable_headers["ExAC_COL"] = "^ExAC$"
                 variable_headers["EVS_COL"] = "^EVS$"
+                variable_headers["GNOMAD_EXOMES_COL"] = "^GNOMAD_EXOMES$"
+                variable_headers["GNOMAD_GENOMES_COL"] = "^GNOMAD_GENOMES$"
                 variable_headers["LOCALCONTROL_COL"] = "^LocalControlAF$"
             else:
                 fixed_headers += [ "^INFO_control", "^ANNOTATION_control$", ]
@@ -179,6 +184,8 @@ def main(args):
             classification = "somatic" # start with default somatic
             inExAC = False
             inEVS = False
+            inGnomAD_WES = False
+            inGnomAD_WGS = False
             inLocalControl = False
         else:
             # for potential re-classification (e.g. low coverage in control and in dbSNP => probably germline)
@@ -230,6 +237,16 @@ def main(args):
                 inEVS = True
                 infofield["EVS"] = "EVS"
                 reasons += "EVS(NoControl)"
+
+             if help["GNOMAD_EXOMES_COL_VALID"] and any(af > 0.001 for af in map(float, extract_info(help["GNOMAD_EXOMES_COL"], "AF").split(','))):
+                inGnomAD_WES = True
+                infofield["gnomAD_Exomes"] = "gnomAD_Exomes"
+                reasons += "gnomAD_Exomes(NoControl)"
+             if help["GNOMAD_GENOMES_COL_VALID"] and any(af > 0.001 for af in map(float, extract_info(help["GNOMAD_GENOMES_COL"], "AF").split(','))):
+                inGnomAD_WGS = True
+                infofield["gnomAD_Genomes"] = "gnomAD_Genomes"
+                reasons += "gnomAD_Genomes(NoControl)"
+
             if help["LOCALCONTROL_COL_VALID"] and any(af > 0.02 for af in map(float, extract_info(help["LOCALCONTROL_COL"], "AF").split(','))):
                 inLocalControl = True
                 infofield["LocalControl"] = "LocalControl"
@@ -375,8 +392,8 @@ def main(args):
 
         if (args.no_control):
             # an SNV that is in dbSNP but not "clinic" or/and in 1 KG with high frequency is probably germline
-            if (in1KG_AF or (indbSNP and is_commonSNP and not is_clinic) or inExAC or inEVS or inLocalControl):
-                classification = "SNP_support_germline"
+            if (in1KG_AF or (indbSNP and is_commonSNP and not is_clinic) or inExAC or inEVS or inGnomAD_WES or inGnomAD_WGS or inLocalControl):
+               classification = "SNP_support_germline"
 
         # 3) information from the calls and germline comparisons: coverage, strand bias, variant support, ..
         #    => can lead to reclassification

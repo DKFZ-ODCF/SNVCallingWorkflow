@@ -88,6 +88,8 @@ cmdFilter="${cmdFilter} | ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=$
     ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${KGENOME} --columnName=${KGENOMES_COL}  --reportMatchType --bAdditionalColumn=2 | \
     ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${ExAC} --columnName ${ExAC_COL} --bFileType vcf | \
     ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${EVS} --columnName ${EVS_COL} --bFileType vcf | \
+    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} -a - -b ${GNOMAD_WES_ALL_INDEL} --columnName=${GNOMAD_WES_COL} --bFileType vcf | \
+    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} -a - -b ${GNOMAD_WGS_ALL_INDEL} --columnName=${GNOMAD_WGS_COL} --bFileType vcf | \
     ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${LOCALCONTROL} --columnName ${LOCALCONTROL_COL} --reportMatchType --minOverlapFraction 1 --bFileType vcf | \
     ${PYPY_BINARY} -u ${TOOL_ONLY_EXTRACT_MATCH}"
 
