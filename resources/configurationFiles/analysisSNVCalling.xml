@@ -48,9 +48,9 @@
         <cvalue name="EVS" value="${hg19DatabasesDirectory}/EVS/ESP6500SI-V2-SSA137.updatedProteinHgvs.ALL.snps_indels.vcf.gz" type="path" />
         <cvalue name="EVS_COL" value="EVS" type="string"/>
         <cvalue name="GNOMAD_WES_COL" value="GNOMAD_EXOMES" type="string"/>
-        <cvalue name="GNOMAD_EXOMES" value= "${hg19DatabasesDirectory}/gnomAD/gnomad.exomes.r2.0.1.sites.SNVs.vcf.gz" type="path"/>
+        <cvalue name="GNOMAD_WES_ALL_SNV" value= "${hg19DatabasesDirectory}/gnomAD/gnomad.exomes.r2.0.1.sites.SNVs.vcf.gz" type="path"/>
         <cvalue name="GNOMAD_WGS_COL" value="GNOMAD_GENOMES" type="string"/>
-        <cvalue name="GNOMAD_GENOMES" value= "${hg19DatabasesDirectory}/gnomAD/gnomad.genomes.r2.0.1.sites.chr1-22-X.SNVs.All.vcf.gz" type="path"/>
+        <cvalue name="GNOMAD_WGS_ALL_SNV" value= "${hg19DatabasesDirectory}/gnomAD/gnomad.genomes.r2.0.1.sites.chr1-22-X.SNVs.All.vcf.gz" type="path"/>
 
 
         <cvalue name="LOCALCONTROL" value="/icgc/dkfzlsdf/analysis/UniExome/GermlineAnnotation/annotationInfo/LocalControls/LocalControlConsolidated_SNP.vcf.gz" type="path" />

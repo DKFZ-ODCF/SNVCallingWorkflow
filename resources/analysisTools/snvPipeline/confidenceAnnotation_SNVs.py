@@ -19,12 +19,12 @@ def extract_info(info, keys, sep=";"):
         rtn = []
         for key in keys:
             rtn.append(info_kv.get(key, None))
-            rtn = [0 if i == 'None' else i for i in rtn]
+            rtn = ['0' if i == 'None' else i for i in rtn]
         return rtn
 
     if type(keys) is str:
         rtn = info_kv.get(keys, None)
-        rtn = 0 if rtn == "None" else rtn
+        rtn = '0' if rtn == "None" else rtn
         return rtn
 
 def main(args):
@@ -238,11 +238,11 @@ def main(args):
                 infofield["EVS"] = "EVS"
                 reasons += "EVS(NoControl)"
 
-             if help["GNOMAD_EXOMES_COL_VALID"] and any(af > 0.001 for af in map(float, extract_info(help["GNOMAD_EXOMES_COL"], "AF").split(','))):
+            if help["GNOMAD_EXOMES_COL_VALID"] and any(af > 0.001 for af in map(float, extract_info(help["GNOMAD_EXOMES_COL"], "AF").split(','))):
                 inGnomAD_WES = True
                 infofield["gnomAD_Exomes"] = "gnomAD_Exomes"
                 reasons += "gnomAD_Exomes(NoControl)"
-             if help["GNOMAD_GENOMES_COL_VALID"] and any(af > 0.001 for af in map(float, extract_info(help["GNOMAD_GENOMES_COL"], "AF").split(','))):
+            if help["GNOMAD_GENOMES_COL_VALID"] and any(af > 0.001 for af in map(float, extract_info(help["GNOMAD_GENOMES_COL"], "AF").split(','))):
                 inGnomAD_WGS = True
                 infofield["gnomAD_Genomes"] = "gnomAD_Genomes"
                 reasons += "gnomAD_Genomes(NoControl)"
