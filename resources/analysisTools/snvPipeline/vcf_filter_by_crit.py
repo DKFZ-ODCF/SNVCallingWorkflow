@@ -13,7 +13,8 @@ from gzip import GzipFile as gzopen
 
 def compare_numeric_value(value, crit_type, crit_value):
     filtered = False
-    found_value = float(value) if '.' in value else int(value)
+    value = 0.0 if value == 'None' else value
+    found_value = float(value) if '.' or 'e' in value else int(value)
     if (crit_type == '+' and crit_value < found_value) or (crit_type == '-' and crit_value > found_value):
         filtered = True
     return filtered
