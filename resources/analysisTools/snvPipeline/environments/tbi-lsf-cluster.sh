@@ -20,6 +20,7 @@ export PYPY_BINARY=pypy-c
 export PYTHON_BINARY=python
 export RSCRIPT_BINARY=Rscript
 export INTERSECTBED_BINARY=intersectBed
+export FASTAFROMBED_BINARY=fastaFromBed
 export BCFTOOLS_BINARY=bcftools
 export BEDTOOLS_BINARY=bedtools
 export VCFTOOLS_SORT_BINARY=vcf-sort
