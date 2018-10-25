@@ -2,6 +2,8 @@
 
 An SNV calling workflow developed in the Applied Bioinformatics and Theoretical Bioinformatics groups at the DKFZ. On earlier version (pre Github) of this workflow was used in the [Pancancer](https://github.com/TheRoddyWMS/BatchEuphoria/pull/124) project.
 
+> <table><tr><td><a href="https://www.denbi.de/"><img src="docs/images/denbi.png" alt="de.NBI logo" width="300" align="left"></a></td><td><strong>Your opinion matters!</strong> The development of this workflow is supported by the <a href="https://www.denbi.de/">German Network for Bioinformatic Infrastructure (de.NBI)</a>. By completing <a href="yet unknown">this very short survey</a> you support our efforts to improve this tool.</td></tr></table>
+
 ## Installation
 
 To run the workflow you first need to install a number of components and dependencies.
@@ -28,6 +30,9 @@ Note that the following feature is currently not implemented in the Conda-based 
 Sebastians script
 
 ## Running the workflow
+
+bamfile_list
+Each BAM file needs to be accompanied by an index file with the same name but suffixed by .bai
 
 ### No Control
 
