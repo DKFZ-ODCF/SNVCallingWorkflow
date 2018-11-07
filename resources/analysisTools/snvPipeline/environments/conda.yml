@@ -125,5 +125,4 @@ dependencies:
   - r-tibble=1.2=r3.3.2_0
   - reportlab=3.2.0=py27_0
   - system=5.8=2
-prefix: /data/kensche/work/share/miniconda3/envs/SNVCallingWorkflow
 

@@ -10,6 +10,7 @@ source $(dirname "$0")/tbi-lsf-cluster.sh
 
 export HTSLIB_INCLUDE_PATH="/tbi/software/x86_64/htslib/htslib-${HTSLIB_VERSION_FOR_HTS_PYTHON}/el7/include"
 export PYPY_LOCAL_LIBPATH="$HOME/.local/lib/pypy"
+export HTS_PYTHON_COMMIT="cd35d6f15221bb09c218d0f978c0b92c560fcdd6"
 
 usePypy() {
     if [[ $("$PYPY_OR_PYTHON_BINARY" --version 2>&1 | grep -P "PyPy") != "" ]]; then
@@ -55,7 +56,8 @@ cloneAndBuildHtsPython() {
 
         if [[ ! -d `echo "$sitePackageDir/hts-*.egg"` ]]; then
             echo "Installing hts-python on your local directory..."
-            ${GIT_BINARY} clone "https://github.com/pjb7687/hts-python" "$RODDY_SCRATCH/hts-python"
+            "$GIT_BINARY" clone "https://github.com/pjb7687/hts-python" "$RODDY_SCRATCH/hts-python"
+            "$GIT_BINARY" -C "$RODDY_SCRATCH/hts-python" checkout "$HTS_PYTHON_COMMIT"
             # Below assume that 'nose' is already installed with PyPy
             pushd ${RODDY_SCRATCH}/hts-python
             "$PYPY_LOCAL_LIBPATH" "$PYPY_OR_PYTHON_BINARY" setup.py build

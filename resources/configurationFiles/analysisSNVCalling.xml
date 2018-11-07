@@ -326,7 +326,6 @@
         <tool name="sangerArtifactDetector" value="SangerArtifactDetector.R" basepath="snvPipeline"/>
         <tool name="ThaDetector" value="determine_THA_score.R" basepath="snvPipeline"/>
         <tool name="analyzeBamHeader" value="analyzeBamHeader.sh" basepath="tools"/>
-        <tool name="copysamWrapper" value="copysam_wrapper.sh" basepath="snvPipeline"/>
     </processingTools>
     <filenames package='de.dkfz.b080.co.files' filestagesbase='de.dkfz.b080.co.files.COFileStage'>
         <!--<filename class='VCFFileForSNVs' derivedFrom="BamFile" pattern="${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvs_${pid}.${RODDY_JOBARRAYINDEX}.vcf" />-->
