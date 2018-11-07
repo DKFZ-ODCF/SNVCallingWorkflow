@@ -1,4 +1,4 @@
 {
-    "phabricator.uri" : "https://tbi-cb14.inet.dkfz-heidelberg.de",
+    "phabricator.uri" : "https://eilslabs-phabricator.dkfz.de",
     "arc.land.onto.default" : "develop"
 }

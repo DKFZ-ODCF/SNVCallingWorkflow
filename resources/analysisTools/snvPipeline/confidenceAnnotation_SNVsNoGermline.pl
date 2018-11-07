@@ -65,6 +65,9 @@ my $EXCLU = 0;
 my $STREP = 0;
 my $REPET = 0;
 my $CHAIN = 0;
+my $ExAC  = 0;
+my $EVS   = 0;
+my $CILC  = 0;
 @help = (split "\t", $header);
 for (my $c = 0; $c < @help; $c++)
 {
@@ -126,6 +129,21 @@ for (my $c = 0; $c < @help; $c++)
 		$DBSBP = $c;
 		print STDERR "DBSNP_COL in column $c\n";
 	}
+	if ($help[$c] eq "ExAC")
+   	{
+   		$ExAC = $c;
+   		print STDERR "ExAC in column $c\n";
+   	}
+ 	if ($help[$c] eq "EVS")
+   	{
+       	$EVS = $c;
+       	print STDERR "EVS in column $c\n";
+    }
+    if ($help[$c] eq "CountInLocalControl")
+    {
+    	$CILC = $c;
+    	print STDERR "CountInLocalControl in column $c\n";
+    }
 }
 
 my $line = "";	# current line

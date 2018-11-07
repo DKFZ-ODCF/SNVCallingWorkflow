@@ -18,12 +18,23 @@ while ($header = <FH>)
 {
 	last if ($header =~ /^\#CHR/); # that is the line with the column names
 }
+
 chomp($header);
 my @columns = split(/\t/, $header);
+
+my $CLASSIFICATION;
+my %header_hash = map { $_ => 1 } @columns;
+if (exists $header_hash{ANNOTATION_control}) {
+   $CLASSIFICATION = "ANNOTATION_control";
+} else {
+   $CLASSIFICATION = "RECLASSIFICATION";
+}
+
 my %fields;
 my %counts;
 say join "\t", (qw(REF ALT preceeding following type exonic value));
 my ($ref, $alt, $pre, $fo, $ty, $ex);
+
 while (<FH>)
 {
   chomp;
@@ -32,8 +43,8 @@ while (<FH>)
   # skip low confidence calls
   next if ($fields{CONFIDENCE} < $minconfidence);
   # skip unclear, LQVSIG, and multi_ (bc. of eq instead of =~ //)
-  next unless ($fields{ANNOTATION_control} eq 'germline' or $fields{ANNOTATION_control} eq 'somatic');
-  $fields{type} = ($fields{ANNOTATION_control} eq 'somatic') ? 'somatic' : 'germline';
+  next unless ($fields{$CLASSIFICATION} eq 'germline' or $fields{$CLASSIFICATION} eq 'somatic');
+  $fields{type} = ($fields{$CLASSIFICATION} eq 'somatic') ? 'somatic' : 'germline';
   $fields{exonic} = ($fields{ANNOVAR_FUNCTION} eq 'exonic') ? 'exonic' : 'non-exonic';
   $fields{REF} = uc($fields{REF});
   $fields{ALT} = uc($fields{ALT});

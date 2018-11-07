@@ -189,6 +189,9 @@ def calculateErrorMatrix(vcfFilename, referenceFilename, errorType):
 		else:
 			split_line = line.rstrip().split("\t")
 
+			# 23.05.2016 JB: Excluded multiallelic SNVs
+			if ',' in split_line[header.index("ALT")]: continue
+
 			chrom = split_line[header.index("CHROM")]
 			pos = int(split_line[header.index("POS")])
 			context = "" 
@@ -213,6 +216,8 @@ def calculateErrorMatrix(vcfFilename, referenceFilename, errorType):
 				elif(element[0] == "ACGTNacgtnMINUS"):
 					ACGTNacgtnMINUS = [int(i) for i in element[1].split(",")]
 
+			if (len(ACGTNacgtnPLUS)==0 or len(ACGTNacgtnMINUS)==0):
+				continue
 			# Count number of alternative bases
 			possible_bases = ["A", "C", "G", "T", "N", "a", "c", "g", "t", "n"]
 			read1_nr = ACGTNacgtnPLUS[possible_bases.index(current_mutation[1])]
