@@ -45,6 +45,12 @@
         <cvalue name="ExAC_COL" value="ExAC" type="string"/>
         <cvalue name="EVS" value="${hg19DatabasesDirectory}/EVS/ESP6500SI-V2-SSA137.updatedProteinHgvs.ALL.snps_indels.vcf.gz" type="path" />
         <cvalue name="EVS_COL" value="EVS" type="string"/>
+        <cvalue name="GNOMAD_WES_COL" value="GNOMAD_EXOMES" type="string"/>
+        <cvalue name="GNOMAD_WES_ALL_SNV" value= "${hg19DatabasesDirectory}/gnomAD/gnomad.exomes.r2.0.1.sites.SNVs.vcf.gz" type="path"/>
+        <cvalue name="GNOMAD_WGS_COL" value="GNOMAD_GENOMES" type="string"/>
+        <cvalue name="GNOMAD_WGS_ALL_SNV" value= "${hg19DatabasesDirectory}/gnomAD/gnomad.genomes.r2.0.1.sites.chr1-22-X.SNVs.All.vcf.gz" type="path"/>
+
+
         <cvalue name="LOCALCONTROL" value="/icgc/dkfzlsdf/analysis/UniExome/GermlineAnnotation/annotationInfo/LocalControls/LocalControlConsolidated_SNP.vcf.gz" type="path" />
         <cvalue name="LOCALCONTROL_COL" value="LocalControlAF" type="string"/>
         <cvalue name='ANNOVAR_BINARY' value='${sharedFilesBaseDirectory}/annovar/annovar_Feb2016/annotate_variation.pl' type='path'/>
@@ -66,6 +72,8 @@
             <!--## Filter switch -->
             <cvalue name="FILTER_ExAC" value="${isNoControlWorkflow}" type="boolean" />
             <cvalue name="FILTER_EVS" value="${isNoControlWorkflow}" type="boolean" />
+            <cvalue name="FILTER_GNOMAD_EXOMES" value="${isNoControlWorkflow}" type="boolean"/>
+            <cvalue name="FILTER_GNOMAD_GENOMES" value="${isNoControlWorkflow}" type="boolean"/>
             <cvalue name="FILTER_1KGENOMES" value="${isNoControlWorkflow}" type="boolean" />
             <cvalue name="FILTER_RECURRENCE" value="false" type="boolean" />
             <cvalue name="FILTER_LOCALCONTROL" value="${isNoControlWorkflow}" type="boolean" />
@@ -75,6 +83,8 @@
             <!--## The rows with corresponding values larger than below criteria will be filtered out. -->
             <cvalue name="CRIT_ExAC_maxMAF" value="0.001" type="string" />
             <cvalue name="CRIT_EVS_maxMAF" value="1.0" type="string" />
+            <cvalue name="CRIT_GNOMAD_EXOMES_maxMAF" value="0.001" type="float"/>
+            <cvalue name="CRIT_GNOMAD_GENOMES_maxMAF" value="0.001" type="float"/>
             <cvalue name="CRIT_1KGENOMES_maxMAF" value="0.01" type="string" />
             <cvalue name="CRIT_RECURRENCE" value="7" type="string" />
             <cvalue name="CRIT_LOCALCONTROL_maxMAF" value="0.2" type="string" />
