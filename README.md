@@ -8,14 +8,31 @@ An SNV calling workflow developed in the Applied Bioinformatics and Theoretical 
 
 To run the workflow you first need to install a number of components and dependencies.
 
-* You need a working [Roddy](https://github.com/TheRoddyWMS/Roddy) installation. The version depends on the workflow version you want to use. You can find it in the [buildinfo.txt](buildinfo.txt) under 'RoddyAPIVersion'. Please follow the instructions for the installation of Roddy itself and the PluginBase and the DefaultPlugin components. There reference here is the [Roddy documentation](https://roddy-documentation.readthedocs.io/installationGuide.html).
+* You need a working [Roddy](https://github.com/TheRoddyWMS/Roddy) installation. The version depends on the workflow version you want to use. You can find it in the [buildinfo.txt](buildinfo.txt) under 'RoddyAPIVersion'. Please follow the instructions for the installation of Roddy itself and the PluginBase and the DefaultPlugin components. The main reference here is the [Roddy documentation](https://roddy-documentation.readthedocs.io/installationGuide.html).
 * Install the version you need -- either from the release tarballs or with git clone into your plugin directory.
 
 Furthermore you need a number of tools and of course reference data, like a genome assembly and annotation databases.
 
 ### Tool installation
 
-The workflow uses Conda as tool to provide the required tools. Note that the Conda environment YAML files tend to outdate, such that at some point some package is lost from all standard channels. We are working on providing a DKFZ Conda channel for long term provisioning of DKFZ workflows.  
+The workflow contains a description of a [Conda](https://conda.io/docs/) environment. A number of Conda packages from [BioConda](https://bioconda.github.io/index.html) are required. 
+
+First install the BioConda channels:
+```
+conda config --add channels r
+conda config --add channels defaults
+conda config --add channels conda-forge
+conda config --add channels bioconda
+conda config --add channels bioconda-legacy
+```
+
+Then install the environment
+
+```
+conda env create -n SNVCallingWorkflow -f $PATH_TO_PLUGIN_DIRECTORY/resources/analysisTools/snvPipeline/environments/conda.yml
+```
+
+The name of the Conda environment is arbitrary but needs to be consistent with the `condaEnvironmentName` variable. The default for that variable is set in `resources/configurationFiles/analysisSNVCalling.xml`.
 
 #### PyPy
 
@@ -27,12 +44,33 @@ Note that the following feature is currently not implemented in the Conda-based 
 
 ### Reference data installation
 
-Sebastians script
+TBD
 
-## Running the workflow
+# Running the workflow
 
-bamfile_list
-Each BAM file needs to be accompanied by an index file with the same name but suffixed by .bai
+## Configuration Values
+
+|Switch                    |  Default     | Description
+|--------------------------|--------------|-----------------------------------------------|
+| bamfile_list             | empty        | Semicolon-separated list of BAM files, starting with the control's BAM. Each BAM file needs an index file with the same name as the BAM, but ".bai" suffixed. |
+| sample_list              | empty        | Semicolon-separated list of sample names in the same order as `bamfile_list` |
+| possibleTumorSampleNamePrefixes | "( tumor )" | Bash-array of tumor sample name prefixes. |
+| possibleControlSampleNamePrefixes | "( control )" | Bash-array of control sample name prefixes. |
+| CHR_SUFFIX | "" | Suffix added to the chromosome names |
+| CHR_PREFIX | "" | Prefix added to the chromosome names |
+| extractSamplesFromOutputFiles | true | |
+| CHROMOSOME_INDICES | empty | Bash-array of chromosome names to which the analysis should be restricted |
+
+## Example Call
+
+```bash
+roddy.sh run projectConfigurationName@analysisName patientId \
+--useconfig=/path/to/your/applicationProperties.ini --configurationDirectories=/path/to/your/projectConfigs \
+--useiodir=/input/directory,/output/directory/snv \
+--usePluginVersion=SNVCallingWorkflow:1.3.2 \
+--cvalues="bamfile_list:/path/to/your/control.bam;/path/to/your/tumor.bam,sample_list:normal;tumor,possibleTumorSampleNamePrefixes:tumor,possibleControlSampleNamePrefixes:normal,REFERENCE_GENOME:/reference/data/hs37d5_PhiX.fa,extractSamplesFromOutputFiles:false"
+```
 
 ### No Control
 
+TBD
