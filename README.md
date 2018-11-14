@@ -1,6 +1,6 @@
 # DKFZ SNVCalling Workflow
 
-An SNV calling workflow developed in the Applied Bioinformatics and Theoretical Bioinformatics groups at the DKFZ. On earlier version (pre Github) of this workflow was used in the [Pancancer](https://github.com/TheRoddyWMS/BatchEuphoria/pull/124) project.
+An SNV calling workflow developed in the Applied Bioinformatics and Theoretical Bioinformatics groups at the DKFZ. An earlier version (pre Github) of this workflow was used in the [Pancancer](https://dockstore.org/containers/quay.io/pancancer/pcawg-dkfz-workflow) project.
 
 > <table><tr><td><a href="https://www.denbi.de/"><img src="docs/images/denbi.png" alt="de.NBI logo" width="300" align="left"></a></td><td><strong>Your opinion matters!</strong> The development of this workflow is supported by the <a href="https://www.denbi.de/">German Network for Bioinformatic Infrastructure (de.NBI)</a>. By completing <a href="yet unknown">this very short survey</a> you support our efforts to improve this tool.</td></tr></table>
 
@@ -34,13 +34,11 @@ conda env create -n SNVCallingWorkflow -f $PATH_TO_PLUGIN_DIRECTORY/resources/an
 
 The name of the Conda environment is arbitrary but needs to be consistent with the `condaEnvironmentName` variable. The default for that variable is set in `resources/configurationFiles/analysisSNVCalling.xml`.
 
+Note that the Conda environment not exactly the same as the software stack used for the [Pancancer](https://dockstore.org/containers/quay.io/pancancer/pcawg-dkfz-workflow) project.
+
 #### PyPy
 
-PyPy is an alternative Python interpreter. Some of the Python scripts in the workflow can use PyPy to achieve higher performance. Simply set the `PYPY_OR_PYTHON_BINARY` to a PyPy interpreter.
-
-##### PyPy with DKFZ/LSF/Modules environment
-
-Note that the following feature is currently not implemented in the Conda-based environment but only in the environment used at the DKFZ (based on LSF and environment modules). Further performance is gained through the employment of a PyPy/hts-python combination instead of a CPython/pysam in the `filter_PEoverlap.py` script. Again, simply set `PYPY_OR_PYTHON_BINARY` to a PyPy interpreter and the workflow uses the implementation based on hts-python.
+PyPy is an alternative Python interpreter. Some of the Python scripts in the workflow can use PyPy to achieve higher performance by employing a fork of [hts-python](https://github.com/eilslabs/hts-python). Currently, this is not implemented for the Conda environment. For most cases you therefore should set the `PYPY_OR_PYTHON_BINARY` variable to just `python` to use the Python binary from the Conda environment. You could set up a `resources/analysisTools/snvPipeline/environments/conda_snvAnnotation.sh` similar to the `tbi-lsf-cluster_snvAnnotation.sh` file in the same directory.  
 
 ### Reference data installation
 
