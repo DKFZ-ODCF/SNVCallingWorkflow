@@ -214,8 +214,12 @@ then
 
 	[[ "$?" != 0 ]] && echo "There was a non-zero exit code in making the PCR bias files" && exit 11
 
+
+    SNV_FILE_WITH_MAF=${filenameSomaticSnvs}.withMAF.vcf
+    cat ${filenameSomaticSnvs} | perl -ne 'chomp; my $line=$_; if (/DP4=(\d+),(\d+),(\d+),(\d+);/) {my $fR=$1; my $rR=$2; my $fA=$3; my $rA=$4; my $MAF=($fA+$rA)/($fR+$rR+$fA+$rA); print "$line\t$MAF\n";} else { if (/^#CHROM/) { print "$line\tMAF\n";} else {print "$line\n";} };' >${SNV_FILE_WITH_MAF}
+
     # make base score bias and base score distribution plots - by Gregor Warsow
-    if [[ -f ${filenameReferenceAlleleBaseQualities} ]] && [[ -f ${filenameAlternativeAlleleBaseQualities} ]]; then
+    if [[ ${generateExtendedQcPlots} == true ]] && [[ -f ${filenameReferenceAlleleBaseQualities} ]] && [[ -f ${filenameAlternativeAlleleBaseQualities} ]]; then
         basequal=`echo ${MPILEUP_OPTS} | perl -ne '($qual) = $_ =~ /\-Q\s*(\d+)/;print $qual'`
         # really use base score threshold of 13 if variable is not set pr empty? We should expect to get a proper value here...
         basequal=${basequal:-13}
@@ -243,8 +247,6 @@ then
         combineRevComp='1'
         channelIndividualGraphs='1'
         skipPlots='0'
-        SNV_FILE_WITH_MAF=${filenameSomaticSnvs}.withMAF.vcf
-        cat ${filenameSomaticSnvs} | perl -ne 'chomp; my $line=$_; if (/DP4=(\d+),(\d+),(\d+),(\d+);/) {my $fR=$1; my $rR=$2; my $fA=$3; my $rA=$4; my $MAF=($fA+$rA)/($fR+$rR+$fA+$rA); print "$line\t$MAF\n";} else { if (/^#CHROM/) { print "$line\tMAF\n";} else {print "$line\n";} };' >${SNV_FILE_WITH_MAF}
 
         SEQUENCE_CONTEXT_COLUMN_INDEX=`cat ${SNV_FILE_WITH_MAF} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "SEQUENCE_CONTEXT"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
         MAF_COLUMN_INDEX=`cat ${SNV_FILE_WITH_MAF} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "MAF"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
@@ -291,7 +293,11 @@ then
 	[[ -f ${filenameBaseScoreBiasPlotFinal} ]] && biasplots="${biasplots} ${filenameBaseScoreBiasPlotFinal}"
 
 	BaseScoreDistributionsPlots_INDIVIDUAL_ChromColored='' # turn off ChromColored BSD
-	${GHOSTSCRIPT_BINARY} -dBATCH -dNOPAUSE -dAutoRotatePages=false -q -sDEVICE=pdfwrite -sOutputFile=${filenameSnvDiagnosticsPlot} ${filenameIntermutationDistancePlot} ${filenameMAFconfPlot} ${filenamePerChromFreq} ${filenameSnvsWithContext} ${filenameBaseScoreDistributions} ${BaseScoreDistributionsPlots_COMBINED} ${BaseScoreDistributionsPlots_INDIVIDUAL} ${BaseScoreDistributionsPlots_INDIVIDUAL_ChromColored} ${BaseScoreDistributionsPlots_INDIVIDUAL_VAFColored} ${BaseScoreDistributionsPlots_INDIVIDUAL_ReadPositionColored} ${BaseScoreDistributionsPlots_CoV} ${biasplots}
+	${GHOSTSCRIPT_BINARY} -dBATCH -dNOPAUSE -dAutoRotatePages=false -q -sDEVICE=pdfwrite -sOutputFile=${filenameSnvDiagnosticsPlot} \
+	    ${filenameIntermutationDistancePlot} ${filenameMAFconfPlot} ${filenamePerChromFreq} ${filenameSnvsWithContext} ${filenameBaseScoreDistributions} \
+	    ${BaseScoreDistributionsPlots_COMBINED} ${BaseScoreDistributionsPlots_INDIVIDUAL} ${BaseScoreDistributionsPlots_INDIVIDUAL_ChromColored} \
+	    ${BaseScoreDistributionsPlots_INDIVIDUAL_VAFColored} ${BaseScoreDistributionsPlots_INDIVIDUAL_ReadPositionColored} \
+	    ${BaseScoreDistributionsPlots_CoV} ${biasplots}
 fi
 
     # infer baseQuality bias (PV4)-related THA score (QC value)
