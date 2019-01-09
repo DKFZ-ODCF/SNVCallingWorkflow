@@ -291,10 +291,12 @@ then
 
 	[[ $? != 0 ]] && echo "Error in moving the vcf file and index or in removing the temporary files" && exit 9
 
+	if [[ ${generateExtendedQcPlots} == true ]]; then
     wait ${plotBaseScoreBiasBeforeFiltering} ; [[ $? -gt 0 ]] && echo "Error in first creation of base score bias plot" && exit 37
     [[ -f ${filenameSomaticSNVsTmp}.forBSBPlotsBeforeFiltering ]] && rm ${filenameSomaticSNVsTmp}.forBSBPlotsBeforeFiltering
     wait ${plotBaseScoreBiasAfterFirstFiltering} ; [[ $? -gt 0 ]] && echo "Error in second creation of base score bias plot" && exit 38
     [[ -f ${filenameSomaticSNVsTmp}.forBSBPlotsAfter1stFiltering ]] && rm ${filenameSomaticSNVsTmp}.forBSBPlotsAfter1stFiltering
+	fi
 else
 	cat ${npConfidence} | ${TOOL_COPYSAM_WRAPPER} ${PYPY_LOCAL_LIBPATH} ${PYPY_BINARY}  -u ${TOOL_FILTER_PE_OVERLAP} ${noControlFlag} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} --altBaseQualFile=${filenameAlternativeAlleleBaseScores}_NP --refBaseQualFile=${filenameReferenceAlleleBaseScores}_NP --altBasePositionsFile=${filenameAlternativeAlleleReadPositions}_NP --refBasePositionsFile=${filenameReferenceAlleleReadPositions}_NP | \
 	${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS_PANCAN} > ${filenameSNVVCFTemp}
