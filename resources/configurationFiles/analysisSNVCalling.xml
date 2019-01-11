@@ -118,6 +118,7 @@
         <cvalue name="maxNumOppositeReadsSequenceStrongBias" value="1" type="integer"/>
         <cvalue name="rVcf" value="0.1" type="float" description="max fraction of reads (reads/total reads) we tolerate in the direction opposite to the bias for it to be called an artefact"/>
 
+        <cvalue name='generateExtendedQcPlots' value='false' type="boolean" />
         <cvalue name='runSecondFilterStep' value='false' type="boolean" />
         <cvalue name="MEDIAN_FILTER_THRESHOLD" value='20' type="integer" description="SNVs with median of alternative base qualities below this threshold will be removed in the rerun filter step. Value of -1 means no filtering."/>
         <cvalue name="RERUN_SUFFIX" value="_filteredAltMedian${MEDIAN_FILTER_THRESHOLD}" type="string"/>
