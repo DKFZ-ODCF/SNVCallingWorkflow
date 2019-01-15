@@ -165,7 +165,7 @@ then
 	
 	CHR_TO_RAINFALL=${numberOfChromosomes}
 
-	${RSCRIPT_BINARY} --vanilla ${TOOL_INTERMUTATION_DISTANCE_COORD_COLOR} -i ${filenameSomaticSnvs} -s ${PID} -o ${filenameIntermutationDistancePlot} -a ${CHR_TO_RAINFALL// /,} -p "${CHR_PREFIX}" -u "${CHR_SUFFIX}" -l ${CHROMOSOME_LENGTH_FILE}
+	${RSCRIPT_BINARY} --vanilla ${TOOL_INTERMUTATION_DISTANCE_COORD_COLOR} -i "$filenameSomaticSnvs" -s "$PID" -o "$filenameIntermutationDistancePlot" -a "${CHR_TO_RAINFALL// /,}" -p "$CHR_PREFIX" -u "$CHR_SUFFIX" -l "$CHROMOSOME_LENGTH_FILE"
 	
 	[[ "$?" != 0 ]] && echo "There was a non-zero exit code in making the rainfall plot file" && exit 4
 	

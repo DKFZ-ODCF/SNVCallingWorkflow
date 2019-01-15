@@ -6,7 +6,7 @@
 #
 
 
-source $(dirname "$0")/tbi-lsf-cluster.sh
+source $(dirname "${BASH_SOURCE[0]}")/tbi-lsf-cluster.sh
 
 export HTSLIB_INCLUDE_PATH="/tbi/software/x86_64/htslib/htslib-${HTSLIB_VERSION_FOR_HTS_PYTHON}/el7/include"
 export PYPY_LOCAL_LIBPATH="$HOME/.local/lib/pypy"

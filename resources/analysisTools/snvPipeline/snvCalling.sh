@@ -83,10 +83,10 @@ else
 fi
 
 firstLineVCF=`cat $filenameMPileupTemp | grep -v "^#" | head -n1`
-if [[ $firstLineVCF ]]; then
+if [[ -n "$firstLineVCF" ]]; then
     # filter out mutations with strand bias next to the motif GGnnGG (or CCnnCC if snv is on reverse strand)
-    ${PERL_BINARY} ${TOOL_SEQ_CONTEXT_ANNOTATOR} ${FASTAFROMBED_BINARY} ${filenameMPileupTemp} ${REFERENCE_GENOME} 10 ${TOOLS_DIR} |
-    ${PYTHON_BINARY} ${TOOL_RAW_SNV_FILTER} --outf=${snvOut} ${RAW_SNV_FILTER_OPTIONS} # --inf=$MPILEUP_SUBDIR/forStrandBiasFilter.${chr}.bed
+    ${PERL_BINARY} "$TOOL_SEQ_CONTEXT_ANNOTATOR" "$FASTAFROMBED_BINARY" "$filenameMPileupTemp" "$REFERENCE_GENOME" 10 "$TOOLS_DIR" | \
+        ${PYTHON_BINARY} "$TOOL_RAW_SNV_FILTER" --outf="$snvOut" "$RAW_SNV_FILTER_OPTIONS" # --inf=$MPILEUP_SUBDIR/forStrandBiasFilter.${chr}.bed
 
     if [[ "$?" == 0 ]]
     then

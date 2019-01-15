@@ -50,14 +50,15 @@ TBD
 
 |Switch                    |  Default     | Description
 |--------------------------|--------------|-----------------------------------------------|
-| bamfile_list             | empty        | Semicolon-separated list of BAM files, starting with the control's BAM. Each BAM file needs an index file with the same name as the BAM, but ".bai" suffixed. |
+| bamfile_list             | empty        | Semicolon-separated list of BAM files, starting with the control's BAM. Each BAM file needs an index file with the same name as the BAM, but ".bai" suffixed |
 | sample_list              | empty        | Semicolon-separated list of sample names in the same order as `bamfile_list` |
-| possibleTumorSampleNamePrefixes | "( tumor )" | Bash-array of tumor sample name prefixes. |
-| possibleControlSampleNamePrefixes | "( control )" | Bash-array of control sample name prefixes. |
+| possibleTumorSampleNamePrefixes | "( tumor )" | Bash-array of tumor sample name prefixes |
+| possibleControlSampleNamePrefixes | "( control )" | Bash-array of control sample name prefixes |
+| CHROMOSOME_INDICES | empty | Bash-array of chromosome names to which the analysis should be restricted |
+| CHROMOSOME_LENGTH_FILE  | empty | Headerless TSV file with chromosome name, chromosome size columns |
 | CHR_SUFFIX | "" | Suffix added to the chromosome names |
 | CHR_PREFIX | "" | Prefix added to the chromosome names |
-| extractSamplesFromOutputFiles | true | |
-| CHROMOSOME_INDICES | empty | Bash-array of chromosome names to which the analysis should be restricted |
+| extractSamplesFromOutputFiles | true | Refer to the documentation of the [COWorkflowBasePlugin](https://github.com/DKFZ-ODCF/COWorkflowsBasePlugin) for further information |
 
 ## Example Call
 
@@ -66,9 +67,10 @@ roddy.sh run projectConfigurationName@analysisName patientId \
 --useconfig=/path/to/your/applicationProperties.ini --configurationDirectories=/path/to/your/projectConfigs \
 --useiodir=/input/directory,/output/directory/snv \
 --usePluginVersion=SNVCallingWorkflow:1.3.2 \
---cvalues="bamfile_list:/path/to/your/control.bam;/path/to/your/tumor.bam,sample_list:normal;tumor,possibleTumorSampleNamePrefixes:tumor,possibleControlSampleNamePrefixes:normal,REFERENCE_GENOME:/reference/data/hs37d5_PhiX.fa,extractSamplesFromOutputFiles:false"
+--cvalues="bamfile_list:/path/to/your/control.bam;/path/to/your/tumor.bam,sample_list:normal;tumor,possibleTumorSampleNamePrefixes:tumor,possibleControlSampleNamePrefixes:normal,REFERENCE_GENOME:/reference/data/hs37d5_PhiX.fa,CHROMOSOME_LENGTH_FILE:/reference/data/hs37d5_PhiX.chromSizes,extractSamplesFromOutputFiles:false"
 ```
 
 ### No Control
 
 TBD
+

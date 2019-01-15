@@ -142,7 +142,7 @@
             # before the = is the  name for the column in which the information will be reported
             # afterwards, the complete path to the sorted, headered, bgzipped and tabixed file
             # optional after the first ":" additional columns to include (default is the entry in the "name" column for bed)
-            # optional after the second ":" report level for matches (default is 2)
+            # optional after the second ":" report level for matchesOn (default is 2)
             # optional after the third ":" additional options to pass through to annotate_vcf.pl
             # see also the usage report of ngs2/trunk/tools/annotate_vcf.pl
             # if any whitespaces are required, use quotation marks like in this example: #MAPABILITY="/ibios/co02/annotation/hg19/wgEncodeCrgMapabilityAlign100mer.bedGraph.gz:::-breakPointMode -aEndOffset=1"-->
@@ -329,13 +329,14 @@
         <tool name="analyzeBamHeader" value="analyzeBamHeader.sh" basepath="tools"/>
     </processingTools>
     <filenames package='de.dkfz.b080.co.files' filestagesbase='de.dkfz.b080.co.files.COFileStage'>
-        <!--<filename class='VCFFileForSNVs' derivedFrom="BamFile" pattern="${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvs_${pid}.${RODDY_JOBARRAYINDEX}.vcf" />-->
-        <filename class='VCFFileForSNVs' derivedFrom="ControlBamFile" pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvs_${pid}.${jobParameter,name="PARM_CHR_INDEX"}.vcf'/>
-        <filename class='VCFFileForSNVsNoControl' derivedFrom="TumorBamFile" pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvs_${pid}.${jobParameter,name="PARM_CHR_INDEX"}.vcf'/>
-        <filename class='TextFile' derivedFrom="TumorBamFile" pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/.snvs_${pid}.${jobParameter,name="PARM_CHR_INDEX"}.vcf_checkpoint'/>
+        <filename class='VCFFileForSNVs' derivedFrom="ControlBamFile"
+                  pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvs_${pid}.${PARM_CHR_INDEX}.vcf'/>
+        <filename class='VCFFileForSNVsNoControl' derivedFrom="TumorBamFile"
+                  pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvs_${pid}.${jobParameter,name="PARM_CHR_INDEX"}.vcf'/>
+        <filename class='TextFile' derivedFrom="TumorBamFile"
+                  pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/checkpoint_snvs_${pid}.${PARM_CHR_INDEX}_${TOOL_ID}'/>
 
-        <filename class="TextFile" derivedFrom="SNVAnnotationFile" pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvCallingCheckPoint_${jobParameter,name="TOOL_ID"}'/>
-        <!--<filename class="TextFile" onMethod="deepAnnotate" selectiontag="snvCallingCheckpoint" pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvCallingCheckPoint_${jobParameter,name="TOOL_ID"}' />-->
+        <filename class="TextFile" derivedFrom="SNVAnnotationFile" pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/checkPoint_${TOOL_ID}'/>
         <filename class='SNVAnnotationFile' derivedFrom="TumorBamFile" pattern="${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvs_${pid}_raw.vcf.gz"/>
         <filename class='SNVAnnotationFile' derivedFrom="SNVAnnotationFile" pattern="${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvs_${pid}.vcf.gz"/>
     </filenames>
