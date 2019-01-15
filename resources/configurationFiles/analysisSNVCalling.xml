@@ -142,7 +142,7 @@
             # before the = is the  name for the column in which the information will be reported
             # afterwards, the complete path to the sorted, headered, bgzipped and tabixed file
             # optional after the first ":" additional columns to include (default is the entry in the "name" column for bed)
-            # optional after the second ":" report level for matchesOn (default is 2)
+            # optional after the second ":" report level for matches (default is 2)
             # optional after the third ":" additional options to pass through to annotate_vcf.pl
             # see also the usage report of ngs2/trunk/tools/annotate_vcf.pl
             # if any whitespaces are required, use quotation marks like in this example: #MAPABILITY="/ibios/co02/annotation/hg19/wgEncodeCrgMapabilityAlign100mer.bedGraph.gz:::-breakPointMode -aEndOffset=1"-->
