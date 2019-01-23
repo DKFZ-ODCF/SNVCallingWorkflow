@@ -5,6 +5,10 @@
 # Distributed under the MIT License (https://opensource.org/licenses/MIT).
 #
 
+set +o
+
+set -ue
+
 module load R/"${RSCRIPT_VERSION:?RSCRIPT_VERSION undefined}"
 module load python/"${PYTHON_VERSION:?PYTHON_VERSION undefined}"
 module load samtools/"${SAMTOOLS_VERSION:?SAMTOOLS_VERSION undefined}"

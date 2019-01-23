@@ -59,6 +59,7 @@ TBD
 | CHR_SUFFIX | "" | Suffix added to the chromosome names |
 | CHR_PREFIX | "" | Prefix added to the chromosome names |
 | extractSamplesFromOutputFiles | true | Refer to the documentation of the [COWorkflowBasePlugin](https://github.com/DKFZ-ODCF/COWorkflowsBasePlugin) for further information |
+| PYPY_OR_PYTHON_BINARY | pypy | The binary to use for a some of the Python scripts. For `filter_PEoverlap.py` using a PyPy binary here also triggers the use of [hts-python](https://github.com/pjb7687/hts-python) is used instead of pysam.|  
 
 ## Example Call
 

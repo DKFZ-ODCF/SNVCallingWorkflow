@@ -8,9 +8,11 @@
 
 source $(dirname "${BASH_SOURCE[0]}")/tbi-lsf-cluster.sh
 
-export HTSLIB_INCLUDE_PATH="/tbi/software/x86_64/htslib/htslib-${HTSLIB_VERSION_FOR_HTS_PYTHON}/el7/include"
-export PYPY_LOCAL_LIBPATH="$HOME/.local/lib/pypy"
-export HTS_PYTHON_COMMIT="cd35d6f15221bb09c218d0f978c0b92c560fcdd6"
+export HTSLIB_INCLUDE_PATH="/tbi/software/x86_64/htslib/htslib-$HTSLIB_VERSION_FOR_HTS_PYTHON/el7/include"
+
+# Have a central installation for the user. This is to avoid DoS on Github!
+# It includes the commit-hash to ensure multiple versions don't interfere with each other.
+export PYPY_LOCAL_LIBPATH="$HOME/.local/lib/pypy/hts-python/$HTS_PYTHON_COMMIT"
 
 usePypy() {
     if [[ $("$PYPY_OR_PYTHON_BINARY" --version 2>&1 | grep -P "PyPy") != "" ]]; then
@@ -41,40 +43,40 @@ unlock() {
 
 ## This is not provided as a
 cloneAndBuildHtsPython() {
+    # Note that both the site-packages/ and the repo-dir are specific for the commit.
+    # Thus, by selecting the commit one selects the local PyPy libdir!
     local sitePackageDir="$PYPY_LOCAL_LIBPATH/site-packages"
-    local LOCK="$sitePackageDir/hts-egg~"
-    lock "$LOCK"
+    local HTS_PYTHON_REPODIR="$PYPY_LOCAL_LIBPATH/repository"
     if [[ ! -d "$sitePackageDir" ]]; then
-        mkdir -p "$sitePackagedir"
+        mkdir -p "$sitePackageDir"
+        local LOCK="$sitePackageDir/hts-egg~"
+        lock "$LOCK"
 
         module load git/"${GIT_VERSION:?GIT_VERSION undefined}"
         export GIT_BINARY=git
 
         # Needed for CFFI
-        export C_INCLUDE_PATH="$HTSLIB_INCLUDE_PATH"
         module switch "htslib/$HTSLIB_VERSION_FOR_HTS_PYTHON"
 
         if [[ ! -d `echo "$sitePackageDir/hts-*.egg"` ]]; then
-            echo "Installing hts-python on your local directory..."
-            "$GIT_BINARY" clone "https://github.com/pjb7687/hts-python" "$RODDY_SCRATCH/hts-python"
-            "$GIT_BINARY" -C "$RODDY_SCRATCH/hts-python" checkout "$HTS_PYTHON_COMMIT"
+            "$GIT_BINARY" clone "$HTS_PYTHON_GIT_REPOSITORY" "$HTS_PYTHON_REPODIR"
+            "$GIT_BINARY" -C "$HTS_PYTHON_REPODIR" checkout "$HTS_PYTHON_COMMIT"
             # Below assume that 'nose' is already installed with PyPy
-            pushd ${RODDY_SCRATCH}/hts-python
-            "$PYPY_LOCAL_LIBPATH" "$PYPY_OR_PYTHON_BINARY" setup.py build
-            "$PYPY_LOCAL_LIBPATH" "$PYPY_OR_PYTHON_BINARY" setup.py install --prefix="$PYPY_LOCAL_LIBPATH"
+            pushd "$HTS_PYTHON_REPODIR"
+            C_INCLUDE_PATH="$HTSLIB_INCLUDE_PATH" PYTHONPATH="$sitePackageDir" "$PYPY_OR_PYTHON_BINARY" setup.py build
+            C_INCLUDE_PATH="$HTSLIB_INCLUDE_PATH" PYTHONPATH="$sitePackageDir" "$PYPY_OR_PYTHON_BINARY" setup.py install --prefix="$PYPY_LOCAL_LIBPATH"
             popd
         fi
         unset C_INCLUDE_PATH
         module switch "htslib/$HTSLIB_VERSION"
+        unlock "$LOCK"
     fi
-    unlock "$LOCK"
 }
 
 pypyCopySam() {
-   C_INCLUDE_PATH="$HTSLIB_INCLUDE_PATH"
    module switch "htslib/$HTSLIB_VERSION_FOR_HTS_PYTHON"
-   PYTHONPATH="$PYPY_LOCAL_LIBPATH/site-packages" "$PYPY_OR_PYTHON_BINARY" "$@"
-   unset C_INCLUDE_PATH
+   local sitePackageDir="$PYPY_LOCAL_LIBPATH/site-packages"
+   C_INCLUDE_PATH="$HTSLIB_INCLUDE_PATH" PYTHONPATH="$sitePackageDir" "$PYPY_OR_PYTHON_BINARY" "$@"
    module switch "htslib/$HTSLIB_VERSION"
 }
 

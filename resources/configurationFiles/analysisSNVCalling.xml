@@ -22,8 +22,12 @@
         <cvalue name='PYPY_VERSION' value='5.8.0' type="string"/>
         <cvalue name='GIT_VERSION' value='2.9.4' type="string"/>
 
-        <cvalue name="PYPY_OR_PYTHON_BINARY" value="python" type="string"
-                description="If you use a CPython binary here, no hts-python but pysam will be used. All scripts are interpreted by CPython. If you use a PyPy binary here, some scripts are interpreted with higher performance by PyPy and hts-python is used instead of pysam in the filter_PEoverlap.py script."/>
+        <cvalue name="PYPY_OR_PYTHON_BINARY" value="pypy" type="string"
+                description="If you use a PyPy binary here, some scripts are interpreted with higher performance by PyPy and hts-python is used instead of pysam in the filter_PEoverlap.py script."/>
+        <cvalue name="HTS_PYTHON_GIT_REPOSITORY" value="https://github.com/pjb7687/hts-python" type="string"
+                description="Git repository link with the hts-python version for PyPy. Try to avoid DoS on Github!"/>
+        <cvalue name="HTS_PYTHON_COMMIT" value="cd35d6f15221bb09c218d0f978c0b92c560fcdd6" type="string"
+                description="Specific Git commit of the PyPy-compatible hts-python to download from HTS_PYTHON_GIT_REPOSITORY."/>
 
         <cvalue name='mpileupOutputDirectory' value='mpileup' type="path"/>
         <cvalue name='MPILEUP_OPTS' value='"-REI -q 30 -ug"' type="string"/>
@@ -333,6 +337,8 @@
                   pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvs_${pid}.${PARM_CHR_INDEX}.vcf'/>
         <filename class='VCFFileForSNVsNoControl' derivedFrom="TumorBamFile"
                   pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/snvs_${pid}.${jobParameter,name="PARM_CHR_INDEX"}.vcf'/>
+
+        <!--TODO: harmonize name with other checkpoint files-->
         <filename class='TextFile' derivedFrom="TumorBamFile"
                   pattern='${outputAnalysisBaseDirectory}/${mpileupOutputDirectory}/checkpoint_snvs_${pid}.${PARM_CHR_INDEX}_${TOOL_ID}'/>
 
