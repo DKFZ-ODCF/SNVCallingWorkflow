@@ -1,4 +1,9 @@
-#! /usr/bin/python
+#!/usr/bin/env python
+#
+# Copyright (c) 2018 German Cancer Research Center (DKFZ).
+#
+# Distributed under the MIT License (https://opensource.org/licenses/MIT).
+#
 #
 # sort -k 1,1V -k 2,2n snvs_139625.annotated.somatic.vcf > snvs_139625_sort.vcf
 # python /home/jaegern/pyWorkspace/NGS_Read_Processing/src/mutationDistance.py --inf=snvs_MB1.annotated.somatic.sort.vcf --outf=intermutation_distance_snv_TEST.txt

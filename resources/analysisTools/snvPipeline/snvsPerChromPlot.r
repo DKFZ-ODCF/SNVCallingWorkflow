@@ -1,4 +1,9 @@
 #!/usr/bin/env Rscript
+#
+# Copyright (c) 2018 German Cancer Research Center (DKFZ).
+#
+# Distributed under the GPL-2 License (http://www.gnu.de/documents/gpl-2.0.en.html).
+#
 
 # to call this script: Rscript --vanilla /home/jaegern/ICGC_NGS/TOOLS/VARIANT_DETECTION/IntermutationDistance/snvsPerChromPlot.r -i intermutation_distance_snv_sorted.txt -s MB101 -o MB101_perChromSnvs
 

@@ -1,3 +1,8 @@
+#
+# Copyright (c) 2018 German Cancer Research Center (DKFZ).
+#
+# Distributed under the MIT License (https://opensource.org/licenses/MIT).
+#
 # Override the execute method of a workflow
 # The method is automatically chosen with things like parameter count and names.
 input bamControlMerged

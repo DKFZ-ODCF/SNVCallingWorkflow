@@ -1,9 +1,13 @@
 #!/usr/bin/env Rscript
+#
+# Copyright (c) 2018 German Cancer Research Center (DKFZ).
+#
+# Distributed under the GPL-2 License (http://www.gnu.de/documents/gpl-2.0.en.html).
+#
 # This script determins the THA artifact score for the given snvs vcf file.
 # The score is calculated as the fraction of SNVs with a baseQbias (PV4) p-value of at most 0.05 among all high quality somatic SNVs.
 # See Phabricator Task 597 and related tasks.
 # Author: G. Warsow
-
 
 library(getopt)
 options(stringsAsFactors = FALSE)

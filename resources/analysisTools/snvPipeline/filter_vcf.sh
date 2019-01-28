@@ -47,7 +47,7 @@ if [[ ${isNoControlWorkflow-false} == "true" ]]; then
         echo ${FILTER_VALUES} > "${outputFilenamePrefix}_postFilter_criteria.txt"
         outputFilenamePrefix="${outputFilenamePrefix}_postFiltered"
         FILTERED_VCF="${outputFilenamePrefix}.vcf"
-        ${PYPY_BINARY} -u ${TOOL_VCF_FILTER_BY_CRIT} ${FILENAME_VCF} ${FILTERED_VCF}${FILTER_VALUES}
+        ${PYPY_OR_PYTHON_BINARY} -u ${TOOL_VCF_FILTER_BY_CRIT} ${FILENAME_VCF} ${FILTERED_VCF}${FILTER_VALUES}
         ${BGZIP_BINARY} -f ${FILTERED_VCF} && ${TABIX_BINARY} -f -p vcf ${FILTERED_VCF}.gz
         FILENAME_VCF=${FILTERED_VCF}.gz
     fi
@@ -165,7 +165,7 @@ then
 	
 	CHR_TO_RAINFALL=${numberOfChromosomes}
 
-	${RSCRIPT_BINARY} --vanilla ${TOOL_INTERMUTATION_DISTANCE_COORD_COLOR} -i ${filenameSomaticSnvs} -s ${PID} -o ${filenameIntermutationDistancePlot} -a ${CHR_TO_RAINFALL// /,} -p "${CHR_PREFIX}" -u "${CHR_SUFFIX}" -l ${CHROMOSOME_LENGTH_FILE}
+	${RSCRIPT_BINARY} --vanilla ${TOOL_INTERMUTATION_DISTANCE_COORD_COLOR} -i "$filenameSomaticSnvs" -s "$PID" -o "$filenameIntermutationDistancePlot" -a "${CHR_TO_RAINFALL// /,}" -p "$CHR_PREFIX" -u "$CHR_SUFFIX" -l "$CHROMOSOME_LENGTH_FILE"
 	
 	[[ "$?" != 0 ]] && echo "There was a non-zero exit code in making the rainfall plot file" && exit 4
 	

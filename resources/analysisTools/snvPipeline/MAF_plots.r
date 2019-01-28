@@ -1,3 +1,10 @@
+#!/usr/bin/env Rscript
+#
+# Copyright (c) 2018 German Cancer Research Center (DKFZ).
+#
+# Distributed under the GPL-2 License (http://www.gnu.de/documents/gpl-2.0.en.html).
+#
+
 
 # R -f /home/jaegern/rWorkspace/MAF_plots.r --no-save --no-restore --args "sample_genomewide_high_conf_snvs_alleleFrq"
 
@@ -13,7 +20,6 @@ snvnum = as.numeric(cmdArgs[2])
 outfile = cmdArgs[3]
 pid = cmdArgs[4]
 nr_in_dbSNP = as.numeric(cmdArgs[5])
-#library(Cairo)
 
 maf=read.table(infile,sep="\t",as.is=TRUE)
 

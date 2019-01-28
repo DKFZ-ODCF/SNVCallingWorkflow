@@ -1,3 +1,10 @@
+#!/usr/bin/env Rscript
+#
+# Copyright (c) 2018 German Cancer Research Center (DKFZ).
+#
+# Distributed under the GPL-2/GPL-3 License (http://www.gnu.de/documents/gpl-2.0.en.html, https://www.gnu.org/licenses/gpl-3.0.en.html).
+#
+
 # ATTENTION: In the output files of this script multi alternative SNVs have been removed!
 # This script creates QC plots
 # More specific: cumulative distributions of base qualities of the somatic SNVs.
