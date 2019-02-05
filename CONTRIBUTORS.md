@@ -1,9 +1,11 @@
 The following people and institutions have a copyright in parts or the whole of the SNV workflow:
+
 - Copyright © 2012-2018  Matthias Bieg
 - Copyright © 2012-2018  Benedikt Brors
 - Copyright © 2012-2018  Ivo Buchhalter
 - Copyright © 2012-2018  Roland Eils
 - Copyright © 2012-2018  Dina ElHarouni
+- Copyright © 2012-2018  Lars Feuerbach
 - Copyright © 2012-2018  Michael Heinold
 - Copyright © 2012-2018  Barbara Hutter
 - Copyright © 2012-2018  Naveed Ishaque
