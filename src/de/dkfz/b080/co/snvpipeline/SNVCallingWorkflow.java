@@ -14,10 +14,16 @@ public class SNVCallingWorkflow extends WorkflowUsingMergedBams {
 private static LoggerWrapper logger = LoggerWrapper.getLogger(SNVCallingWorkflow.class.getName());
     @Override
     public boolean execute(ExecutionContext context, BasicBamFile _bamControlMerged, BasicBamFile _bamTumorMerged) {
-        boolean noControlFLAG = getflag(context, IS_NO_CONTROL_WORKFLOW, false);
-        logger.postAlwaysInfo("noControlFLAG is " + noControlFLAG);
-        ControlBamFile bamControlMerged = noControlFLAG && _bamControlMerged == null ? null : new ControlBamFile(_bamControlMerged);
-        TumorBamFile bamTumorMerged = new TumorBamFile(_bamTumorMerged);
+        logger.postAlwaysInfo("noControlFLAG is " + isNoControlWorkflow());
+        BasicBamFile bamTumorMerged;
+        if (isControlWorkflow()) {
+            BasicBamFile bamControlMerged = new BasicBamFile(loadInitialBamFilesForDataset(context)[0]);
+            context.getConfigurationValues().add(new ConfigurationValue("controlSample", ((COFileStageSettings) bamControlMerged.getFileStage()).getSample().getName()));
+            bamTumorMerged = new BasicBamFile(loadInitialBamFilesForDataset(context)[1]);
+        } else {
+            bamTumorMerged = new BasicBamFile(loadInitialBamFilesForDataset(context)[0]);
+        }
+        context.getConfigurationValues().add(new ConfigurationValue("tumorSample", ((COFileStageSettings) bamTumorMerged.getFileStage()).getSample().getName()));
 
 
         boolean runMetaCallingStep = context.getConfiguration().getConfigurationValues().getBoolean("runSNVMetaCallingStep", false);
