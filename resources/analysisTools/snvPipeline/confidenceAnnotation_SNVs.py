@@ -1,4 +1,9 @@
-#/usr/bin/env python
+#!/usr/bin/env python
+#
+# Copyright (c) 2018 German Cancer Research Center (DKFZ).
+#
+# Distributed under the MIT License (https://opensource.org/licenses/MIT).
+#
 
 # confidenceAnnotation_SNVs.py
 # Author: Jeongbin Park (based on perl code 'confidenceREAnnotation_SNVs.pl' and 'confidenceAnnotation_SNVsNoGermline.pl')

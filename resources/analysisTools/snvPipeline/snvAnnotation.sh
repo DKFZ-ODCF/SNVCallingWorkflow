@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Copyright (c) 2018 German Cancer Research Center (DKFZ).
+#
+# Distributed under the MIT License (https://opensource.org/licenses/MIT).
+#
 
 PLOT_TYPE=${BASE_SCORE_BIAS_PLOT_TYPE:-Differences}
 
@@ -91,7 +96,7 @@ cmdFilter="${cmdFilter} | ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=$
     ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} -a - -b ${GNOMAD_WES_ALL_SNV} --columnName=${GNOMAD_WES_COL} --bFileType vcf | \
     ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} -a - -b ${GNOMAD_WGS_ALL_SNV} --columnName=${GNOMAD_WGS_COL} --bFileType vcf | \
     ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${LOCALCONTROL} --columnName ${LOCALCONTROL_COL} --reportMatchType --minOverlapFraction 1 --bFileType vcf | \
-    ${PYPY_BINARY} -u ${TOOL_ONLY_EXTRACT_MATCH}"
+    ${PYPY_OR_PYTHON_BINARY} -u ${TOOL_ONLY_EXTRACT_MATCH}"
 
 if [[ -f ${RECURRENCE} ]]; then
     cmdFilter="${cmdFilter} | ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} -a - -b ${RECURRENCE} --columnName ${RECURRENCE_COL} --bFileType vcf"
@@ -194,22 +199,7 @@ mkfifo ${npConfidence}
 if [[ ${isNoControlWorkflow-false} == "false" ]]; then
     cat ${filenameSNVVCF} > ${npConfidence} &
 else
-    cat ${filenameSNVVCF} | ${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 0 > ${npConfidence} &
-fi
-
-# Needed for CFFI
-export C_INCLUDE_PATH=${HTSLIB_INCLUDE_PATH}
-module switch htslib/${HTSLIB_VERSION_FOR_HTS_PYTHON}
-if [[ ! -d `echo ${PYPY_LOCAL_LIBPATH}/site-packages/hts-*.egg` ]]; then
-    echo "Installing hts-python on your local directory..."
-    mkdir -p ${PYPY_LOCAL_LIBPATH}/site-packages
-
-    ${GIT_BINARY} clone "https://github.com/pjb7687/hts-python" ${RODDY_SCRATCH}/hts-python
-    # Below assume that 'nose' is already installed with PyPy
-    cd ${RODDY_SCRATCH}/hts-python
-    ${TOOL_COPYSAM_WRAPPER} ${PYPY_LOCAL_LIBPATH} ${PYPY_BINARY} setup.py build
-    ${TOOL_COPYSAM_WRAPPER} ${PYPY_LOCAL_LIBPATH} ${PYPY_BINARY} setup.py install --prefix=~/.local/lib/pypy
-    cd -
+    cat ${filenameSNVVCF} | ${PYPY_OR_PYTHON_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 0 > ${npConfidence} &
 fi
 
 # create BaseScore FIFOs and their consumer processes (zip and write to target file)
@@ -223,8 +213,8 @@ cat ${filenameReferenceAlleleReadPositions}_NP | ${BGZIP_BINARY} -f >${filenameR
 # If this is for the pancancer workflow, then also create a DKFZ specific file.
 if [[ ${runArtifactFilter-true} == true ]]
 then
-	cat ${npConfidence} | ${TOOL_COPYSAM_WRAPPER} ${PYPY_LOCAL_LIBPATH} ${PYPY_BINARY} -u ${TOOL_FILTER_PE_OVERLAP} ${noControlFlag} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} --altBaseQualFile=${filenameAlternativeAlleleBaseScores}_NP --refBaseQualFile=${filenameReferenceAlleleBaseScores}_NP --altBasePositionsFile=${filenameAlternativeAlleleReadPositions}_NP --refBasePositionsFile ${filenameReferenceAlleleReadPositions}_NP \
-						| ${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 0 -f ${filenameSomaticSNVsTmp} > ${filenameSNVVCFTemp}.tmp
+	cat ${npConfidence} | filterPeOverlap ${noControlFlag} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} --altBaseQualFile=${filenameAlternativeAlleleBaseScores}_NP --refBaseQualFile=${filenameReferenceAlleleBaseScores}_NP --altBasePositionsFile=${filenameAlternativeAlleleReadPositions}_NP --refBasePositionsFile ${filenameReferenceAlleleReadPositions}_NP \
+						| ${PYPY_OR_PYTHON_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 0 -f ${filenameSomaticSNVsTmp} > ${filenameSNVVCFTemp}.tmp
 
     [[ $? != 0 ]] && echo "Error in first iteration of confidence annotation" && exit 2
 
@@ -253,7 +243,7 @@ then
     fi
 
 	cat ${filenameSNVVCFTemp} | ${PYTHON_BINARY} ${TOOL_FLAG_BIAS} --vcfFile="/dev/stdin" --referenceFile=${REFERENCE_GENOME} --sequence_specificFile=${filenamePCRerrorMatrix} --sequencing_specificFile=${filenameSequencingErrorMatrix} --numReads=${nReads} --numMuts=${nMuts} --biasPValThreshold=${biasPValThreshold} --biasRatioThreshold=${biasRatioThreshold} --biasRatioMinimum=${biasRatioMinimum} --maxNumOppositeReadsSequencingWeakBias=${maxNumOppositeReadsSequencingWeakBias} --maxNumOppositeReadsSequenceWeakBias=${maxNumOppositeReadsSequenceWeakBias} --maxNumOppositeReadsSequencingStrongBias=${maxNumOppositeReadsSequencingStrongBias} --maxNumOppositeReadsSequenceStrongBias=${maxNumOppositeReadsSequenceStrongBias} --ratioVcf=${rVcf} --bias_matrixSeqFile=${filenameBiasMatrixSeqFile} --bias_matrixSeqingFile=${filenameBiasMatrixSeqingFile} --vcfFileFlagged="/dev/stdout" | \
-	${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 1 -f ${filenameSomaticSNVsTmp} > ${filenameSNVVCFTemp}.tmp
+	${PYPY_OR_PYTHON_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 1 -f ${filenameSomaticSNVsTmp} > ${filenameSNVVCFTemp}.tmp
 
 	[[ $? != 0 ]] && echo "Error in first filtering and/or second interation of confidence annotation" && exit 5
 
@@ -277,7 +267,7 @@ then
     fi
 
 	cat ${filenameSNVVCFTemp} | ${PYTHON_BINARY} -u ${TOOL_FLAG_BIAS} --vcfFile="/dev/stdin" --referenceFile=${REFERENCE_GENOME} --sequence_specificFile=${filenamePCRerrorMatrix} --sequencing_specificFile=${filenameSequencingErrorMatrix} --numReads=${nReads} --numMuts=${nMuts} --biasPValThreshold=${biasPValThreshold} --biasRatioThreshold=${biasRatioThreshold} --biasRatioMinimum=${biasRatioMinimum} --maxNumOppositeReadsSequencingWeakBias=${maxNumOppositeReadsSequencingWeakBias} --maxNumOppositeReadsSequenceWeakBias=${maxNumOppositeReadsSequenceWeakBias} --maxNumOppositeReadsSequencingStrongBias=${maxNumOppositeReadsSequencingStrongBias} --maxNumOppositeReadsSequenceStrongBias=${maxNumOppositeReadsSequenceStrongBias} --ratioVcf=${rVcf} --bias_matrixSeqFile=${filenameBiasMatrixSeqFile} --bias_matrixSeqingFile=${filenameBiasMatrixSeqingFile} --vcfFileFlagged="/dev/stdout" | \
-	${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS_PANCAN} -a 2  > ${filenameSNVVCF}
+	${PYPY_OR_PYTHON_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS_PANCAN} -a 2  > ${filenameSNVVCF}
 
 	[[ $? != 0 ]] && echo "Error in second filtering and/or third iteration of confidence annotation" && exit 8
 
@@ -298,8 +288,8 @@ then
     [[ -f ${filenameSomaticSNVsTmp}.forBSBPlotsAfter1stFiltering ]] && rm ${filenameSomaticSNVsTmp}.forBSBPlotsAfter1stFiltering
 	fi
 else
-	cat ${npConfidence} | ${TOOL_COPYSAM_WRAPPER} ${PYPY_LOCAL_LIBPATH} ${PYPY_BINARY}  -u ${TOOL_FILTER_PE_OVERLAP} ${noControlFlag} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} --altBaseQualFile=${filenameAlternativeAlleleBaseScores}_NP --refBaseQualFile=${filenameReferenceAlleleBaseScores}_NP --altBasePositionsFile=${filenameAlternativeAlleleReadPositions}_NP --refBasePositionsFile=${filenameReferenceAlleleReadPositions}_NP | \
-	${PYPY_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS_PANCAN} > ${filenameSNVVCFTemp}
+	cat ${npConfidence} | filterPeOverlap ${noControlFlag} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} --altBaseQualFile=${filenameAlternativeAlleleBaseScores}_NP --refBaseQualFile=${filenameReferenceAlleleBaseScores}_NP --altBasePositionsFile=${filenameAlternativeAlleleReadPositions}_NP --refBasePositionsFile=${filenameReferenceAlleleReadPositions}_NP | \
+	${PYPY_OR_PYTHON_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS_PANCAN} > ${filenameSNVVCFTemp}
 
     exitCode=$?
     [[ $exitCode == 0 ]] && [[ -f ${filenameSNVVCFTemp} ]] && mv ${filenameSNVVCFTemp} ${filenameSNVVCF}
@@ -326,7 +316,5 @@ annofile=$(ls ${FILEBASE}*Annovar* 2> /dev/null | wc -l)
 [[ "$annofile" != 0 ]] && rm ${FILEBASE}*Annovar*
 
 [[ ${relinked} == true ]] && rm ${TUMOR_BAMFILE_FULLPATH_BP}.bai && rm ${TUMOR_BAMFILE_FULLPATH_BP}
-
-module switch htslib/${HTSLIB_VERSION}
 
 touch ${FILENAME_CHECKPOINT}

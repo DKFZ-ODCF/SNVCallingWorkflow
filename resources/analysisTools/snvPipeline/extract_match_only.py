@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+#
+# Copyright (c) 2018 German Cancer Research Center (DKFZ).
+#
+# Distributed under the MIT License (https://opensource.org/licenses/MIT).
+#
 # Author: Jeongbin Park
 # Purpose: Reporting actual values of 'MATCH=exact'
 # Usage: perl annotate_vcf.pl ... --reportMatchType | python -u extract_match_only.py > output.vcf
