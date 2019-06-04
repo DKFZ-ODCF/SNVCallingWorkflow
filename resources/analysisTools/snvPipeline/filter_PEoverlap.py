@@ -18,6 +18,7 @@ else:  # "CPython"
 
 import sys, os
 from vcfparser import *
+import re
 
 
 def listToTabsep(listItems, sep='\t'):
@@ -161,6 +162,7 @@ def performAnalysis(args):
                     DP4_idx = info_idx
                     DP4 = map(int, info_value[4:].split(','))
                     DP4rf, DP4rr, DP4af, DP4ar = DP4
+                    DP4_original = re.sub('DP4', 'DP4original', info_value)
                     break
 
             chrom=parsed_line["CHROM"]
@@ -329,6 +331,7 @@ def performAnalysis(args):
             info_values[DP4_idx] = "DP4=" + str(DP4rf)+ "," + str(DP4rr)+ "," + str(DP4af)+ "," + str(DP4ar)
             info_values.append(ACGTNacgtn1_string)
             info_values.append(ACGTNacgtn2_string)
+            info_values.append(DP4_original)
 
             entries[header_indices["INFO"]] = ';'.join(info_values)
 
