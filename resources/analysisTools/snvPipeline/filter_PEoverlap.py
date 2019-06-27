@@ -185,10 +185,8 @@ def performAnalysis(args):
         REF_baseQualities=[]
         ALT_baseQualities=[]
 
-        # how to treat multiallelic SNVs? Skipped in this current version...
-        # All the variants in the somatic high confidence file should be procossed similarly not only the 'somatic'-reclassified variants.
-        if len(parsed_line["ALT"]) == 1:        
-        #if ((args.no_control and int(parsed_line["CONFIDENCE"]) > 7 and "somatic" in parsed_line["RECLASSIFICATION"]) or (not args.no_control and "somatic" in parsed_line["ANNOTATION_control"])) and len(parsed_line["ALT"]) == 1:
+        # how to treat multiallelic SNVs? Skipped in this current version...        
+        if ((args.no_control and int(parsed_line["CONFIDENCE"]) > 7 and "somatic" in parsed_line["RECLASSIFICATION"]) or (not args.no_control and "somatic" in parsed_line["ANNOTATION_control"])) and len(parsed_line["ALT"]) == 1:
             # DP=13;AF1=0.5;AC1=1;DP4=2,3,3,4;MQ=37;FQ=75;PV4=1,1,1,1
             info_values = parsed_line["INFO"].split(';')
             for info_idx, info_value in enumerate(info_values):
