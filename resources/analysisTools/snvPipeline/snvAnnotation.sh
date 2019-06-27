@@ -213,7 +213,7 @@ cat ${filenameReferenceAlleleReadPositions}_NP | ${BGZIP_BINARY} -f >${filenameR
 # If this is for the pancancer workflow, then also create a DKFZ specific file.
 if [[ ${runArtifactFilter-true} == true ]]
 then
-	cat ${npConfidence} | filterPeOverlap ${noControlFlag} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} --altBaseQualFile=${filenameAlternativeAlleleBaseScores}_NP --refBaseQualFile=${filenameReferenceAlleleBaseScores}_NP --altBasePositionsFile=${filenameAlternativeAlleleReadPositions}_NP --refBasePositionsFile ${filenameReferenceAlleleReadPositions}_NP \
+	cat ${npConfidence} | filterPeOverlap ${noControlFlag} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} --altBaseQualFile=${filenameAlternativeAlleleBaseScores}_NP --refBaseQualFile=${filenameReferenceAlleleBaseScores}_NP --altBasePositionsFile=${filenameAlternativeAlleleReadPositions}_NP --refBasePositionsFile ${filenameReferenceAlleleReadPositions}_NP --referenceFile=${REFERENCE_GENOME} \
 						| ${PYPY_OR_PYTHON_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 0 -f ${filenameSomaticSNVsTmp} > ${filenameSNVVCFTemp}.tmp
 
     [[ $? != 0 ]] && echo "Error in first iteration of confidence annotation" && exit 2
@@ -288,7 +288,7 @@ then
     [[ -f ${filenameSomaticSNVsTmp}.forBSBPlotsAfter1stFiltering ]] && rm ${filenameSomaticSNVsTmp}.forBSBPlotsAfter1stFiltering
 	fi
 else
-	cat ${npConfidence} | filterPeOverlap ${noControlFlag} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} --altBaseQualFile=${filenameAlternativeAlleleBaseScores}_NP --refBaseQualFile=${filenameReferenceAlleleBaseScores}_NP --altBasePositionsFile=${filenameAlternativeAlleleReadPositions}_NP --refBasePositionsFile=${filenameReferenceAlleleReadPositions}_NP | \
+	cat ${npConfidence} | filterPeOverlap ${noControlFlag} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} --altBaseQualFile=${filenameAlternativeAlleleBaseScores}_NP --refBaseQualFile=${filenameReferenceAlleleBaseScores}_NP --altBasePositionsFile=${filenameAlternativeAlleleReadPositions}_NP --refBasePositionsFile=${filenameReferenceAlleleReadPositions}_NP --referenceFile=${REFERENCE_GENOME} | \
 	${PYPY_OR_PYTHON_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS_PANCAN} > ${filenameSNVVCFTemp}
 
     exitCode=$?

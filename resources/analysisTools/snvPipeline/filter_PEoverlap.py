@@ -467,7 +467,7 @@ if __name__ == '__main__':
     #parser.add_option('--inf',action='store',type='string',dest='inf',help='Specify the name of the input vcf file containing all snvs (germline and somatic)',default='')
     parser.add_argument('--alignmentFile',dest='alignmentFile',help='Specify the name of the BAM file containing bwa alignments, has to be the BAM file that was used to call the variants in the input vcf file - REQUIRED', required=True)
     #parser.add_option('--outf',action='store',type='string',dest='outf',help='Specify the name of the output file, which will have same format as input vcf but with PE overlap filtered DP4 values if somatic and if snvs in PE overlap region',default='')
-    parser.add_argument('--reference_file', dest='refFileName', help='Specify the full path of reference genome file in fasta format, with index in the same directory')
+    parser.add_argument('--referenceFile', dest='refFileName', help='Specify the full path of reference genome file in fasta format, with index in the same directory')
     parser.add_argument('--mapq',type=int,dest='mapq',help='Specify the minimum mapping quality of bwa used for mpileup as parameter -q (default: 30 )',default=30)
     parser.add_argument('--baseq',type=int,dest='baseq',help='Specify the minimum base quality scores used for mpileup as parameter -Q (default: 13)',default=13)
     parser.add_argument('--qualityScore',dest='qualityScore',help='Specify whether the per base  quality score is given in phred or illumina format (default is Illumina score: ASCII offset of 64, while PHRED scores have an ASCII offset of 33)',default='phred')
