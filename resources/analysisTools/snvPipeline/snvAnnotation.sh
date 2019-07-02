@@ -89,14 +89,13 @@ if [[ ${isNoControlWorkflow-false} == "false" ]]; then
     cmdFilter="${cmdFilter} | perl ${TOOL_MEDIAN} - ${filenameControlMedian}"
 fi
 
-cmdFilter="${cmdFilter} | ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${DBSNP} --columnName=${DBSNP_COL} --reportMatchType  --bAdditionalColumn=2 | \
-    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${KGENOME} --columnName=${KGENOMES_COL}  --reportMatchType --bAdditionalColumn=2 | \
-    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${ExAC} --columnName ${ExAC_COL} --bFileType vcf | \
-    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${EVS} --columnName ${EVS_COL} --bFileType vcf | \
-    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} -a - -b ${GNOMAD_WES_ALL_SNV} --columnName=${GNOMAD_WES_COL} --bFileType vcf | \
-    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} -a - -b ${GNOMAD_WGS_ALL_SNV} --columnName=${GNOMAD_WGS_COL} --bFileType vcf | \
-    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${LOCALCONTROL} --columnName ${LOCALCONTROL_COL} --reportMatchType --minOverlapFraction 1 --bFileType vcf | \
-    ${PYPY_OR_PYTHON_BINARY} -u ${TOOL_ONLY_EXTRACT_MATCH}"
+cmdFilter="${cmdFilter} | ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${DBSNP} --columnName=${DBSNP_COL} --reportMatchType  --bAdditionalColumn=2 --reportLevel 4 | \
+    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${KGENOME} --columnName=${KGENOMES_COL}  --reportMatchType --bAdditionalColumn=2 --reportLevel 4 | \
+    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${ExAC} --columnName ${ExAC_COL} --bFileType vcf --reportLevel 4 | \
+    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${EVS} --columnName ${EVS_COL} --bFileType vcf --reportLevel 4 | \
+    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} -a - -b ${GNOMAD_WES_ALL_SNV} --columnName=${GNOMAD_WES_COL} --bFileType vcf --reportLevel 4 | \
+    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} -a - -b ${GNOMAD_WGS_ALL_SNV} --columnName=${GNOMAD_WGS_COL} --bFileType vcf --reportLevel 4 | \
+    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${LOCALCONTROL} --columnName ${LOCALCONTROL_COL} --bFileType vcf --reportLevel 4"
 
 if [[ -f ${RECURRENCE} ]]; then
     cmdFilter="${cmdFilter} | ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} -a - -b ${RECURRENCE} --columnName ${RECURRENCE_COL} --bFileType vcf"
