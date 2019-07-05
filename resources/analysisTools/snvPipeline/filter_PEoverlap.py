@@ -94,24 +94,6 @@ def decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, D
             if DP4af > 0: DP4af -= 1   
     return(DP4rf, DP4rr, DP4af, DP4ar)
 
-def removeSupplementary(info_list, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar):
-    """
-    Function to decrease DP for all the supplementary reads supporting the position (REF and ALT).
-    """
-    new_list = []    
-    count_supple=[0,0]
-    for element in info_list:    	
-        qual_value, decreaseInfo = element
-        is_supplementary = decreaseInfo[3]
-        if is_supplementary:           
-            remove_base = decreaseInfo[0]
-            remove_is_reverse = decreaseInfo[1]
-            count_supple = decrease_counter(count_supple, remove_base, REF)
-            (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)
-        else:        
-            new_list.append((qual_value, decreaseInfo))    
-    return(new_list, DP4rf, DP4rr, DP4af, DP4ar, count_supple)
-
 def decrease_counter(count_list, remove_base, ref):
 	"""
 	Helper function in counting the criteria used to decrease DP4
@@ -186,7 +168,8 @@ def performAnalysis(args):
         ALT_baseQualities=[]
 
         # how to treat multiallelic SNVs? Skipped in this current version...        
-        if ((args.no_control and int(parsed_line["CONFIDENCE"]) > 7 and "somatic" in parsed_line["RECLASSIFICATION"]) or (not args.no_control and "somatic" in parsed_line["ANNOTATION_control"])) and len(parsed_line["ALT"]) == 1:
+        if(len(parsed_line["ALT"]) == 1):
+        #if ((args.no_control and int(parsed_line["CONFIDENCE"]) > 7 and "somatic" in parsed_line["RECLASSIFICATION"]) or (not args.no_control and "somatic" in parsed_line["ANNOTATION_control"])) and len(parsed_line["ALT"]) == 1:
             # DP=13;AF1=0.5;AC1=1;DP4=2,3,3,4;MQ=37;FQ=75;PV4=1,1,1,1
             info_values = parsed_line["INFO"].split(';')
             for info_idx, info_value in enumerate(info_values):
@@ -211,6 +194,7 @@ def performAnalysis(args):
             ACGTNacgtn1 = [0]*10
             ACGTNacgtn2 = [0]*10
             count_PE = [0,0] 
+            count_supple = [0,0]
             count_mismatch = [0,0]
 
             # To match pysam and mpileup counts, a reference file is added. Given the reference file, Pysam by default computes BAQ (compute_baq).
@@ -220,8 +204,7 @@ def performAnalysis(args):
                     for pileupread in pileupcolumn.pileups:                    	
                         if pileupread.is_del:                            
                             # 31 May 2016 JB: deletion at the pileup position                            
-                            continue
-                        #print '\tbase in read %s = %s' % (pileupread.alignment.query_name, pileupread.alignment.seq[pileupread.query_position])                        
+                            continue                        
                         baseScore = transformQualStr(pileupread.alignment.qual[pileupread.query_position])[0]
                         readpos = pileupread.query_position
                         if pileupread.alignment.seq[pileupread.query_position].lower()  == ALT.lower():                            
@@ -282,10 +265,16 @@ def performAnalysis(args):
                                         else:
                                             ACGTNacgtn2[ACGTNacgtn_index[1]] += 1
 
+                                        if(pileupread.alignment.is_supplementary):
+                                            remove_base = pileupread.alignment.seq[pileupread.query_position]	
+                                            remove_is_reverse = pileupread.alignment.is_reverse                                            
+                                            count_supple = decrease_counter(count_supple, remove_base, REF)                                            
+                                            (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)
+                                            continue
+
+
                                         #if transformQualStr(pileupread.alignment.qual[pileupread.query_position])[0] >= args.baseq:        # DEBUG July 23 2012: BROAD BAM problem due to pileupread.alignment.qqual being shorter sometimes than pileupread.alignment.qual
                                         if(pileupread.alignment.query_name in readNameHash):
-                                            #if pileupread.alignment.seq[pileupread.query_position].lower()  != REF.lower():
-                                            #    print pileupread.alignment.query_name	
                                             old_qual = readNameHash[pileupread.alignment.query_name][0]
                                             old_base = readNameHash[pileupread.alignment.query_name][1]
                                             old_is_reverse = readNameHash[pileupread.alignment.query_name][2]
@@ -302,18 +291,18 @@ def performAnalysis(args):
                                                 if(old_qual <= current_qual):
                                                     remove_base = old_base
                                                     remove_is_reverse = old_is_reverse
-                                                    remove_old = False
+                                                    remove_old = True
                                                 else:
                                                     remove_base = current_base
                                                     remove_is_reverse = current_is_reverse
-                                                    remove_old = True
+                                                    remove_old = False
                                             else:
                                                 remove_base = current_base
                                                 remove_is_reverse = current_is_reverse
-                                                remove_old = True
+                                                remove_old = False
                                             
-                                            count_PE = decrease_counter(count_PE, remove_base, REF)                               
-                                            (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)
+                                            count_PE = decrease_counter(count_PE, remove_base, REF)                                            
+                                            (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)                                                                                        
                                             # If current base is better, then removing the information about old mate
                                             # If current base is not good, then do nothing
                                             if remove_old:
@@ -340,7 +329,7 @@ def performAnalysis(args):
                                             	readMateHash[read_mate_tuple] = []
                                             	readMateHash[read_mate_tuple].append(read_mate_tuple_value)
 
-                                            readMateHash_qnameLocation[pileupread.alignment.query_name] = len(readMateHash[read_mate_tuple]) - 1 # Location of the last pushed element in the array 
+                                            readMateHash_qnameLocation[pileupread.alignment.query_name] = len(readMateHash[read_mate_tuple]) - 1 # Location of the last pushed element in the array                                            
 
                             except IndexError:
                                 "soft-clipped or trimmed base, not part of the high-qual alignemnt anyways, skip"
@@ -390,30 +379,23 @@ def performAnalysis(args):
                     break # only one pileup for a position
 
             # Calculating duplicates based on read-mate pair's start positions (chr id and start location)
-            count_duplicate = [0,0]
-            count_supple = [0, 0]
+            count_duplicate = [0,0]            
 
             for key in readMateHash:
             	value_length = len(readMateHash[key])            	            	
-            	if value_length > 0:
-            		# Removing supplementary reads before calculating duplicates
-            	    (primary_values, DP4rf, DP4rr, DP4af, DP4ar, supple_counter) = removeSupplementary(readMateHash[key], REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)
-            	    count_supple = [sum(x) for x in zip(count_supple, supple_counter)] # Supplementary removal counter, updates for each key
-                    
-                    new_value_length = len(primary_values)
-                    if(new_value_length > 1):                     # Duplicate reads mate pairs enters here                                               
-                        sorted_values = sorted(primary_values, key=lambda x: x[0]) # Sorted based on base quality
-                        sorted_values = sorted_values[:-1] # removing the read with highest quality, so it will be retained for count
-                        for value in sorted_values:        # Removing everthing else                            
-                            qual_value, decreaseInfo = value
-                            remove_base = decreaseInfo[0]
-                            remove_is_reverse = decreaseInfo[1]
+            	if value_length > 0:            		
+            	    sorted_values = sorted(readMateHash[key], key=lambda x: x[0]) # Sorted based on base quality
+                    sorted_values = sorted_values[:-1] # removing the read with highest quality, so it will be retained for count
+                    for value in sorted_values:        # Removing everthing else                            
+                        qual_value, decreaseInfo = value
+                        remove_base = decreaseInfo[0]
+                        remove_is_reverse = decreaseInfo[1]
 
-                            count_duplicate = decrease_counter(count_duplicate, remove_base, REF)
-                            (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)
+                        count_duplicate = decrease_counter(count_duplicate, remove_base, REF)
+                        (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)
 
             nonREFnonALT = nonREFnonALTrev + nonREFnonALTfwd
-            #DP2 = "reference(forward + reverse), alt(forward + reverse)"
+            #Format: DP2 -> "reference(forward + reverse), alt(forward + reverse)"
             supple_dup_str = 'DP2sup=' + ','.join(map(str, count_supple))
             supple_dup_str += ';DP2dup=' + ','.join(map(str, count_duplicate))
             supple_dup_str += ';DP2pairEnd=' + ','.join(map(str, count_PE))
