@@ -55,7 +55,7 @@
         <cvalue name="GNOMAD_WGS_ALL_SNV" value= "${hg19DatabasesDirectory}/gnomAD/gnomad.genomes.r2.0.1.sites.chr1-22-X.SNVs.All.vcf.gz" type="path"/>
 
 
-        <cvalue name="LOCALCONTROL" value="/icgc/dkfzlsdf/analysis/UniExome/GermlineAnnotation/annotationInfo/LocalControls/LocalControlConsolidated_SNP.vcf.gz" type="path" />
+        <cvalue name="LOCALCONTROL" value="${hg19DatabasesDirectory}/LocalControls/ExclusionList_2019/MPsnvs_PLindels/ExclusionList_2019_HIPO-PCAWG_MP_PL_WGS.SNVs.AFgt1.vcf.gz" type="path" />
         <cvalue name="LOCALCONTROL_COL" value="LocalControlAF" type="string"/>
         <cvalue name='ANNOVAR_BINARY' value='${sharedFilesBaseDirectory}/annovar/annovar_Feb2016/annotate_variation.pl' type='path'/>
         <cvalue name='ANNOVAR_BUILDVER' value='hg19' type='string'/>
@@ -85,13 +85,13 @@
 
             <!--## Filter criteria -->
             <!--## The rows with corresponding values larger than below criteria will be filtered out. -->
-            <cvalue name="CRIT_ExAC_maxMAF" value="0.001" type="string" />
+            <cvalue name="CRIT_ExAC_maxMAF" value="1.0" type="string" />
             <cvalue name="CRIT_EVS_maxMAF" value="1.0" type="string" />
             <cvalue name="CRIT_GNOMAD_EXOMES_maxMAF" value="0.001" type="float"/>
             <cvalue name="CRIT_GNOMAD_GENOMES_maxMAF" value="0.001" type="float"/>
             <cvalue name="CRIT_1KGENOMES_maxMAF" value="0.01" type="string" />
             <cvalue name="CRIT_RECURRENCE" value="7" type="string" />
-            <cvalue name="CRIT_LOCALCONTROL_maxMAF" value="0.2" type="string" />
+            <cvalue name="CRIT_LOCALCONTROL_maxMAF" value="0.01" type="string" />
         <!--#### END EXTRA FILTERING -->
 
         <cvalue name="CONFIDENCE_OPTS" value="-t 500" type="string"
