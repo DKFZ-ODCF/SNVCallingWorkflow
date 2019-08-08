@@ -23,6 +23,14 @@ NUMBER_OF_MISMACTHES_THRESHOLD		-1	resources/analysisTools/snvPipeline/snvAnnota
 
 
 == Changelist
+* Version update to 2.0.0
+
+- Upgrading to BCFtools/SAMtools/htslib to 1.9
+- Calling variants using BCFtools mpileup and samtools mpileup for lookup in control (similar to the old way)
+- PE overlaps are removed as before
+- Removing supplementary reads and left-out duplicate reads from variant calling
+- Deactivating the use to ExAC for no-control workflow filtering.
+- Updating to new local control and change the max AF threshold to 0.01
 
 * Version update to 1.0.166
 
