@@ -104,7 +104,6 @@ if [[ -n "$firstLineVCF" ]]; then
 
             # if there is a germline BAM, first look up these positions in the control file by just piling up the bases, this is NO SNV calling
             ${SAMTOOLS_BINARY} mpileup ${MPILEUPCONTROL_OPTS} -r ${chr} -l ${filenameMPileupOut} -f ${REFERENCE_GENOME} ${CONTROL_BAMFILE_FULLPATH_BP} > ${NP_MPILEUP} &
-            #${BCFTOOLS_BINARY} mpileup ${MPILEUPCONTROL_OPTS} -r ${chr} -R ${filenameMPileupOut} -f ${REFERENCE_GENOME} ${CONTROL_BAMFILE_FULLPATH_BP} > ${NP_MPILEUP} &
             ${PERL_BINARY} ${TOOL_VCF_PILEUP_COMPARE} ${filenameMPileupOut} $NP_MPILEUP "Header" > ${FILENAME_VCF_SNVS_TEMP}
 
             rm $NP_MPILEUP
