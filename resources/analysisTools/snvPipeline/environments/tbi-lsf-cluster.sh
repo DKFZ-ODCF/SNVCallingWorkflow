@@ -12,12 +12,15 @@ set -ue
 module load R/"${RSCRIPT_VERSION:?RSCRIPT_VERSION undefined}"
 module load python/"${PYTHON_VERSION:?PYTHON_VERSION undefined}"
 module load samtools/"${SAMTOOLS_VERSION:?SAMTOOLS_VERSION undefined}"
+module load bcftools/"${BCFTOOLS_VERSION:?BCFTOOLS_VERSION undefined}"
 module load htslib/"${HTSLIB_VERSION:?HTSLIB_VERSION undefined}"
 module load perl/"${PERL_VERSION:?PERL_VERSION undefined}"
 module load bedtools/"${BEDTOOLS_VERSION:?BEDTOOLS_VERSION undefined}"
 module load pypy/"${PYPY_VERSION:?PYPY_VERSION undefined}"
 
-source /odcf/cluster/virtualenvs/warsow/python_2.7.9_SNVCalling/bin/activate
+set +ue
+source /odcf/cluster/virtualenvs/paramasi/python_2.7.9_SNVCalling_pysam_0.15.2/bin/activate
+set -ue
 
 export BGZIP_BINARY=bgzip
 export TABIX_BINARY=tabix

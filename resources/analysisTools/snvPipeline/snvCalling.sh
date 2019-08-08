@@ -67,7 +67,7 @@ filenameMPileupError="${MPILEUP_SUBDIR}/${MPILEUPOUT_PREFIX}${PID}.${chr}.error"
 FILENAME_VCF_SNVS_TEMP=${FILENAME_VCF_SNVS}.tmp
 
 #[[ ! -f $filenameMPileupTemp ]] && 
-${SAMTOOLS_BINARY} mpileup ${MPILEUP_OPTS} -r ${chr} -f ${REFERENCE_GENOME} $tumorbamfullpath | ${BCFTOOLS_BINARY} view ${BCFTOOLS_OPTS} - > $filenameMPileupTemp
+${BCFTOOLS_BINARY} mpileup ${MPILEUP_OPTS} -r ${chr} -f ${REFERENCE_GENOME} $tumorbamfullpath | ${BCFTOOLS_BINARY} call ${BCFTOOLS_OPTS} > $filenameMPileupTemp
 
 if [[ "$?" != 0 ]]
 then
@@ -104,6 +104,7 @@ if [[ -n "$firstLineVCF" ]]; then
 
             # if there is a germline BAM, first look up these positions in the control file by just piling up the bases, this is NO SNV calling
             ${SAMTOOLS_BINARY} mpileup ${MPILEUPCONTROL_OPTS} -r ${chr} -l ${filenameMPileupOut} -f ${REFERENCE_GENOME} ${CONTROL_BAMFILE_FULLPATH_BP} > ${NP_MPILEUP} &
+            #${BCFTOOLS_BINARY} mpileup ${MPILEUPCONTROL_OPTS} -r ${chr} -R ${filenameMPileupOut} -f ${REFERENCE_GENOME} ${CONTROL_BAMFILE_FULLPATH_BP} > ${NP_MPILEUP} &
             ${PERL_BINARY} ${TOOL_VCF_PILEUP_COMPARE} ${filenameMPileupOut} $NP_MPILEUP "Header" > ${FILENAME_VCF_SNVS_TEMP}
 
             rm $NP_MPILEUP

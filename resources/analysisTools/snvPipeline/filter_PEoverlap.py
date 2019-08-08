@@ -20,7 +20,6 @@ import sys, os
 from vcfparser import *
 import re
 
-
 def listToTabsep(listItems, sep='\t'):
     return sep.join(listItems)
 
@@ -197,7 +196,7 @@ def performAnalysis(args):
             count_mismatch = [0,0]
 
             # To match pysam and mpileup counts, a reference file is added. Given the reference file, Pysam by default computes BAQ (compute_baq).
-            for pileupcolumn in samfile.pileup(chrom, (pos-1), pos, ignore_overlaps=False, fastafile=reference_file, compute_baq=True):
+            for pileupcolumn in samfile.pileup(chrom, (pos-1), pos, flag_filter=3844, redo_baq=True, ignore_overlaps=False):
                 if pileupcolumn.pos == (pos-1):                	
                     #print 'coverage at base %s = %s' % (pileupcolumn.pos , pileupcolumn.nsegments)                    
                     for pileupread in pileupcolumn.pileups:                    	
@@ -222,7 +221,6 @@ def performAnalysis(args):
                                     readlength = len(pileupread.alignment.seq)
                                     readpos = (readlength - readpos)
                                 REF_basePositions.append(readpos)
-
 
                         if pileupread.alignment.mapq >= args.mapq:
                             # http://wwwfgu.anat.ox.ac.uk/~andreas/documentation/samtools/api.html   USE qqual
@@ -253,7 +251,7 @@ def performAnalysis(args):
                                                 continue 
                                                                             
                                     # Check if pileupread.alignment is proper pair
-                                    if(pileupread.alignment.is_proper_pair):                                        
+                                    if(pileupread.alignment.is_proper_pair):
                                         # count to ACGTNacgtn list                                        
                                         is_reverse = pileupread.alignment.is_reverse
                                         is_read1 = pileupread.alignment.is_read1
@@ -274,6 +272,7 @@ def performAnalysis(args):
 
                                         #if transformQualStr(pileupread.alignment.qual[pileupread.query_position])[0] >= args.baseq:        # DEBUG July 23 2012: BROAD BAM problem due to pileupread.alignment.qqual being shorter sometimes than pileupread.alignment.qual
                                         if(pileupread.alignment.query_name in readNameHash):
+                                            #print pileupread.alignment.query_name
                                             old_qual = readNameHash[pileupread.alignment.query_name][0]
                                             old_base = readNameHash[pileupread.alignment.query_name][1]
                                             old_is_reverse = readNameHash[pileupread.alignment.query_name][2]
@@ -281,7 +280,7 @@ def performAnalysis(args):
                                             current_qual = transformQualStr(pileupread.alignment.qual[pileupread.query_position])[0]
                                             current_base = pileupread.alignment.seq[pileupread.query_position]
                                             current_is_reverse = pileupread.alignment.is_reverse
-                                            current_read_mate_tuple = (pileupread.alignment.reference_id, pileupread.alignment.reference_start, pileupread.alignment.next_reference_id, pileupread.alignment.next_reference_start)
+                                            current_read_mate_tuple = (pileupread.alignment.reference_id, pileupread.alignment.reference_start, pileupread.alignment.reference_end, pileupread.alignment.next_reference_id, pileupread.alignment.next_reference_start)
                                             # if read name occurs twice for one variant, then due to overlapping PE reads, then subtract variant count from DP4 field
                                             # if old_base is not equal to new_base remove the one with the smaller base quality
                                             remove_base = None
@@ -317,7 +316,7 @@ def performAnalysis(args):
                                         else:
                                             # Store base quality, base, and read direction in readNameHash
                                             base_qual_score=transformQualStr(pileupread.alignment.qual[pileupread.query_position])[0]
-                                            read_mate_tuple = (pileupread.alignment.reference_id, pileupread.alignment.reference_start, pileupread.alignment.next_reference_id, pileupread.alignment.next_reference_start)
+                                            read_mate_tuple = (pileupread.alignment.reference_id, pileupread.alignment.reference_start, pileupread.alignment.reference_end, pileupread.alignment.next_reference_id, pileupread.alignment.next_reference_start)
                                             read_mate_tuple_value = (base_qual_score, (pileupread.alignment.seq[pileupread.query_position], pileupread.alignment.is_reverse, pileupread.alignment.query_name, pileupread.alignment.is_supplementary))
 
                                             readNameHash[pileupread.alignment.query_name] = [base_qual_score, pileupread.alignment.seq[pileupread.query_position], pileupread.alignment.is_reverse, read_mate_tuple]

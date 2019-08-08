@@ -786,7 +786,7 @@ if __name__ == "__main__":
     parser.add_argument("-l", "--runlowmaf", dest="runlowmaf", action="store_true", default=False,
                         help="Set this option if you want to run the low maf punishment.")
     parser.add_argument("-x", "--runexome", dest="runexome", action="store_true", default=False,
-                        help="Run on exome, will turn off will turn off the high control coverage punishment " \
+                        help="Run on exome, will turn off the high control coverage punishment " \
                              "and the PCR bias filter.")
     args = parser.parse_args()
     main(args)
