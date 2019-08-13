@@ -97,10 +97,13 @@ def decrease_counter(count_list, remove_base, ref):
 	"""
 	Helper function in counting the criteria used to decrease DP4
 	"""
+        count_ref_idx = 0
+        count_alt_idx = 1
+
 	if remove_base == ref:
-		count_list[0] += 1
+		count_list[count_ref_idx] += 1
 	else:
-		count_list[1] += 1
+		count_list[count_alt_idx] += 1
 
 	return count_list
 
@@ -191,9 +194,9 @@ def performAnalysis(args):
 
             ACGTNacgtn1 = [0]*10
             ACGTNacgtn2 = [0]*10
-            count_PE = [0,0] 
-            count_supple = [0,0]
-            count_mismatch = [0,0]
+            count_PE = [0,0] # Starting the counter for the forward and reverse reads removed due to PE overlap detection  
+            count_supple = [0,0] # "" for supplementary reads, since flag_filter is added, entire supplementary detection can be removed in future versions
+            count_mismatch = [0,0] # " for mismatch report 
 
             # To match pysam and mpileup counts, a reference file is added. Given the reference file, Pysam by default computes BAQ (compute_baq).
             for pileupcolumn in samfile.pileup(chrom, (pos-1), pos, flag_filter=3844, redo_baq=True, ignore_overlaps=False):
