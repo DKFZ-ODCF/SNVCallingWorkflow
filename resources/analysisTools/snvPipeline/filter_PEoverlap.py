@@ -264,13 +264,14 @@ def performAnalysis(args):
                                             ACGTNacgtn1[ACGTNacgtn_index[1]] += 1
                                         else:
                                             ACGTNacgtn2[ACGTNacgtn_index[1]] += 1
-
-                                        if(pileupread.alignment.is_supplementary):
-                                            remove_base = pileupread.alignment.seq[pileupread.query_position]	
-                                            remove_is_reverse = pileupread.alignment.is_reverse                                            
-                                            count_supple = decrease_counter(count_supple, remove_base, REF)                                            
-                                            (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)
-                                            continue
+ 
+                                        # Supplementary reads are removed with flag now
+                                        #if(pileupread.alignment.is_supplementary):
+                                        #    remove_base = pileupread.alignment.seq[pileupread.query_position]	
+                                        #    remove_is_reverse = pileupread.alignment.is_reverse                                            
+                                        #    count_supple = decrease_counter(count_supple, remove_base, REF)                                            
+                                        #    (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)
+                                        #    continue
 
 
                                         #if transformQualStr(pileupread.alignment.qual[pileupread.query_position])[0] >= args.baseq:        # DEBUG July 23 2012: BROAD BAM problem due to pileupread.alignment.qqual being shorter sometimes than pileupread.alignment.qual
