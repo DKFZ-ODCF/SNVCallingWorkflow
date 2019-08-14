@@ -93,20 +93,21 @@ def decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, D
             if DP4af > 0: DP4af -= 1   
     return(DP4rf, DP4rr, DP4af, DP4ar)
 
-def decrease_counter(count_list, remove_base, ref):
-	"""
-	Helper function in counting the criteria used to decrease DP4
-	"""
-        count_ref_idx = 0
-        count_alt_idx = 1
+class BoolCounter:
+    """ A class for counter objects """ 
 
-	if remove_base == ref:
-		count_list[count_ref_idx] += 1
-	else:
-		count_list[count_alt_idx] += 1
+    def __init__(self):
+        self.ref = 0
+        self.alt = 0
 
-	return count_list
+    def update(self, remove):
+        if (remove):
+            self.ref += 1
+        else:
+            self.alt += 1
 
+    def counted(self):
+        return [self.ref, self.alt]
 
 # MAIN ANALYSIS PROCEDURE
 def performAnalysis(args):
@@ -194,9 +195,9 @@ def performAnalysis(args):
 
             ACGTNacgtn1 = [0]*10
             ACGTNacgtn2 = [0]*10
-            count_PE = [0,0] # Starting the counter for the forward and reverse reads removed due to PE overlap detection  
-            count_supple = [0,0] # "" for supplementary reads, since flag_filter is added, entire supplementary detection can be removed in future versions
-            count_mismatch = [0,0] # " for mismatch report 
+            count_PE = BoolCounter() # Starting the counter for the forward and reverse reads removed due to PE overlap detection  
+            count_supple = BoolCounter() # "" for supplementary reads, since flag_filter is added, entire supplementary detection can be removed in future versions
+            count_mismatch = BoolCounter() # " for mismatch report 
 
             # To match pysam and mpileup counts, a reference file is added. Given the reference file, Pysam by default computes BAQ (compute_baq).
             for pileupcolumn in samfile.pileup(chrom, (pos-1), pos, flag_filter=3844, redo_baq=True, ignore_overlaps=False):
@@ -243,7 +244,7 @@ def performAnalysis(args):
                                             if numberOfMismatches > args.allowedNumberOfMismatches:
                                                 remove_base = pileupread.alignment.seq[pileupread.query_position]
                                                 remove_is_reverse = pileupread.alignment.is_reverse
-                                                count_mismatch = decrease_counter(count_mismatch, remove_base, REF)
+                                                count_mismatch.update(remove_base == REF)
                                                 (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)                                         
                                                 # after decreasing the respective DP4 value, go directly to the next read
                                                 # without remembering the current read
@@ -265,11 +266,11 @@ def performAnalysis(args):
                                         else:
                                             ACGTNacgtn2[ACGTNacgtn_index[1]] += 1
  
-                                        # Supplementary reads are removed with flag now
+                                        # Supplementary reads are removed with 'flag_filter=3844' argument in samfile.pileup() above, so this block is commented out. 
                                         #if(pileupread.alignment.is_supplementary):
-                                        #    remove_base = pileupread.alignment.seq[pileupread.query_position]	
-                                        #    remove_is_reverse = pileupread.alignment.is_reverse                                            
-                                        #    count_supple = decrease_counter(count_supple, remove_base, REF)                                            
+                                        #    remove_base = pileupread.alignment.seq[pileupread.query_position]
+                                        #    remove_is_reverse = pileupread.alignment.is_reverse
+                                        #    count_supple.update(remove_base == REF)
                                         #    (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)
                                         #    continue
 
@@ -303,7 +304,7 @@ def performAnalysis(args):
                                                 remove_is_reverse = current_is_reverse
                                                 remove_old = False
                                             
-                                            count_PE = decrease_counter(count_PE, remove_base, REF)                                            
+                                            count_PE.update(remove_base == REF)
                                             (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)                                                                                        
                                             # If current base is better, then removing the information about old mate
                                             # If current base is not good, then do nothing
@@ -381,7 +382,7 @@ def performAnalysis(args):
                     break # only one pileup for a position
 
             # Calculating duplicates based on read-mate pair's start positions (chr id and start location)
-            count_duplicate = [0,0]            
+            count_duplicate = BoolCounter()
 
             for key in readMateHash:
             	value_length = len(readMateHash[key])            	            	
@@ -393,15 +394,15 @@ def performAnalysis(args):
                         remove_base = decreaseInfo[0]
                         remove_is_reverse = decreaseInfo[1]
 
-                        count_duplicate = decrease_counter(count_duplicate, remove_base, REF)
+                        count_duplicate.update(remove_base == REF)
                         (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)
 
             nonREFnonALT = nonREFnonALTrev + nonREFnonALTfwd
             #Format: DP2 -> "reference(forward + reverse), alt(forward + reverse)"
-            supple_dup_str = 'DP2sup=' + ','.join(map(str, count_supple))
-            supple_dup_str += ';DP2dup=' + ','.join(map(str, count_duplicate))
-            supple_dup_str += ';DP2pairEnd=' + ','.join(map(str, count_PE))
-            supple_dup_str += ';DP2mis=' + ','.join(map(str, count_mismatch))
+            supple_dup_str = 'DP2sup=' + ','.join(map(str, count_supple.counted()))
+            supple_dup_str += 'DP2dup=' + ','.join(map(str, count_duplicate.counted()))
+            supple_dup_str += ';DP2pairEnd=' + ','.join(map(str, count_PE.counted()))
+            supple_dup_str += ';DP2mis=' + ','.join(map(str, count_mismatch.counted()))
             supple_dup_str += ';DPnonREFnonALT=' + str(nonREFnonALT)
 
             if (DP4[2] + DP4[3]) > ALTcount:    # that the ALTcount is larger  happens often due to BAQ during samtools mpileup which doesn't change the base qual in the BAM file, but decreases base qual during calling                
