@@ -105,8 +105,6 @@ def main(args):
             variable_headers = { "ANNOVAR_SEGDUP_COL": "^SEGDUP$", "KGENOMES_COL": "^1K_GENOMES$", "DBSNP_COL": "^DBSNP$", }
 
             if args.no_control:
-                variable_headers["ExAC_COL"] = "^ExAC$"
-                variable_headers["EVS_COL"] = "^EVS$"
                 variable_headers["GNOMAD_EXOMES_COL"] = "^GNOMAD_EXOMES$"
                 variable_headers["GNOMAD_GENOMES_COL"] = "^GNOMAD_GENOMES$"
                 variable_headers["LOCALCONTROL_COL"] = "^LocalControlAF$"
@@ -187,8 +185,6 @@ def main(args):
         is_weird = False # coindicende with known artefact-producing regions
         if args.no_control:
             classification = "somatic" # start with default somatic
-            inExAC = False
-            inEVS = False
             inGnomAD_WES = False
             inGnomAD_WGS = False
             inLocalControl = False
@@ -234,15 +230,6 @@ def main(args):
         if args.no_control:
             if indbSNP and is_commonSNP and not is_clinic:
                 reasons += "dbSNP(NoControl)"
-            if help["ExAC_COL_VALID"] and any(af > 0.001 for af in map(float, extract_info(help["ExAC_COL"], "AF").split(','))):
-                inExAC = True
-                infofield["ExAC"] = "ExAC"
-                reasons += "ExAC(NoControl)"
-            if help["EVS_COL_VALID"] and any(af > 1.0 for af in map(float, extract_info(help["EVS_COL"], "MAF").split(','))):
-                inEVS = True
-                infofield["EVS"] = "EVS"
-                reasons += "EVS(NoControl)"
-
             if help["GNOMAD_EXOMES_COL_VALID"] and any(af > 0.001 for af in map(float, extract_info(help["GNOMAD_EXOMES_COL"], "AF").split(','))):
                 inGnomAD_WES = True
                 infofield["gnomAD_Exomes"] = "gnomAD_Exomes"
@@ -397,7 +384,7 @@ def main(args):
 
         if (args.no_control):
             # an SNV that is in dbSNP but not "clinic" or/and in 1 KG with high frequency is probably germline
-            if (in1KG_AF or (indbSNP and is_commonSNP and not is_clinic) or inExAC or inEVS or inGnomAD_WES or inGnomAD_WGS or inLocalControl):
+            if (in1KG_AF or (indbSNP and is_commonSNP and not is_clinic) or inGnomAD_WES or inGnomAD_WGS or inLocalControl):
                classification = "SNP_support_germline"
 
         # 3) information from the calls and germline comparisons: coverage, strand bias, variant support, ..
