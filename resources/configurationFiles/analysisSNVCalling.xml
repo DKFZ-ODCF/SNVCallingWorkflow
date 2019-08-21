@@ -52,9 +52,9 @@
         <cvalue name="EVS" value="${hg19DatabasesDirectory}/EVS/ESP6500SI-V2-SSA137.updatedProteinHgvs.ALL.snps_indels.vcf.gz" type="path" />
         <cvalue name="EVS_COL" value="EVS" type="string"/>
         <cvalue name="GNOMAD_WES_COL" value="GNOMAD_EXOMES" type="string"/>
-        <cvalue name="GNOMAD_WES_ALL_SNV" value= "${hg19DatabasesDirectory}/gnomAD/gnomad.exomes.r2.0.1.sites.SNVs.vcf.gz" type="path"/>
+        <cvalue name="GNOMAD_WES_ALL_SNV" value= "${hg19DatabasesDirectory}/gnomAD/gnomad_v2.1/gnomad.exomes.r2.1.sites.SNV.vcf.gz" type="path"/>
         <cvalue name="GNOMAD_WGS_COL" value="GNOMAD_GENOMES" type="string"/>
-        <cvalue name="GNOMAD_WGS_ALL_SNV" value= "${hg19DatabasesDirectory}/gnomAD/gnomad.genomes.r2.0.1.sites.chr1-22-X.SNVs.All.vcf.gz" type="path"/>
+        <cvalue name="GNOMAD_WGS_ALL_SNV" value= "${hg19DatabasesDirectory}/gnomAD/gnomad_v2.1/gnomad.genomes.r2.1.sites.SNV.vcf.gz" type="path"/>
 
 
         <cvalue name="LOCALCONTROL" value="${hg19DatabasesDirectory}/LocalControls/ExclusionList_2019/MPsnvs_PLindels/ExclusionList_2019_HIPO-PCAWG_MP_PL_WGS.SNVs.AFgt1.vcf.gz" type="path" />
