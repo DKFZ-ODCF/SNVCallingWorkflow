@@ -54,7 +54,7 @@ def main(args):
                   '##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read depth at this position in the sample">\n' \
                   '##FORMAT=<ID=DP4,Number=4,Type=Integer,Description="Number of high-quality ref-forward, ref-reverse, alt-forward and alt-reverse bases">\n' \
                   '##FILTER=<ID=RE,Description="variant in UCSC_27Sept2013_RepeatMasker.bed.gz region and/or SimpleTandemRepeats_chr.bed.gz region, downloaded from UCSC genome browser and/or variant in segmental duplication region, annotated by annovar">\n' \
-                  '##FILTER=<ID=BL,Description="variant in DAC-Blacklist from ENCODE or in DUKE_EXCLUDED list, both downloaded from UCSC genome browser">\n' \
+                  '##FILTER=<ID=BL,Description="variant in DAC-Blacklist from ENCODE or in DUKE_EXCLUDED list, both downloaded from UCSC genome browser - # not used in hg38">\n' \
                   '##FILTER=<ID=DP,Description="<= 5 reads total at position in tumor">\n' \
                   '##FILTER=<ID=SB,Description="Strand bias of reads with mutant allele = zero reads on one strand">\n' \
                   '##FILTER=<ID=TAC,Description="less than 6 reads in Tumor at position">\n' \
@@ -98,8 +98,8 @@ def main(args):
 
         if line[0] == "#":
             headers = list(line[1:].rstrip().split('\t'))
-            fixed_headers = ["^INFO$", "MAPABILITY", "HISEQDEPTH", "SIMPLE_TANDEMREPEATS", "REPEAT_MASKER", "DUKE_EXCLUDED",
-                             "DAC_BLACKLIST", "SELFCHAIN", "^CONFIDENCE$", "^RECLASSIFICATION$", "^PENALTIES$",
+            fixed_headers = ["^INFO$", "MAPABILITY", "SIMPLE_TANDEMREPEATS", "REPEAT_MASKER", 
+                             "^CONFIDENCE$", "^RECLASSIFICATION$", "^PENALTIES$",
                              "^seqBiasPresent$", "^seqingBiasPresent$", "^seqBiasPresent_1$", "^seqingBiasPresent_1$",
                              "^seqBiasPresent_2$", "^seqingBiasPresent_2$"]
             variable_headers = { "ANNOVAR_SEGDUP_COL": "^SEGDUP$", "KGENOMES_COL": "^1K_GENOMES$", "DBSNP_COL": "^DBSNP$", }
@@ -321,19 +321,19 @@ def main(args):
             filterfield["RE"] = 1
 
         # Duke excluded and ENCODE DAC blacklist, only consider if not already annotated as suspicious repeat
-        if help["DUKE_EXCLUDED_VALID"] or help["DAC_BLACKLIST_VALID"]:
-            confidence -= 3 # really bad region, usually centromeric repeats
-            is_weird = True
-            reasons += "Blacklist(-3)"
-            filterfield["BL"] = 1
+        #if help["DUKE_EXCLUDED_VALID"] or help["DAC_BLACKLIST_VALID"]:
+        #    confidence -= 3 # really bad region, usually centromeric repeats
+        #    is_weird = True
+        #    reasons += "Blacklist(-3)"
+        #    filterfield["BL"] = 1
 
         # HiSeqDepth: regions "attracting" reads; often coincide with tandem repeats and CEN/TEL,
         # not always with low mapability
-        if help["HISEQDEPTH_VALID"]:
-            confidence -= 3 # really really bad region!
-            is_weird = True
-            reasons += "Hiseqdepth(-3)"
-            filterfield["HSDEPTH"] = 1
+        #if help["HISEQDEPTH_VALID"]:
+        #    confidence -= 3 # really really bad region!
+        #    is_weird = True
+        #    reasons += "Hiseqdepth(-3)"
+        #    filterfield["HSDEPTH"] = 1
 
         # Mapability is 1 for unique regions, 0.5 for regions appearing twice, 0.33... 3times, ...
         # Everything with really high number of occurences is artefacts
