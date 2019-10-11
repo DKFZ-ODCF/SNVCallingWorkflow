@@ -41,24 +41,29 @@
         <cvalue name="RAW_SNV_FILTER_OPTIONS" value='" --minVac=3 --minVaf=0.03 --minVacPS=2"' type="string"/>
         <!--<cvalue name='REFERENCE_GENOME' value="${referenceGenome_hg19_chr}" type="string"/>-->
 
+    	<!-- Reference genomes -->
+    	<cvalue name='REFERENCE_GENOME' value='${hg38RefereceDirtory}/GRCh38_d1_vd1_phiX/GRCh38_d1_vd1_phiX.fa' type="path"/>
+    	<cvalue name='INDEX_PREFIX' value='${hg38RefereceDirtory}/GRCh38_d1_vd1_phiX/bwa-0.7.15/GRCh38_d1_vd1_phiX.fa' type="path"/>
+    	<cvalue name='CHROM_SIZES_FILE' value='${hg38RefereceDirtory}/GRCh38_d1_vd1_phiX/stats/GRCh38_d1_vd1_phiX.fa.chrLenOnlyACGT_realChromosomes.tsv' type="path" />
+    	<cvalue name='CHROMOSOME_LENGTH_FILE' value='${hg38RefereceDirtory}/GRCh38_d1_vd1_phiX/stats/GRCh38_d1_vd1_phiX.fa.chrLength.tsv' type="path" />
+
         <!--## Databases -->
         <!-- hg19DatabasesDirectory=/icgc/ngs_share/assemblies/hg19_GRCh37_1000genomes/databases -->
-        <cvalue name="DBSNP" value="${hg19DatabasesDirectory}/dbSNP/dbSNP_147/00-All.SNV.vcf.gz" type="path"/>
+        <cvalue name="DBSNP" value="${hg38DatabasesDirectory}/dbSNP/dbSNP_151_GRCh38.p7/00-All_v151_GRCh38.SNV.vcf.gz" type="path"/>
         <cvalue name="DBSNP_COL" value="DBSNP" type="string"/>
-        <cvalue name="KGENOME" value="${hg19DatabasesDirectory}/1000genomes/ALL.wgs.phase1_integrated_calls.20101123.snps_chr.vcf.gz" type="path"/>
+        <cvalue name="KGENOME" value="${hg38DatabasesDirectory}/1000Genome/hg38/ALL.wgs.shapeit2_integrated_snvindels_v2a.GRCh38.27022019.sites.vcf.gz" type="path"/>
         <cvalue name="KGENOMES_COL" value="1K_GENOMES" type="string"/>
         <cvalue name="GNOMAD_WES_COL" value="GNOMAD_EXOMES" type="string"/>
-        <cvalue name="GNOMAD_WES_ALL_SNV" value= "${hg19DatabasesDirectory}/gnomAD/gnomad.exomes.r2.0.1.sites.SNVs.vcf.gz" type="path"/>
+        <cvalue name="GNOMAD_WES_ALL_SNV" value= "${hg38DatabasesDirectory}/gnomAD/v2.1.1/liftover_grch38/exomes/gnomad.exomes.r2.1.1.sites.liftover_grch38.SNV.vcf.gz" type="path"/>
         <cvalue name="GNOMAD_WGS_COL" value="GNOMAD_GENOMES" type="string"/>
-        <cvalue name="GNOMAD_WGS_ALL_SNV" value= "${hg19DatabasesDirectory}/gnomAD/gnomad.genomes.r2.0.1.sites.chr1-22-X.SNVs.All.vcf.gz" type="path"/>
-
-
-        <cvalue name="LOCALCONTROL" value="${hg19DatabasesDirectory}/LocalControls/ExclusionList_2019/MPsnvs_PLindels/ExclusionList_2019_HIPO-PCAWG_MP_PL_WGS.SNVs.AFgt1.vcf.gz" type="path" />
+        <cvalue name="GNOMAD_WGS_ALL_SNV" value= "${hg38DatabasesDirectory}/gnomAD/v2.1.1/liftover_grch38/genomes/gnomad.genomes.r2.1.1.sites.liftover_grch38.SNV.vcf.gz" type="path"/>
+        <cvalue name="LOCALCONTROL" value="${hg38DatabasesDirectory}/liftover/GRCh38_ExclusionList_2019_HIPO-PCAWG_MP_PL_WGS.SNVs.AFgt1.vcf.gz" type="path" />
         <cvalue name="LOCALCONTROL_COL" value="LocalControlAF" type="string"/>
-        <cvalue name='ANNOVAR_BINARY' value='${sharedFilesBaseDirectory}/annovar/annovar_Feb2016/annotate_variation.pl' type='path'/>
-        <cvalue name='ANNOVAR_BUILDVER' value='hg19' type='string'/>
-        <cvalue name='ANNOVAR_DBPATH' value='${sharedFilesBaseDirectory}/annovar/annovar_Feb2016/humandb/' type='path'/>
-        <cvalue name='ANNOVAR_DBTYPE' value="'-dbtype wgEncodeGencodeCompV19'" type='string'/>
+
+        <cvalue name='ANNOVAR_BINARY' value='${hg38DatabasesDirectory}/ANNOVAR/annovar_April2018/annotate_variation.pl' type='path'/>
+        <cvalue name='ANNOVAR_BUILDVER' value='hg38' type='string'/>
+        <cvalue name='ANNOVAR_DBPATH' value='${hg38DatabasesDirectory}/ANNOVAR/annovar_April2018/humandb/' type='path'/>
+        <cvalue name='ANNOVAR_DBTYPE' value="'-dbtype wgEncodeGencodeCompV31'" type='string'/>
         <cvalue name="ANNOVAR_GENEANNO_COLS" value='"ANNOVAR_FUNCTION,GENE,EXONIC_CLASSIFICATION,ANNOVAR_TRANSCRIPTS"' type="string"/>
         <cvalue name="ANNOVAR_SEGDUP_COL" value="SEGDUP" type="string"/>
         <cvalue name="ANNOVAR_CYTOBAND_COL" value="CYTOBAND" type="string"/>
@@ -123,13 +128,13 @@
 
 
         <configurationValueBundle name='PIPE_CONFIG:SNV_RELIABILITY'>
-            <cvalue name='MAPABILITY' value='${hg19DatabaseUCSCDirectory}/wgEncodeCrgMapabilityAlign100mer_chr.bedGraph.gz' type="path"/>
-            <cvalue name='HISEQDEPTH' value='${hg19DatabaseUCSCDirectory}/HiSeqDepthTop10Pct_chr.bed.gz' type="path"/>
-            <cvalue name='SIMPLE_TANDEMREPEATS' value='${hg19DatabaseUCSCDirectory}/repeats/SimpleTandemRepeats_chr.bed.gz:4' type="path"/>
-            <cvalue name='REPEAT_MASKER' value='${hg19DatabaseUCSCDirectory}/Sept2013/UCSC_27Sept2013_RepeatMasker.bed.gz' type="path"/>
-            <cvalue name='DUKE_EXCLUDED' value='${hg19DatabaseUCSCDirectory}/DukeExcluded_chr.bed.gz' type="path"/>
-            <cvalue name='DAC_BLACKLIST' value='${hg19DatabaseUCSCDirectory}/DACBlacklist_chr.bed.gz' type="path"/>
-            <cvalue name='SELFCHAIN' value='${hg19DatabaseUCSCDirectory}/selfChain_chr.bed.gz:4::--maxNrOfMatches=5' type="path"/>
+        	<cvalue name='MAPABILITY' value='${hg38DatabasesDirectory}/mapability/GRCh38_Mappability_Align_100mer.bedGraph.gz' type="path"/>
+        	<!--cvalue name='HISEQDEPTH' value='${hg38DatabaseUCSCDirectory}/HiSeqDepthTop10Pct_chr.bed.gz' type="path"/-->
+        	<cvalue name='SIMPLE_TANDEMREPEATS' value='${hg38DatabaseUCSCDirectory}/simple_tandem_repeats/2019-08-15_SimpleTandemRepeats_Human_hg38.sorted_plain.bed.gz:4' type="path"/>
+        	<cvalue name='REPEAT_MASKER' value='${hg38DatabaseUCSCDirectory}/repeatMasker/2019-08-14_RepeatMasker_Human_hg38.sorted_plain.bed.gz' type="path"/>
+        	<!--cvalue name='DUKE_EXCLUDED' value='${hg38DatabaseUCSCDirectory}/DukeExcluded_chr.bed.gz' type="path"/-->
+        	<!--cvalue name='DAC_BLACKLIST' value='${hg38DatabaseUCSCDirectory}/DACBlacklist_chr.bed.gz' type="path"/-->
+        	<!--cvalue name='SELFCHAIN' value='${hg38DatabaseUCSCDirectory}/selfChain_chr.bed.gz:4::\-\-maxNrOfMatches=5' type="path"/-->
         </configurationValueBundle>
 
 
@@ -145,17 +150,17 @@
             # see also the usage report of ngs2/trunk/tools/annotate_vcf.pl
             # if any whitespaces are required, use quotation marks like in this example: #MAPABILITY="/ibios/co02/annotation/hg19/wgEncodeCrgMapabilityAlign100mer.bedGraph.gz:::-breakPointMode -aEndOffset=1"-->
         <configurationValueBundle name='PIPE_CONFIG:SNV_DEEPANNOTATION'>
-            <cvalue name='CpGislands' value='${hg19DatabaseUCSCDirectory}/Sept2013/UCSC_27Sept2013_CpG_islands.bed.gz' type="path"/>
-            <cvalue name='CgiMountains' value='${assembliesHG191000GenomesDirectory}/CustomDeepAnnotation/CgiMountains_chr.bed.gz:4' type="path"/>
-            <cvalue name='Enhancers' value='${hg19DatabaseUCSCDirectory}/Enhancers_Vista_2011_01_14_chr.bed.gz' type="path"/>
-            <cvalue name='miRNAs_snoRNAs' value='${hg19DatabasesDirectory}/miRNA/miRNA_snoRNAs_miRBaseRelease15_chr.bed.gz' type="path"/>
-            <cvalue name='miRBase18' value='${hg19DatabasesDirectory}/miRNA/miRBase_version-18_chr.bed.gz' type="path"/>
-            <cvalue name='miRNAtargets' value='${hg19DatabasesDirectory}/miRNA/miRNAsites_TargetScan_BartelLab_2011_01_14_chr.bed.gz' type="path"/>
-            <cvalue name='phastConsElem20bp' value='${hg19DatabaseUCSCDirectory}/phastConsElem_min20bp_chr.bed.gz:4' type="path"/>
-            <cvalue name='TFBScons' value='${hg19DatabaseUCSCDirectory}/tfbsConsSites_noncoding_merged_chr.bed.gz' type="path"/>
-            <cvalue name='COSMIC' value='${hg19DatabasesDirectory}/COSMIC/Cosmic_v77_hg19_coding_SNVs.bed.gz:7,8,9:1' type="path"/>
-            <cvalue name='ENCODE_DNASE' value='${hg19DatabaseUCSCDirectory}/Sept2013/UCSC_27Sept2013_DNase_cluster_V2.bed.gz' type="path"/>
-            <cvalue name='ENCODE_TFBS' value='${hg19DatabaseUCSCDirectory}/Sept2013/UCSC_27Sept2013_wgEncodeRegTfbsClusteredV3.bed.gz' type="path"/>
+        	<cvalue name='CpGislands' value='${hg38DatabaseUCSCDirectory}/cpg_islands/2019-08-15_CpG_Islands_Human_hg38.sorted_plain.bed.gz' type="path"/>
+        	<!--cvalue name='CgiMountains' value='${assembliesHG191000GenomesDirectory}/CustomDeepAnnotation/CgiMountains_chr.bed.gz:4' type="path"/-->
+        	<cvalue name='Enhancers' value='${hg38DatabasesDirectory}/enhancers/FANTOM5/F5.hg38.enhancers.sorted_plain.bed.gz' type="path"/>
+        	<cvalue name='miRNAs_sncRNAs' value='${hg38DatabasesDirectory}/miRNA/dashr.v2.sncRNA.annotation.hg38.sncType.sorted_plain.bed.gz' type="path"/>
+        	<cvalue name='miRBase' value='${hg38DatabasesDirectory}/miRNA/miRBase_version-22_hg38.sorted_plain.bed.gz' type="path"/>
+        	<!--cvalue name='miRNAtargets' value='${hg38DatabasesDirectory}/miRNA/miRNAsites_TargetScan_BartelLab_2011_01_14_chr.bed.gz' type="path"/-->
+        	<!--cvalue name='phastConsElem20bp' value='${hg38DatabaseUCSCDirectory}/phastConsElem_min20bp_chr.bed.gz:4' type="path"/-->
+        	<!--cvalue name='TFBScons' value='${hg38DatabaseUCSCDirectory}/tfbsConsSites_noncoding_merged_chr.bed.gz' type="path"/-->
+        	<cvalue name='COSMIC' value='${hg38DatabasesDirectory}/COSMIC/cosmic_v81/Cosmic_v81_hg38_all.coding_snvs.bed.gz:7,8,9:1' type="path"/>
+        	<cvalue name='ENCODE_DNASE' value='${hg38DatabaseUCSCDirectory}/DNAase/2019-08-15_Encode_DNAase_clusters_Human_hg38.sorted_plain.bed.gz' type="path"/>
+        	<cvalue name='ENCODE_TFBS' value='${hg38DatabaseUCSCDirectory}/TF_clusters/2019-08-15_Encode_TF_clusters_Human_hg38.sorted_plain.bed.gz' type="path"/>
         </configurationValueBundle>
         <!--#>PIPE_CONFIG-->
 
@@ -196,8 +201,8 @@
         </tool>
         <tool name="snvCallingNoControl" value="snvCalling.sh" basepath="snvPipeline">
             <resourcesets>
-                <rset size="s" memory="1" cores="1" nodes="1" walltime="1"/>
-                <rset size="m" memory="1" cores="1" nodes="1" walltime="4"/>
+                <rset size="s" memory="1" cores="1" nodes="1" walltime="6"/>
+                <rset size="m" memory="1" cores="1" nodes="1" walltime="12"/>
                 <rset size="l" memory="1" cores="1" nodes="1" walltime="24"/>
                 <rset size="xl" memory="4" cores="1" nodes="1" walltime="48"/>
             </resourcesets>
@@ -223,9 +228,9 @@
         <tool name="snvAnnotation" value="snvAnnotation.sh" basepath="snvPipeline">
             <resourcesets>
                 <rset size="t" memory="1" cores="1" nodes="1" walltime="1" queue="devel"/>
-                <rset size="s" memory="3" cores="2" nodes="1" walltime="4"/>
-                <rset size="m" memory="5" cores="3" nodes="1" walltime="6"/>
-                <rset size="l" memory="5" cores="3" nodes="1" walltime="10"/>
+                <rset size="s" memory="3" cores="2" nodes="1" walltime="6"/>
+                <rset size="m" memory="5" cores="3" nodes="1" walltime="12"/>
+                <rset size="l" memory="5" cores="3" nodes="1" walltime="24"/>
                 <rset size="xl" memory="6" cores="3" nodes="1" walltime="48"/>
             </resourcesets>
             <input type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_VCF_IN"/>
@@ -239,10 +244,10 @@
         <tool name="snvDeepAnnotation" value="vcf_pipeAnnotator.sh" basepath="tools">
             <resourcesets>
                 <rset size="t" memory="1" cores="1" nodes="1" walltime="1" queue="devel"/>
-                <rset size="s" memory="1" cores="3" nodes="1" walltime="1"/>
-                <rset size="m" memory="1" cores="3" nodes="1" walltime="2"/>
-                <rset size="l" memory="1" cores="3" nodes="1" walltime="3"/>
-                <rset size="xl" memory="4" cores="3" nodes="1" walltime="4"/>
+                <rset size="s" memory="1" cores="3" nodes="1" walltime="4"/>
+                <rset size="m" memory="1" cores="3" nodes="1" walltime="8"/>
+                <rset size="l" memory="1" cores="3" nodes="1" walltime="12"/>
+                <rset size="xl" memory="4" cores="3" nodes="1" walltime="24"/>
             </resourcesets>
             <input type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_VCF"/>
             <output type="filegroup" typeof="de.dkfz.b080.co.files.VCFFileWithCheckpointFile">
