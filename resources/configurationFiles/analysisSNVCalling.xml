@@ -4,8 +4,7 @@
                imports="commonCOWorkflowsSettings"
                canCreateTestdata='true'
                listOfUsedTools="snvCalling,snvJoinVcfFiles,snvAnnotation,snvDeepAnnotation,snvFilter"
-               usedToolFolders="snvPipeline,tools"
-               cleanupScript="cleanupScript">
+               usedToolFolders="snvPipeline,tools">
     <configurationvalues>
 
         <cvalue name='RSCRIPT_VERSION' value='3.0.0' type="string"/>
@@ -24,9 +23,7 @@
         <cvalue name='MPILEUPCONTROL_OPTS' value='"-ABRI -Q 0 -q 1"' type="string"/>
         <cvalue name='MPILEUPOUT_PREFIX' value='mp_' type="string"/>
         <cvalue name='INDELFILE_PREFIX' value='indel_' type="string"/>
-        <cvalue name='SNVFILE_PREFIX' value='snvs_' type="string"/>
         <!--<cvalue name='analysisMethodNameOnInput' value='whole_genome_analysis' type='string' />-->
-        <cvalue name='GHOSTSCRIPT_BINARY' value='/usr/bin/gs' type='path'/>
         <cvalue name="RAW_SNV_FILTER_OPTIONS" value='" --minVac=3 --minVaf=0.03 --minVacPS=2"' type="string"/>
         <!--<cvalue name='REFERENCE_GENOME' value="${referenceGenome_hg19_chr}" type="string"/>-->
 
@@ -109,12 +106,6 @@
     </configurationvalues>
     <processingTools>
         <tool name='workflowEnvironment_tbiLsf' value="tbi-lsf-cluster.sh" basepath='snvPipeline/environments'/>
-        <tool name="cleanupScript" value="cleanupScript.sh" basepath="snvPipeline">
-            <resourcesets>
-                <rset size="t" memory="0.1" cores="1" nodes="1" walltime="1" queue="devel"/>
-                <rset size="l" memory="0.1" cores="1" nodes="1" walltime="1"/>
-            </resourcesets>
-        </tool>
         <tool name="snvCallingMetaScript" value="snvCallingMetaScript.sh" basepath="snvPipeline">
             <resourcesets>
                 <rset size="t" memory="1" cores="1" nodes="1" walltime="1" queue="devel"/>
