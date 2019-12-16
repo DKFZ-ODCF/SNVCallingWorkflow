@@ -135,7 +135,7 @@ if [[ ${RERUN_FILTER_STEP} == 1 ]]; then
     filenameSomaticFunctionalSnvs_RemovedByMedianFilter=`basename ${outputFilenamePrefix}_somatic_functional_snvs_conf_${MIN_CONFIDENCE_SCORE}_to_10_removedByMedian${MEDIAN_FILTER_THRESHOLD}Filter.vcf`
     grep '^#' ${filenameSomaticFunctionalSnvs_original} >${filenameSomaticFunctionalSnvs_RemovedByMedianFilter}; ${BEDTOOLS_BINARY} subtract -a ${filenameSomaticFunctionalSnvs_original} -b ${filenameSomaticFunctionalSnvs_MedianFiltered} >>${filenameSomaticFunctionalSnvs_RemovedByMedianFilter}
 else
-    ${PERL_BINARY} ${TOOL_SNV_EXTRACTOR} --infile=${FILENAME_VCF} --minconf=${MIN_CONFIDENCE_SCORE} --pid=${outputFilenamePrefix} --bgzip=${BGZIP_BINARY} --tabix=${TABIX_BINARY} ${SNV_FILTER_OPTIONS}
+    ${PERL_BINARY} ${TOOL_SNV_EXTRACTOR} --infile=${FILENAME_VCF} --minconf=${MIN_CONFIDENCE_SCORE} --pid=${outputFilenamePrefix} --bgzip=${BGZIP_BINARY} --tabix=${TABIX_BINARY} --whitelist="${WHITELIST:-NA}" ${SNV_FILTER_OPTIONS}
     [[ "$?" != 0 ]] && echo "There was a non-zero exit code in the somatic file and dbSNP counting pipe" && exit 26
 fi
 
