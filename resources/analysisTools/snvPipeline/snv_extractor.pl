@@ -109,7 +109,7 @@ while(<IN>)
 	my @line = split("\t", $_);
         if($line[$col{"CONFIDENCE"}] < $whitelist_minconf){
 
-             if($line[$col{"ANNOTATION_control"}] eq "somatic" && $line[$col{"ANNOVAR_FUNCTION"}] eq "exonic")){push(@{$genes{$line[$col{"GENE"}]}} ,$_);}
+             if($line[$col{"ANNOTATION_control"}] eq "somatic" && $line[$col{"ANNOVAR_FUNCTION"}] eq "exonic"){push(@{$genes{$line[$col{"GENE"}]}} ,$_);}
 
         }
 
