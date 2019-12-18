@@ -123,8 +123,12 @@ while(<IN>)
 	if($line[$col{"ANNOTATION_control"}] eq "germline" && $line[$col{"ANNOVAR_FUNCTION"}] !~ /ncRNA/ && ($line[$col{"EXONIC_CLASSIFICATION"}] =~ /nonsynonymous/ || $line[$col{"EXONIC_CLASSIFICATION"}] =~ /stopgain/ ||$line[$col{"EXONIC_CLASSIFICATION"}]  =~ /stoploss/ || $line[$col{"ANNOVAR_FUNCTION"}] =~ /splicing/)){
 		print GER $_, "\n";
 	}
-        if($line[$col{"ANNOTATION_control"}] eq "somatic" && $line[$col{"RECLASSIFICATION"}] !~ /lowCov_SNP_support_germline/){push(@{$genes{$line[$col{"GENE"}]}} ,$_);}
 
+        if($line[$col{"CONFIDENCE"}] < $minconf){
+
+             if($line[$col{"ANNOTATION_control"}] eq "somatic" && $line[$col{"ANNOVAR_FUNCTION"}] eq "exonic")){push(@{$genes{$line[$col{"GENE"}]}} ,$_);}
+
+}
 
 }
 close IN;
@@ -168,14 +172,10 @@ if ($whitelist ne "NA"){
 	chomp;
 	next if($_ =~ /^#/);
 	my @line = split("\t", $_);
-        next if($line[$col{"CONFIDENCE"}] < $whitelist_minconf);
 
 	if (exists($genes{$line[$whitecol{"gene"}]})){
-
-            if($line[$col{"ANNOTATION_control"}] eq "somatic" && $line[$col{"ANNOVAR_FUNCTION"}] eq "exonic"){         
-                @snvs_whitelist=@{$genes{$line[$whitecol{"gene"}]}};
-                print WHITE join("\n",@snvs_whitelist),"\n";
-            } 
+            @snvs_whitelist=@{$genes{$line[$whitecol{"gene"}]}};
+            print WHITE join("\n",@snvs_whitelist),"\n";
         }
     }
 close WHITE;
