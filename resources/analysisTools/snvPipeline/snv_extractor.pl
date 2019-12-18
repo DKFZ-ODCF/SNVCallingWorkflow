@@ -110,7 +110,7 @@ while(<IN>)
 	next if($line[$col{"CONFIDENCE"}] < $minconf);
 	if($line[$col{"ANNOTATION_control"}] eq "somatic" && $line[$col{"RECLASSIFICATION"}] !~ /lowCov_SNP_support_germline/){print SOM $_, "\n";}
 	
-	if($line && $line[$col{"RECLASSIFICATION"}] !~ /lowCov_SNP_support_germline/ && $line[$col{"ANNOVAR_FUNCTION"}] !~ /ncRNA/ && ($line[$col{"EXONIC_CLASSIFICATION"}] =~ /nonsynonymous/ || $line[$col{"EXONIC_CLASSIFICATION"}] =~ /stopgain/ ||$line[$col{"EXONIC_CLASSIFICATION"}] =~ /stoploss/ || $line[$col{"ANNOVAR_FUNCTION"}] =~ /splicing/)){
+	if($line[$col{"ANNOTATION_control"}] eq "somatic" && $line[$col{"RECLASSIFICATION"}] !~ /lowCov_SNP_support_germline/ && $line[$col{"ANNOVAR_FUNCTION"}] !~ /ncRNA/ && ($line[$col{"EXONIC_CLASSIFICATION"}] =~ /nonsynonymous/ || $line[$col{"EXONIC_CLASSIFICATION"}] =~ /stopgain/ ||$line[$col{"EXONIC_CLASSIFICATION"}] =~ /stoploss/ || $line[$col{"ANNOVAR_FUNCTION"}] =~ /splicing/)){
 		print COD $_, "\n";
 	}
 	if($extractNcRNA == 1 && $line[$col{"ANNOTATION_control"}] eq "somatic" && $line[$col{"RECLASSIFICATION"}] !~ /lowCov_SNP_support_germline/ && ($line[$col{"ANNOVAR_FUNCTION"}] =~ /ncRNA_exonic/ || $line[$col{"ANNOVAR_FUNCTION"}] =~ /ncRNA_splicing/)){
