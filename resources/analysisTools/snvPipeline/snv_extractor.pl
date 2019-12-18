@@ -124,7 +124,7 @@ while(<IN>)
 		print GER $_, "\n";
 	}
 
-        if($line[$col{"CONFIDENCE"}] < $minconf){
+        if($line[$col{"CONFIDENCE"}] < $whitelist_minconf){
 
              if($line[$col{"ANNOTATION_control"}] eq "somatic" && $line[$col{"ANNOVAR_FUNCTION"}] eq "exonic")){push(@{$genes{$line[$col{"GENE"}]}} ,$_);}
 
