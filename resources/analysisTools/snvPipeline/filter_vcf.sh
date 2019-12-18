@@ -40,7 +40,8 @@ filenameSeqContextTab=${outputFilenamePrefix}_snvs_with_context_conf_${MIN_CONFI
 filenameMAFconfPlot=${outputFilenamePrefix}_MAF_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf
 filenameSnvDiagnosticsPlot=${outputFilenamePrefix}_allSNVdiagnosticsPlots.pdf
 
-${PERL_BINARY} ${TOOL_SNV_EXTRACTOR} --infile=${FILENAME_VCF} --minconf=${MIN_CONFIDENCE_SCORE} --pid=${outputFilenamePrefix} --bgzip=${BGZIP_BINARY} --tabix=${TABIX_BINARY} --whitelist="${WHITELIST:-NA}" ${SNV_FILTER_OPTIONS}
+${PERL_BINARY} ${TOOL_SNV_EXTRACTOR} --infile=${FILENAME_VCF} --minconf=${MIN_CONFIDENCE_SCORE} --pid=${outputFilenamePrefix} --bgzip=${BGZIP_BINARY} --tabix=${TABIX_BINARY} --whitelist="${WHITELIST:-NA}" --whitelist_minconf="${WHITELIST_MIN_CONFIDENCE_SCORE:-NA}" ${SNV_FILTER_OPTIONS}
+
 [[ "$?" != 0 ]] && echo "There was a non-zero exit code in the somatic file and dbSNP counting pipe" && exit 1
 
 if [ ${RUN_PLOTS} == 1 ]

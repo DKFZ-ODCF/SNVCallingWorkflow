@@ -23,6 +23,7 @@ my $extractNcRNA = 0;
 my $bgzip = "bgzip";
 my $tabix = "tabix";
 my $whitelist = "NA";
+my $whitelist_minconf = 5;
 
 GetOptions (	                "infile=s"	 		=> \$infile,		# vcf file, can be bgzipped
 				"minconf=i"			=> \$minconf,		# minimum confidence score
@@ -32,7 +33,9 @@ GetOptions (	                "infile=s"	 		=> \$infile,		# vcf file, can be bgzi
 				"synonymous=i"		        => \$extractsyn,
 				"bgzip=s"			=> \$bgzip,
 				"tabix=s"			=> \$tabix,
-                                "whitelist=s"                   => \$whitelist          # List of whitelisted genes, if defined do extra filtering
+                                "whitelist=s"                   => \$whitelist,         # List of whitelisted genes, if defined do extra filtering
+                                "whitelist_minconf=i"           => \$whitelist_minconf  # Minimum confidence score for variants in whitelisted genes, is only used if a whitelist has been specified
+ 
 ) or die "Could not get the options!\n";
 
 if($region ne "0" && (!-f $region || $infile !~ /\.gz$/ || !-f $infile.".tbi")){die "region-file: $region is not a valid file or, infile: $infile is not zipped or there is no index for the infile $infile.tbi\n";}
@@ -107,7 +110,7 @@ while(<IN>)
 	next if($line[$col{"CONFIDENCE"}] < $minconf);
 	if($line[$col{"ANNOTATION_control"}] eq "somatic" && $line[$col{"RECLASSIFICATION"}] !~ /lowCov_SNP_support_germline/){print SOM $_, "\n";}
 	
-	if($line[$col{"ANNOTATION_control"}] eq "somatic" && $line[$col{"RECLASSIFICATION"}] !~ /lowCov_SNP_support_germline/ && $line[$col{"ANNOVAR_FUNCTION"}] !~ /ncRNA/ && ($line[$col{"EXONIC_CLASSIFICATION"}] =~ /nonsynonymous/ || $line[$col{"EXONIC_CLASSIFICATION"}] =~ /stopgain/ ||$line[$col{"EXONIC_CLASSIFICATION"}] =~ /stoploss/ || $line[$col{"ANNOVAR_FUNCTION"}] =~ /splicing/)){
+	if($line && $line[$col{"RECLASSIFICATION"}] !~ /lowCov_SNP_support_germline/ && $line[$col{"ANNOVAR_FUNCTION"}] !~ /ncRNA/ && ($line[$col{"EXONIC_CLASSIFICATION"}] =~ /nonsynonymous/ || $line[$col{"EXONIC_CLASSIFICATION"}] =~ /stopgain/ ||$line[$col{"EXONIC_CLASSIFICATION"}] =~ /stoploss/ || $line[$col{"ANNOVAR_FUNCTION"}] =~ /splicing/)){
 		print COD $_, "\n";
 	}
 	if($extractNcRNA == 1 && $line[$col{"ANNOTATION_control"}] eq "somatic" && $line[$col{"RECLASSIFICATION"}] !~ /lowCov_SNP_support_germline/ && ($line[$col{"ANNOVAR_FUNCTION"}] =~ /ncRNA_exonic/ || $line[$col{"ANNOVAR_FUNCTION"}] =~ /ncRNA_splicing/)){
@@ -128,7 +131,7 @@ close IN;
 
 if ($whitelist ne "NA"){
     # whitelisted somatic mutations
-    my $outsomwhite = $pid."_somatic_snvs_whitelisted_genes.vcf";
+    my $outsomwhite = $pid."_somatic_functional_snvs_whitelisted_genes_conf_".$whitelist_minconf."_to_10.vcf";
     # whitelisted somatic mutations
     open(WHITE, ">$outsomwhite") or die "Could not open the file $outsomwhite\n";
 
@@ -146,8 +149,6 @@ if ($whitelist ne "NA"){
     }else{
         die "Could not open the whitelistfile: $whitelist\n";
     }
-
-
 
     @whitelist_header=split("\t", $whitelist_header);
 
@@ -167,9 +168,14 @@ if ($whitelist ne "NA"){
 	chomp;
 	next if($_ =~ /^#/);
 	my @line = split("\t", $_);
+        next if($line[$col{"CONFIDENCE"}] < $whitelist_minconf);
+
 	if (exists($genes{$line[$whitecol{"gene"}]})){
-            @snvs_whitelist=@{$genes{$line[$whitecol{"gene"}]}};
-            print WHITE join("\n",@snvs_whitelist),"\n";
+
+            if($line[$col{"ANNOTATION_control"}] eq "somatic" && $line[$col{"ANNOVAR_FUNCTION"}] eq "exonic"){         
+                @snvs_whitelist=@{$genes{$line[$whitecol{"gene"}]}};
+                print WHITE join("\n",@snvs_whitelist),"\n";
+            } 
         }
     }
 close WHITE;
