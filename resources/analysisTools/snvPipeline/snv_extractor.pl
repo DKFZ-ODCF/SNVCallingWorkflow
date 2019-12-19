@@ -130,10 +130,8 @@ while(<IN>)
 	if($line[$col{"ANNOTATION_control"}] eq "germline" && $line[$col{"ANNOVAR_FUNCTION"}] !~ /ncRNA/ && ($line[$col{"EXONIC_CLASSIFICATION"}] =~ /nonsynonymous/ || $line[$col{"EXONIC_CLASSIFICATION"}] =~ /stopgain/ ||$line[$col{"EXONIC_CLASSIFICATION"}]  =~ /stoploss/ || $line[$col{"ANNOVAR_FUNCTION"}] =~ /splicing/)){
 		print GER $_, "\n";
 	}
-
-        
-
 }
+
 close IN;
 
 if ($whitelist ne "NA"){
@@ -180,7 +178,7 @@ if ($whitelist ne "NA"){
             @snvs_whitelist=@{$genes{$line[$whitecol{"gene"}]}};
             print WHITE join("\n",@snvs_whitelist),"\n";
         }
-    
+    }    
 close WHITE;
 }
 
