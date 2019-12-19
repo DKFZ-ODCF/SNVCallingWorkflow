@@ -180,7 +180,7 @@ if ($whitelist ne "NA"){
             @snvs_whitelist=@{$genes{$line[$whitecol{"gene"}]}};
             print WHITE join("\n",@snvs_whitelist),"\n";
         }
-    }
+    
 close WHITE;
 }
 
