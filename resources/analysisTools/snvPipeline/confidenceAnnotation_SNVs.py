@@ -320,6 +320,13 @@ def main(args):
             reasons += "Segmental_dup(-2)"
             filterfield["RE"] = 1
 
+        # Encode blacklist, generated for hg38 mappings
+#        if help["ENCODE_BLACKLIST_VALID"]:
+#            confidence -= 3 # High signal region and low mappability
+#            is_weird = True
+#            reasons += "Blacklist(-3)"
+#            filterfield["BL"] = 1
+
         # Duke excluded and ENCODE DAC blacklist, only consider if not already annotated as suspicious repeat
         #if help["DUKE_EXCLUDED_VALID"] or help["DAC_BLACKLIST_VALID"]:
         #    confidence -= 3 # really bad region, usually centromeric repeats

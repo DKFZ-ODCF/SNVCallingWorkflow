@@ -42,10 +42,10 @@
         <!--<cvalue name='REFERENCE_GENOME' value="${referenceGenome_hg19_chr}" type="string"/>-->
 
     	<!-- Reference genomes -->
-    	<cvalue name='REFERENCE_GENOME' value='${hg38RefereceDirtory}/GRCh38_d1_vd1_phiX/GRCh38_d1_vd1_phiX.fa' type="path"/>
-    	<cvalue name='INDEX_PREFIX' value='${hg38RefereceDirtory}/GRCh38_d1_vd1_phiX/bwa-0.7.15/GRCh38_d1_vd1_phiX.fa' type="path"/>
-    	<cvalue name='CHROM_SIZES_FILE' value='${hg38RefereceDirtory}/GRCh38_d1_vd1_phiX/stats/GRCh38_d1_vd1_phiX.fa.chrLenOnlyACGT_realChromosomes.tsv' type="path" />
-    	<cvalue name='CHROMOSOME_LENGTH_FILE' value='${hg38RefereceDirtory}/GRCh38_d1_vd1_phiX/stats/GRCh38_d1_vd1_phiX.fa.chrLength.tsv' type="path" />
+    	<cvalue name='REFERENCE_GENOME' value='${hg38ReferenceDirectory}/GRCh38_d1_vd1_phiX/GRCh38_d1_vd1_phiX.fa' type="path"/>
+    	<cvalue name='INDEX_PREFIX' value='${hg38ReferenceDirectory}/GRCh38_d1_vd1_phiX/bwa-0.7.15/GRCh38_d1_vd1_phiX.fa' type="path"/>
+    	<cvalue name='CHROM_SIZES_FILE' value='${hg38ReferenceDirectory}/GRCh38_d1_vd1_phiX/stats/GRCh38_d1_vd1_phiX.fa.chrLenOnlyACGT_realChromosomes.tsv' type="path" />
+    	<cvalue name='CHROMOSOME_LENGTH_FILE' value='${hg38ReferenceDirectory}/GRCh38_d1_vd1_phiX/stats/GRCh38_d1_vd1_phiX.fa.chrLength.tsv' type="path" />
 
         <!--## Databases -->
         <!-- hg19DatabasesDirectory=/icgc/ngs_share/assemblies/hg19_GRCh37_1000genomes/databases -->
@@ -56,7 +56,7 @@
         <cvalue name="GNOMAD_WES_COL" value="GNOMAD_EXOMES" type="string"/>
         <cvalue name="GNOMAD_WES_ALL_SNV" value= "${hg38DatabasesDirectory}/gnomAD/v2.1.1/liftover_grch38/exomes/gnomad.exomes.r2.1.1.sites.liftover_grch38.SNV.vcf.gz" type="path"/>
         <cvalue name="GNOMAD_WGS_COL" value="GNOMAD_GENOMES" type="string"/>
-        <cvalue name="GNOMAD_WGS_ALL_SNV" value= "${hg38DatabasesDirectory}/gnomAD/v2.1.1/liftover_grch38/genomes/gnomad.genomes.r2.1.1.sites.liftover_grch38.SNV.vcf.gz" type="path"/>
+        <cvalue name="GNOMAD_WGS_ALL_SNV" value= "${hg38DatabasesDirectory}/gnomAD/v3/genomes/GRCh38/gnomad.genomes.r3.0.sites.SNV.vcf.gz" type="path"/>
         <cvalue name="LOCALCONTROL" value="${hg38DatabasesDirectory}/liftover/GRCh38_ExclusionList_2019_HIPO-PCAWG_MP_PL_WGS.SNVs.AFgt1.vcf.gz" type="path" />
         <cvalue name="LOCALCONTROL_COL" value="LocalControlAF" type="string"/>
 
@@ -132,6 +132,7 @@
         	<!--cvalue name='HISEQDEPTH' value='${hg38DatabaseUCSCDirectory}/HiSeqDepthTop10Pct_chr.bed.gz' type="path"/-->
         	<cvalue name='SIMPLE_TANDEMREPEATS' value='${hg38DatabaseUCSCDirectory}/simple_tandem_repeats/2019-08-15_SimpleTandemRepeats_Human_hg38.sorted_plain.bed.gz:4' type="path"/>
         	<cvalue name='REPEAT_MASKER' value='${hg38DatabaseUCSCDirectory}/repeatMasker/2019-08-14_RepeatMasker_Human_hg38.sorted_plain.bed.gz' type="path"/>
+                <!--cvalue name='ENCODE_BLACKLIST' value='${hg38DatabaseUCSCDirectory}/encode_blacklist/hg38-blacklist.v2.bed.gz' type="path"/-->
         	<!--cvalue name='DUKE_EXCLUDED' value='${hg38DatabaseUCSCDirectory}/DukeExcluded_chr.bed.gz' type="path"/-->
         	<!--cvalue name='DAC_BLACKLIST' value='${hg38DatabaseUCSCDirectory}/DACBlacklist_chr.bed.gz' type="path"/-->
         	<!--cvalue name='SELFCHAIN' value='${hg38DatabaseUCSCDirectory}/selfChain_chr.bed.gz:4::\-\-maxNrOfMatches=5' type="path"/-->
