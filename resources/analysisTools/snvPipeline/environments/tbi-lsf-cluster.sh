@@ -7,7 +7,7 @@ module load htslib/"${HTSLIB_VERSION:?HTSLIB_VERSION undefined}"
 module load perl/"${PERL_VERSION:?PERL_VERSION undefined}"
 module load bedtools/"${BEDTOOLS_VERSION:?BEDTOOLS_VERSION undefined}"
 
-source /ibios/tbi_cluster/virtualenvs/warsow/python_2.7.9_SNVCalling_1.2.166-1/bin/activate
+source /odcf/cluster/virtualenvs/warsow/python_2.7.9_SNVCalling_1.2.166-1/bin/activate
 
 export BGZIP_BINARY=bgzip
 export TABIX_BINARY=tabix
