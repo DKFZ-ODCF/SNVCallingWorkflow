@@ -1,4 +1,9 @@
 #!/usr/bin/env Rscript
+#
+# Copyright (c) 2018 German Cancer Research Center (DKFZ).
+#
+# Distributed under the GPL-2/GPL-3 License (http://www.gnu.de/documents/gpl-2.0.en.html, https://www.gnu.org/licenses/gpl-3.0.en.html).
+#
 
 ### to call this script: Rscript --vanilla ~/org/Bioinfo/rainfallPlots/intermutationDistance_Coord_color.r -i snvFile.vcf -s MB1000 -o MB1000_intermutationDistance_snvs
 ### pay attention with the chrLengthFile; there is a default which is either set to hg19 or hs37d5 
@@ -17,7 +22,6 @@ opt = getopt(matrix(c(
   'chrSuffix', 'u', 2, "character"
 
   ),ncol=4,byrow=TRUE));
-
 
 if (is.null(opt$mutationFile)){      # no intermutation distance File specified
   cat("Please specify a tab separated intermutation distance file"); 
@@ -43,18 +47,29 @@ chrLength <- data.frame(data)
 rownames(chrLength) <- chrLength$V1
 xtotal <- sum(chrLength[c.array,2]/10)
 xoffsets <- c(0)
-    
-dat <- read.delim(pipe(paste0("grep -v '^##' ",opt$mutationFile)), header = TRUE)
-dat <- dat[which(dat$REF != 'N'),]    
-dat$diff <- c(-1,diff(dat$POS))
+
+headset <- read.delim(pipe(paste0("grep -v '^##' ",opt$mutationFile)), header = TRUE)
+headset.classes = sapply(headset, class)
+headset.classes[names(headset.classes) %in% c("REF", "ALT")] = "character"
+
+dat <- read.delim(pipe(paste0("grep -v '^##' ",opt$mutationFile)), header = TRUE, colClasses = headset.classes)
+dat <- dat[which(dat$REF != 'N'),]
+if (nrow(dat) > 0) {
+  dat$diff <- c(-1,diff(dat$POS))
+}
 
 complement <- c('A' = 'T', 'C' = 'G','G' = 'C', 'T' = 'A', 'N' = 'N')
 
 sel <- which(dat$REF == 'C' | dat$REF == 'T')
-dat[sel,'change'] <- paste0(as.character(dat[sel, 'REF']),as.character(dat[sel, 'ALT']))
+if (length(sel) > 0) {
+  dat[sel,'change'] <- paste0(dat[sel, 'REF'],dat[sel, 'ALT'])
+}
 
 sel <- which(dat$REF == 'A' | dat$REF == 'G')
-dat[sel, 'change'] <- paste0(complement[dat[sel, 'REF']],complement[dat[sel, 'ALT']])
+if (length(sel) > 0) {
+  dat[sel, 'change'] <- paste0(complement[dat[sel, 'REF']],complement[dat[sel, 'ALT']])
+}
+
 
 ##chrX <- which(dat$chromosome == "X")
 ##chrXmean <- round(mean(dat$intermutationDistance[chrX])/1000)  # in kb
