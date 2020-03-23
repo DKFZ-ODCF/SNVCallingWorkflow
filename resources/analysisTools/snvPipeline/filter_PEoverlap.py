@@ -266,15 +266,6 @@ def performAnalysis(args):
                                         else:
                                             ACGTNacgtn2[ACGTNacgtn_index[1]] += 1
  
-                                        # Supplementary reads are removed with 'flag_filter=3844' argument in samfile.pileup() above, so this block is commented out. 
-                                        #if(pileupread.alignment.is_supplementary):
-                                        #    remove_base = pileupread.alignment.seq[pileupread.query_position]
-                                        #    remove_is_reverse = pileupread.alignment.is_reverse
-                                        #    count_supple.update(remove_base == REF)
-                                        #    (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)
-                                        #    continue
-
-
                                         #if transformQualStr(pileupread.alignment.qual[pileupread.query_position])[0] >= args.baseq:        # DEBUG July 23 2012: BROAD BAM problem due to pileupread.alignment.qqual being shorter sometimes than pileupread.alignment.qual
                                         if(pileupread.alignment.query_name in readNameHash):
                                             #print pileupread.alignment.query_name
@@ -400,7 +391,7 @@ def performAnalysis(args):
             nonREFnonALT = nonREFnonALTrev + nonREFnonALTfwd
             #Format: DP2 -> "reference(forward + reverse), alt(forward + reverse)"
             supple_dup_str = 'DP2sup=' + ','.join(map(str, count_supple.counted()))
-            supple_dup_str += 'DP2dup=' + ','.join(map(str, count_duplicate.counted()))
+            supple_dup_str += ';DP2dup=' + ','.join(map(str, count_duplicate.counted()))
             supple_dup_str += ';DP2pairEnd=' + ','.join(map(str, count_PE.counted()))
             supple_dup_str += ';DP2mis=' + ','.join(map(str, count_mismatch.counted()))
             supple_dup_str += ';DPnonREFnonALT=' + str(nonREFnonALT)
