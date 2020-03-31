@@ -79,8 +79,8 @@ TBD
 ### Cross-Species Contaminations
 
 In coding regions, the expected proportion of synonymous mutations compared to the total number of mutations should be
-low. On the other hand, a high proportion of synonymous mutations suggest cross-species contamination. Any value
- above 0.5 (i.e. 50% of mutations are synonymous) is indicating a contamination. A value below 0.35 is considered to be
+low. By contrast, a high proportion of synonymous mutations suggests cross-species contamination. Any value
+ above 0.5 (i.e. at least 50% of mutations are synonymous) is indicating a contamination. A value below 0.35 is considered to be
   OK. Values in the range of 0.35-0.5 are unclear. 
 
 ## Contributors
