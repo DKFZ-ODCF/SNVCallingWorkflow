@@ -57,8 +57,11 @@
         <cvalue name="GNOMAD_WGS_ALL_SNV" value= "${hg19DatabasesDirectory}/gnomAD/gnomad_v2.1/gnomad.genomes.r2.1.sites.SNV.vcf.gz" type="path"/>
 
 
-        <cvalue name="LOCALCONTROL" value="${hg19DatabasesDirectory}/LocalControls/ExclusionList_2019/MPsnvs_PLindels/ExclusionList_2019_HIPO-PCAWG_MP_PL_WGS.SNVs.AFgt1.vcf.gz" type="path" />
-        <cvalue name="LOCALCONTROL_COL" value="LocalControlAF" type="string"/>
+        <cvalue name="LOCALCONTROL_WGS" value="${hg19DatabasesDirectory}/LocalControls/ExclusionList_2019/MPsnvs_PLindels/ExclusionList_2019_HIPO-PCAWG_MP_PL_WGS.SNVs.AFgt1.vcf.gz" type="path" />
+        <cvalue name="LOCALCONTROL_WGS_COL" value="LocalControlAF_WGS" type="string"/>
+        <cvalue name="LOCALCONTROL_WES" value="${hg19DatabasesDirectory}/LocalControls/ExclusionList_2019/MPsnvs_PLindels/ExclusionList_2019_H021_MP_PL_WES.SNVs.AFgt1.vcf.gz" type="path" />
+        <cvalue name="LOCALCONTROL_WES_COL" value="LocalControlAF_WES" type="string"/>
+
         <cvalue name='ANNOVAR_BINARY' value='${sharedFilesBaseDirectory}/annovar/annovar_Feb2016/annotate_variation.pl' type='path'/>
         <cvalue name='ANNOVAR_BUILDVER' value='hg19' type='string'/>
         <cvalue name='ANNOVAR_DBPATH' value='${sharedFilesBaseDirectory}/annovar/annovar_Feb2016/humandb/' type='path'/>
