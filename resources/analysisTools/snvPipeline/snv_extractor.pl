@@ -35,7 +35,6 @@ GetOptions (	                "infile=s"	 		=> \$infile,		# vcf file, can be bgzi
 				"tabix=s"			=> \$tabix,
                                 "whitelist=s"                   => \$whitelist,         # List of whitelisted genes, if defined do extra filtering
                                 "whitelist_minconf=i"           => \$whitelist_minconf  # Minimum confidence score for variants in whitelisted genes, is only used if a whitelist has been specified
-                                "whitelist_maxconf=i"           => \$whitelist_maxconf  # Max confidence score for variants in whitelisted genes, is only used if a whitelist has been specified
  
 ) or die "Could not get the options!\n";
 
@@ -51,6 +50,8 @@ my $outsomcod = $pid."_somatic_functional_snvs_conf_".$minconf."_to_10.vcf";
 my $outgermcod = $pid."_germline_functional_snvs_conf_".$minconf."_to_10.vcf";
 my $outsyn = $pid."_somatic_functional_and_synonymous_snvs_conf_".$minconf."_to_10.vcf";
 my $outNcRNA = $pid."_somatic_functional_ncRNA_snvs_conf_".$minconf."_to_10.vcf";
+
+my $whitelist_maxconf=$minconf-1;
 
 
 open(SOM, ">$outsom") or die "Could not open the file $outsom\n";
