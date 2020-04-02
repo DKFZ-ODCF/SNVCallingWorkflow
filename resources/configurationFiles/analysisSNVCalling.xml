@@ -45,7 +45,7 @@
         <cvalue name="WHITELIST" value='${assembliesHG191000GenomesDirectory}/CustomGeneLists/INFORM_druggable_genes_ensembl_geneIDs_20191205.tsv'  type='path'
                 description="List of treatable target genes in TSV format (INFORM, N.Jaeger): chr,start,end, Genename (used for extraction), ENSEMBL Gene ID "/>
         <cvalue name="WHITELIST_MIN_CONFIDENCE_SCORE" value="5" type="integer"/>
-
+        <cvalue name="WHITELIST_MAX_CONFIDENCE_SCORE" value="7" type="integer"/>
         <cvalue name="MIN_CONFIDENCE_SCORE" value="8" type="integer"/>
         <cvalue name="SNV_FILTER_OPTIONS" value="--ncRNA=1 --synonymous=0" type="string" description="Values used for the extraction of SNVs"/>
         <cvalue name="MINCOV" value="0" type="integer" description="minimal coverage for somatic SNVs (MAF plot)"/>

@@ -98,7 +98,6 @@ elsif($infile =~ /\.gz$/){open(IN, "zcat $infile |") or die "Could not open the 
 else{open(IN, "<$infile") or die "Could not open the infile: $infile\n";}
 
 my %genes;
-my %somatic_functional;
 my $whitelist_header;
 my @whitelist_header;
 my %whitecol;
@@ -110,7 +109,6 @@ while(<IN>)
 	next if($_ =~ /^#/);
 	my @line = split("\t", $_);
         if($line[$col{"CONFIDENCE"}] >= $whitelist_minconf && $line[$col{"CONFIDENCE"}] <= $whitelist_maxconf ){
-# Relaxed settings for genes in Whitelist
 
              if($line[$col{"ANNOTATION_control"}] eq "somatic" && $line[$col{"ANNOVAR_FUNCTION"}] eq "exonic"){push(@{$genes{$line[$col{"GENE"}]}} ,$_);}
 
@@ -122,10 +120,6 @@ while(<IN>)
 	
 	if($line[$col{"ANNOTATION_control"}] eq "somatic" && $line[$col{"RECLASSIFICATION"}] !~ /lowCov_SNP_support_germline/ && $line[$col{"ANNOVAR_FUNCTION"}] !~ /ncRNA/ && ($line[$col{"EXONIC_CLASSIFICATION"}] =~ /nonsynonymous/ || $line[$col{"EXONIC_CLASSIFICATION"}] =~ /stopgain/ ||$line[$col{"EXONIC_CLASSIFICATION"}] =~ /stoploss/ || $line[$col{"ANNOVAR_FUNCTION"}] =~ /splicing/)){
 		print COD $_, "\n";
-# "Normal somatic coding SNVs" For Whitelist
-                push(@{$somatic_functional{$line[$col{"GENE"}]}} ,$_);
-
-
 	}
 	if($extractNcRNA == 1 && $line[$col{"ANNOTATION_control"}] eq "somatic" && $line[$col{"RECLASSIFICATION"}] !~ /lowCov_SNP_support_germline/ && ($line[$col{"ANNOVAR_FUNCTION"}] =~ /ncRNA_exonic/ || $line[$col{"ANNOVAR_FUNCTION"}] =~ /ncRNA_splicing/)){
 		print NCRNA $_, "\n";
@@ -142,12 +136,12 @@ while(<IN>)
 close IN;
 
 if ($whitelist ne "NA"){
-     #whitelisted and "regular" somatic mutations
-     my $outsomwhite = $pid."_somatic_functional_snvs_conf_".$minconf."_to_10_plus_whitelisted_genes_conf_".$whitelist_minconf."_to_".$whitelist_maxconf.".vcf";
-    
-     open(WHITE, ">$outsomwhite") or die "Could not open the file $outsomwhite\n";
+    # whitelisted somatic mutations
+    my $outsomwhite = $pid."_somatic_functional_snvs_whitelisted_genes_conf_".$whitelist_minconf."_to_10.vcf";
+    # whitelisted somatic mutations
+    open(WHITE, ">$outsomwhite") or die "Could not open the file $outsomwhite\n";
 
-     print WHITE $head, "\n";
+    print WHITE $head, "\n";
 
 
     if (open(WHITELIST, "<$whitelist")){	
@@ -172,20 +166,8 @@ if ($whitelist ne "NA"){
 	$i++;
     }
 
-    my @snv_final;
-    my @snvs_per_gene;
+    @snv_genes=keys(%genes);
     my @snvs_whitelist;
-
-### Print "regular" functional somatic SNVs to list with whitelisted genes
-
-    foreach $key (keys %somatic_functional)
-    {
-        @snvs_per_gene=@{$somatic_functional{$key}};
-        #print WHITE join("\n",@snvs_per_gene),"\n";
-        push @snv_final,@snvs_per_gene;
-       
-    }
-
 
     while(<WHITELIST>)
     {
@@ -195,17 +177,10 @@ if ($whitelist ne "NA"){
 
 	if (exists($genes{$line[$whitecol{"gene"}]})){
             @snvs_whitelist=@{$genes{$line[$whitecol{"gene"}]}};
-            push @snv_final,@snvs_whitelist;
+            print WHITE join("\n",@snvs_whitelist),"\n";
         }
     }    
-
-
-# Add whitelisted genes to CODing somatic SNVs
-     my @filtered = uniq(@snv_final);
-
-     print WHITE join("\n",@filtered),"\n";
-            
-     close WHITE;
+close WHITE;
 }
 
 
