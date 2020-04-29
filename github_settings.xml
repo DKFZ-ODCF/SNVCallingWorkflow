@@ -1,7 +1,0 @@
-<application>
-  <component name="GithubSettings">
-    <option name="LOGIN" value="warsow" />
-    <option name="HOST" value="https://eilslabs-phabricator.dkfz.de/diffusion/" />
-    <option name="AUTH_TYPE" value="BASIC" />
-  </component>
-</application>

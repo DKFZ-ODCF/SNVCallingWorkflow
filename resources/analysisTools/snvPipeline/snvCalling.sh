@@ -67,7 +67,7 @@ filenameMPileupError="${MPILEUP_SUBDIR}/${MPILEUPOUT_PREFIX}${PID}.${chr}.error"
 FILENAME_VCF_SNVS_TEMP=${FILENAME_VCF_SNVS}.tmp
 
 #[[ ! -f $filenameMPileupTemp ]] && 
-${SAMTOOLS_BINARY} mpileup ${MPILEUP_OPTS} -r ${chr} -f ${REFERENCE_GENOME} $tumorbamfullpath | ${BCFTOOLS_BINARY} view ${BCFTOOLS_OPTS} - > $filenameMPileupTemp
+${BCFTOOLS_BINARY} mpileup ${MPILEUP_OPTS} -r ${chr} -f ${REFERENCE_GENOME} $tumorbamfullpath | ${BCFTOOLS_BINARY} call ${BCFTOOLS_OPTS} > $filenameMPileupTemp
 
 if [[ "$?" != 0 ]]
 then

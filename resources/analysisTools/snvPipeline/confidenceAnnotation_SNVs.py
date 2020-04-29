@@ -109,7 +109,8 @@ def main(args):
                 variable_headers["EVS_COL"] = "^EVS$"
                 variable_headers["GNOMAD_EXOMES_COL"] = "^GNOMAD_EXOMES$"
                 variable_headers["GNOMAD_GENOMES_COL"] = "^GNOMAD_GENOMES$"
-                variable_headers["LOCALCONTROL_COL"] = "^LocalControlAF$"
+                variable_headers["LOCALCONTROL_WGS_COL"] = "^LocalControlAF_WGS$"
+                variable_headers["LOCALCONTROL_WES_COL"] = "^LocalControlAF_WES$"  
             else:
                 fixed_headers += [ "^INFO_control", "^ANNOTATION_control$", ]
 
@@ -191,7 +192,8 @@ def main(args):
             inEVS = False
             inGnomAD_WES = False
             inGnomAD_WGS = False
-            inLocalControl = False
+            inLocalControl_WGS = False
+            inLocalControl_WES = False
         else:
             # for potential re-classification (e.g. low coverage in control and in dbSNP => probably germline)
             classification = help["ANNOTATION_control"] # start with original classification
@@ -234,7 +236,7 @@ def main(args):
         if args.no_control:
             if indbSNP and is_commonSNP and not is_clinic:
                 reasons += "dbSNP(NoControl)"
-            if help["ExAC_COL_VALID"] and any(af > 0.001 for af in map(float, extract_info(help["ExAC_COL"], "AF").split(','))):
+            if help["ExAC_COL_VALID"] and any(af > 1.0 for af in map(float, extract_info(help["ExAC_COL"], "AF").split(','))):
                 inExAC = True
                 infofield["ExAC"] = "ExAC"
                 reasons += "ExAC(NoControl)"
@@ -252,10 +254,14 @@ def main(args):
                 infofield["gnomAD_Genomes"] = "gnomAD_Genomes"
                 reasons += "gnomAD_Genomes(NoControl)"
 
-            if help["LOCALCONTROL_COL_VALID"] and any(af > 0.02 for af in map(float, extract_info(help["LOCALCONTROL_COL"], "AF").split(','))):
-                inLocalControl = True
-                infofield["LocalControl"] = "LocalControl"
-                reasons += "LocalControl(NoControl)"
+            if help["LOCALCONTROL_WGS_COL_VALID"] and any(af > 0.01 for af in map(float, extract_info(help["LOCALCONTROL_WGS_COL"], "AF").split(','))):
+                inLocalControl_WGS = True
+                infofield["LocalControl_WGS"] = "LocalControl_WGS"
+                reasons += "LocalControl_WGS(NoControl)"
+            if help["LOCALCONTROL_WES_COL_VALID"] and any(af > 0.01 for af in map(float, extract_info(help["LOCALCONTROL_WES_COL"], "AF").split(','))):
+                inLocalControl_WES = True
+                infofield["LocalControl_WES"] = "LocalControl_WES"
+                reasons += "LocalControl_WES(NoControl)"
 
         # Punish for biases round 1
         if idx_pcrbias != -1 and idx_seqbias != -1 and args.round == 1:
@@ -397,7 +403,7 @@ def main(args):
 
         if (args.no_control):
             # an SNV that is in dbSNP but not "clinic" or/and in 1 KG with high frequency is probably germline
-            if (in1KG_AF or (indbSNP and is_commonSNP and not is_clinic) or inExAC or inEVS or inGnomAD_WES or inGnomAD_WGS or inLocalControl):
+            if (in1KG_AF or (indbSNP and is_commonSNP and not is_clinic) or inExAC or inEVS or inGnomAD_WES or inGnomAD_WGS or inLocalControl_WES or inLocalControl_WGS):
                classification = "SNP_support_germline"
 
         # 3) information from the calls and germline comparisons: coverage, strand bias, variant support, ..
@@ -786,7 +792,7 @@ if __name__ == "__main__":
     parser.add_argument("-l", "--runlowmaf", dest="runlowmaf", action="store_true", default=False,
                         help="Set this option if you want to run the low maf punishment.")
     parser.add_argument("-x", "--runexome", dest="runexome", action="store_true", default=False,
-                        help="Run on exome, will turn off will turn off the high control coverage punishment " \
+                        help="Run on exome, will turn off the high control coverage punishment " \
                              "and the PCR bias filter.")
     args = parser.parse_args()
     main(args)

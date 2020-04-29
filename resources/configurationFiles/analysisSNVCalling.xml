@@ -13,10 +13,11 @@
 
         <cvalue name='RSCRIPT_VERSION' value='3.3.1' type="string"/>
         <cvalue name='PERL_VERSION' value='5.20.2' type="string"/>
-        <cvalue name='SAMTOOLS_VERSION' value='0.1.19' type="string"/>
+        <cvalue name='SAMTOOLS_VERSION' value='1.9' type="string"/>
+        <cvalue name='BCFTOOLS_VERSION' value='1.9' type="string"/>
         <cvalue name='PYTHON_VERSION' value='2.7.9' type="string"/>
         <cvalue name='BEDTOOLS_VERSION' value='2.16.2' type="string"/>
-        <cvalue name='HTSLIB_VERSION' value='0.2.5' type="string"/>
+        <cvalue name='HTSLIB_VERSION' value='1.9' type="string"/>
         <cvalue name='HTSLIB_VERSION_FOR_HTS_PYTHON' value='1.2' type="string"
                 description="Only used if PYPY_OR_PYTHON_BINARY evaluates to a PyPy binary."/>
         <cvalue name='PYPY_VERSION' value='5.8.0' type="string"/>
@@ -28,19 +29,20 @@
                 description="Git repository link with the hts-python version for PyPy. Try to avoid DoS on Github!"/>
         <cvalue name="HTS_PYTHON_COMMIT" value="cd35d6f15221bb09c218d0f978c0b92c560fcdd6" type="string"
                 description="Specific Git commit of the PyPy-compatible hts-python to download from HTS_PYTHON_GIT_REPOSITORY."/>
+        <cvalue name="usePypy" value='true' type="boolean" />
 
         <cvalue name='mpileupOutputDirectory' value='mpileup' type="path"/>
-        <cvalue name='MPILEUP_OPTS' value='"-REI -q 30 -ug"' type="string"/>
-        <cvalue name='BCFTOOLS_OPTS' value='"-vcgN -p 2.0"' type="string"/>
-        <cvalue name='MPILEUPCONTROL_OPTS' value='"-ABRI -Q 0 -q 1"' type="string"/>
+        <cvalue name='MPILEUP_OPTS' value='"-EI -q 30 -O u --ignore-RG --ff UNMAP,SECONDARY,QCFAIL,DUP,SUPPLEMENTARY -d 9999 -a AD -x"' type="string"/>
+        <cvalue name='BCFTOOLS_OPTS' value='"-vc -p 2.0"' type="string"/>
+        <cvalue name='MPILEUPCONTROL_OPTS' value='"-ABI --ignore-RG -Q 0 -q 1"' type="string"/>
         <cvalue name='MPILEUPOUT_PREFIX' value='mp_' type="string"/>
         <cvalue name='SNVFILE_PREFIX' value='snvs_' type="string"/>
         <!--<cvalue name='analysisMethodNameOnInput' value='whole_genome_analysis' type='string' />-->
         <cvalue name="RAW_SNV_FILTER_OPTIONS" value='" --minVac=3 --minVaf=0.03 --minVacPS=2"' type="string"/>
-        <!--<cvalue name='REFERENCE_GENOME' value="${referenceGenome_hg19_chr}" type="string"/>-->
+        <cvalue name='REFERENCE_GENOME' value="${referenceGenome_hg19_chr}" type="string"/>
 
         <!--## Databases -->
-        <!-- hg19DatabasesDirectory=/icgc/ngs_share/assemblies/hg19_GRCh37_1000genomes/databases -->
+        <cvalue name='hg19DatabasesDirectory' value="/icgc/ngs_share/assemblies/hg19_GRCh37_1000genomes/databases" type="path" />
         <cvalue name="DBSNP" value="${hg19DatabasesDirectory}/dbSNP/dbSNP_147/00-All.SNV.vcf.gz" type="path"/>
         <cvalue name="DBSNP_COL" value="DBSNP" type="string"/>
         <cvalue name="KGENOME" value="${hg19DatabasesDirectory}/1000genomes/ALL.wgs.phase1_integrated_calls.20101123.snps_chr.vcf.gz" type="path"/>
@@ -50,13 +52,16 @@
         <cvalue name="EVS" value="${hg19DatabasesDirectory}/EVS/ESP6500SI-V2-SSA137.updatedProteinHgvs.ALL.snps_indels.vcf.gz" type="path" />
         <cvalue name="EVS_COL" value="EVS" type="string"/>
         <cvalue name="GNOMAD_WES_COL" value="GNOMAD_EXOMES" type="string"/>
-        <cvalue name="GNOMAD_WES_ALL_SNV" value= "${hg19DatabasesDirectory}/gnomAD/gnomad.exomes.r2.0.1.sites.SNVs.vcf.gz" type="path"/>
+        <cvalue name="GNOMAD_WES_ALL_SNV" value= "${hg19DatabasesDirectory}/gnomAD/gnomad_v2.1/gnomad.exomes.r2.1.sites.SNV.vcf.gz" type="path"/>
         <cvalue name="GNOMAD_WGS_COL" value="GNOMAD_GENOMES" type="string"/>
-        <cvalue name="GNOMAD_WGS_ALL_SNV" value= "${hg19DatabasesDirectory}/gnomAD/gnomad.genomes.r2.0.1.sites.chr1-22-X.SNVs.All.vcf.gz" type="path"/>
+        <cvalue name="GNOMAD_WGS_ALL_SNV" value= "${hg19DatabasesDirectory}/gnomAD/gnomad_v2.1/gnomad.genomes.r2.1.sites.SNV.vcf.gz" type="path"/>
 
 
-        <cvalue name="LOCALCONTROL" value="/icgc/dkfzlsdf/analysis/UniExome/GermlineAnnotation/annotationInfo/LocalControls/LocalControlConsolidated_SNP.vcf.gz" type="path" />
-        <cvalue name="LOCALCONTROL_COL" value="LocalControlAF" type="string"/>
+        <cvalue name="LOCALCONTROL_WGS" value="${hg19DatabasesDirectory}/LocalControls/ExclusionList_2019/MPsnvs_PLindels/ExclusionList_2019_HIPO-PCAWG_MP_PL_WGS.SNVs.AFgt1.vcf.gz" type="path" />
+        <cvalue name="LOCALCONTROL_WGS_COL" value="LocalControlAF_WGS" type="string"/>
+        <cvalue name="LOCALCONTROL_WES" value="${hg19DatabasesDirectory}/LocalControls/ExclusionList_2019/MPsnvs_PLindels/ExclusionList_2019_H021_MP_PL_WES.SNVs.AFgt1.vcf.gz" type="path" />
+        <cvalue name="LOCALCONTROL_WES_COL" value="LocalControlAF_WES" type="string"/>
+
         <cvalue name='ANNOVAR_BINARY' value='${sharedFilesBaseDirectory}/annovar/annovar_Feb2016/annotate_variation.pl' type='path'/>
         <cvalue name='ANNOVAR_BUILDVER' value='hg19' type='string'/>
         <cvalue name='ANNOVAR_DBPATH' value='${sharedFilesBaseDirectory}/annovar/annovar_Feb2016/humandb/' type='path'/>
@@ -85,13 +90,13 @@
 
             <!--## Filter criteria -->
             <!--## The rows with corresponding values larger than below criteria will be filtered out. -->
-            <cvalue name="CRIT_ExAC_maxMAF" value="0.001" type="string" />
+            <cvalue name="CRIT_ExAC_maxMAF" value="1.0" type="string" />
             <cvalue name="CRIT_EVS_maxMAF" value="1.0" type="string" />
             <cvalue name="CRIT_GNOMAD_EXOMES_maxMAF" value="0.001" type="float"/>
             <cvalue name="CRIT_GNOMAD_GENOMES_maxMAF" value="0.001" type="float"/>
             <cvalue name="CRIT_1KGENOMES_maxMAF" value="0.01" type="string" />
             <cvalue name="CRIT_RECURRENCE" value="7" type="string" />
-            <cvalue name="CRIT_LOCALCONTROL_maxMAF" value="0.2" type="string" />
+            <cvalue name="CRIT_LOCALCONTROL_maxMAF" value="0.01" type="string" />
         <!--#### END EXTRA FILTERING -->
 
         <cvalue name="CONFIDENCE_OPTS" value="-t 500" type="string"
@@ -202,7 +207,7 @@
         </tool>
         <tool name="snvCallingNoControl" value="snvCalling.sh" basepath="snvPipeline">
             <resourcesets>
-                <rset size="s" memory="1" cores="1" nodes="1" walltime="4"/>
+                <rset size="s" memory="1" cores="1" nodes="1" walltime="1"/>
                 <rset size="m" memory="1" cores="1" nodes="1" walltime="4"/>
                 <rset size="l" memory="1" cores="1" nodes="1" walltime="24"/>
                 <rset size="xl" memory="4" cores="1" nodes="1" walltime="48"/>
@@ -217,9 +222,9 @@
         <tool name="snvJoinVcfFiles" value="joinSNVVCFFiles.sh" basepath="snvPipeline">
             <resourcesets>
                 <rset size="t" memory="1" cores="1" nodes="1" walltime="1" queue="devel"/>
-                <rset size="s" memory="1" cores="1" nodes="1" walltime="4"/>
-                <rset size="m" memory="1" cores="1" nodes="1" walltime="4"/>
-                <rset size="l" memory="1" cores="1" nodes="1" walltime="4"/>
+                <rset size="s" memory="1" cores="1" nodes="1" walltime="1"/>
+                <rset size="m" memory="1" cores="1" nodes="1" walltime="2"/>
+                <rset size="l" memory="1" cores="1" nodes="1" walltime="3"/>
                 <rset size="xl" memory="6" cores="1" nodes="1" walltime="4"/>
             </resourcesets>
             <input type="file" typeof="de.dkfz.b080.co.files.TumorBamFile" scriptparameter="TUMOR_BAMFILE_FULLPATH_BP"/>
