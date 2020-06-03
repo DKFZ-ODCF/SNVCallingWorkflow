@@ -19,7 +19,7 @@ maf=read.table(infile,sep="\t",as.is=TRUE)
 
 pdf(outfile, width=7, height=7)
 
-if(nr_in_dbSNP > 3){
+if(nr_in_dbSNP > 3 && length(which(maf[,1]==1))>1){
 
 	dens_in_dbSNP <- density(x = maf[maf[,1]==1,3])
 	dens_in_all <- density(x = maf[,3])
