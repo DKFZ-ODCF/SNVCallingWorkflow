@@ -18,6 +18,12 @@ runFilter                   true    Run the filter step or stop the workflow bef
 runOnPancan                 false   Run a special analysis type for pancancer type projects.
 
 == Changelist
+* Version update to 1.2.166-3
+  Added feature to the script snv_extractor.pl and the bash file filter_vcf.sh. Introduced a "Whitelist" output based on the 
+  tab delimited file /icgc/ngs_share/assemblies/hg19_GRCh37_1000genomes/CustomGeneLists/INFORM_druggable_genes_ensembl_geneIDs_20191205.tsv
+  Exonic somatic variants are filtered based on a more lenient confidence threshold that can be specified at the commandline (default value is 5)
+
+* Version update to 1.2.166-2 
 
 * Version update to 1.0.166
 
