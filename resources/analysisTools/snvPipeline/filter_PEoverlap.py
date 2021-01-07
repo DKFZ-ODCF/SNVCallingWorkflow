@@ -123,15 +123,15 @@ def performAnalysis(args):
     #vcfInFile = open(args.inf, "r")
     #outFile = open(args.outf, "w")
 
-    # Reference file for BAQ_recalcuation and local realignment
-    reference_file = pysam.Fastafile(args.refFileName)
+    # Reference file for CRAM files
+    reference_file = args.refFileName
 
     mode = "r"
     if args.alignmentFile[-4:] == ".bam":
         mode += "b"
     elif args.alignmentFile[-5:] == ".cram":
         mode += "c"
-    samfile = pysam.Samfile(args.alignmentFile, mode)  # This should work for BAM file only (with random access).
+    samfile = pysam.Samfile(args.alignmentFile, mode, reference_filename = reference_file)  # This should work for BAM file only (with random access).
 
     if args.altPosF != '':
         ALT_basePositions_file = args.altPosF

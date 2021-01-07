@@ -17,7 +17,7 @@ declare -r outputDirectory=`dirname ${FILENAME_VCF_OUT}`
 relinked=false
 # (Re-)link bam file and index. The pipeline cannot handle i.e. .mdup.bam and .mdup.bai
 # Look up the index with .bam.bai. If the file exists nothing happens.
-if [[ ! -f ${TUMOR_BAMFILE_FULLPATH_BP}.bai ]]
+if [[ ! -f ${TUMOR_BAMFILE_FULLPATH_BP}.bai && ! -f ${TUMOR_BAMFILE_FULLPATH_BP}.crai ]]
 then
     shortBamIdx=`dirname ${TUMOR_BAMFILE_FULLPATH_BP}`"/"`basename ${TUMOR_BAMFILE_FULLPATH_BP} .bam`".bai"
     [[ ! -f ${shortBamIdx} ]] && echo "Bam index file cannot be found!" && exit -15
