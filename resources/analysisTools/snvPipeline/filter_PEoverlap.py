@@ -96,20 +96,20 @@ def decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, D
 class BoolCounter:
     """ A class for counter objects """ 
 
-    def __init__(self, ref, alt):
-        self.REF = ref
-        self.ALT = alt
+    def __init__(self, ref_base, alt_base):
+        self.ref_base = ref_base
+        self.alt_base = alt_base
         self.ref_count = 0
         self.alt_count = 0
 
     def update(self, current_base):
-        if self.REF == current_base:
+        if self.ref_base == current_base:
             self.ref_count += 1
-        elif self.ALT == current_base:
+        elif self.alt_base == current_base:
             self.alt_count += 1
 
-    def update_nonREFnonALT(self, remove_count):
-        self.alt_count =+ remove_count
+    def update_nonREFnonALT(self, count):
+        self.alt_count =+ count
 
     def counted(self):
         return [self.ref_count, self.alt_count]
@@ -133,9 +133,10 @@ def performAnalysis(args):
 
     mode = "r"
     multiple_iterators = False
-    if args.alignmentFile[-4:] == ".bam":
+    # Setting pysam read mode based on the file extension
+    if args.alignmentFile.split(".")[-1] == "bam":
         mode += "b"
-    elif args.alignmentFile[-5:] == ".cram":
+    elif args.alignmentFile.split(".")[-1] == "cram":
         mode += "c"
     samfile = pysam.Samfile(args.alignmentFile, mode)  # This should work for BAM file only (with random access).
 
