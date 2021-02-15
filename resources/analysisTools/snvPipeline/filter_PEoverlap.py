@@ -96,18 +96,23 @@ def decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, D
 class BoolCounter:
     """ A class for counter objects """ 
 
-    def __init__(self):
-        self.ref = 0
-        self.alt = 0
+    def __init__(self, ref_base, alt_base):
+        self.ref_base = ref_base
+        self.alt_base = alt_base
+        self.ref_count = 0
+        self.alt_count = 0
 
-    def update(self, remove):
-        if (remove):
-            self.ref += 1
-        else:
-            self.alt += 1
+    def update(self, current_base):
+        if self.ref_base == current_base:
+            self.ref_count += 1
+        elif self.alt_base == current_base:
+            self.alt_count += 1
+
+    def update_nonREFnonALT(self, count):
+        self.alt_count =+ count
 
     def counted(self):
-        return [self.ref, self.alt]
+        return [self.ref_count, self.alt_count]
 
 # MAIN ANALYSIS PROCEDURE
 def performAnalysis(args):
@@ -127,9 +132,11 @@ def performAnalysis(args):
     reference_file = pysam.Fastafile(args.refFileName)
 
     mode = "r"
-    if args.alignmentFile[-4:] == ".bam":
+    multiple_iterators = False
+    # Setting pysam read mode based on the file extension
+    if args.alignmentFile.split(".")[-1] == "bam":
         mode += "b"
-    elif args.alignmentFile[-5:] == ".cram":
+    elif args.alignmentFile.split(".")[-1] == "cram":
         mode += "c"
     samfile = pysam.Samfile(args.alignmentFile, mode)  # This should work for BAM file only (with random access).
 
@@ -195,12 +202,13 @@ def performAnalysis(args):
 
             ACGTNacgtn1 = [0]*10
             ACGTNacgtn2 = [0]*10
-            count_PE = BoolCounter() # Starting the counter for the forward and reverse reads removed due to PE overlap detection  
-            count_supple = BoolCounter() # "" for supplementary reads, since flag_filter is added, entire supplementary detection can be removed in future versions
-            count_mismatch = BoolCounter() # " for mismatch report 
+            count_PE = BoolCounter(REF, ALT) # Starting the counter for the forward and reverse reads removed due to PE overlap detection  
+            count_supple = BoolCounter(REF, ALT) # "" for supplementary reads, since flag_filter is added, entire supplementary detection can be removed in future versions
+            count_mismatch = BoolCounter(REF, ALT) # " for mismatch report 
+            count_nonREFnonALT = BoolCounter(REF, ALT) # " to count the non-ref and non-alt base at POS
 
             # To match pysam and mpileup counts, a reference file is added. Given the reference file, Pysam by default computes BAQ (compute_baq).
-            for pileupcolumn in samfile.pileup(chrom, (pos-1), pos, flag_filter=3844, redo_baq=True, ignore_overlaps=False):
+            for pileupcolumn in samfile.pileup(chrom, (pos-1), pos, flag_filter=3844, redo_baq=True, ignore_overlaps=False, multiple_iterators=multiple_iterators):
                 if pileupcolumn.pos == (pos-1):                	
                     #print 'coverage at base %s = %s' % (pileupcolumn.pos , pileupcolumn.nsegments)                    
                     for pileupread in pileupcolumn.pileups:                    	
@@ -244,7 +252,7 @@ def performAnalysis(args):
                                             if numberOfMismatches > args.allowedNumberOfMismatches:
                                                 remove_base = pileupread.alignment.seq[pileupread.query_position]
                                                 remove_is_reverse = pileupread.alignment.is_reverse
-                                                count_mismatch.update(remove_base == REF)
+                                                count_mismatch.update(remove_base)
                                                 (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)                                         
                                                 # after decreasing the respective DP4 value, go directly to the next read
                                                 # without remembering the current read
@@ -295,7 +303,7 @@ def performAnalysis(args):
                                                 remove_is_reverse = current_is_reverse
                                                 remove_old = False
                                             
-                                            count_PE.update(remove_base == REF)
+                                            count_PE.update(remove_base)
                                             (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)                                                                                        
                                             # If current base is better, then removing the information about old mate
                                             # If current base is not good, then do nothing
@@ -373,7 +381,7 @@ def performAnalysis(args):
                     break # only one pileup for a position
 
             # Calculating duplicates based on read-mate pair's start positions (chr id and start location)
-            count_duplicate = BoolCounter()
+            count_duplicate = BoolCounter(REF, ALT)
 
             for key in readMateHash:
             	value_length = len(readMateHash[key])            	            	
@@ -385,21 +393,24 @@ def performAnalysis(args):
                         remove_base = decreaseInfo[0]
                         remove_is_reverse = decreaseInfo[1]
 
-                        count_duplicate.update(remove_base == REF)
+                        count_duplicate.update(remove_base)
                         (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)
 
-            nonREFnonALT = nonREFnonALTrev + nonREFnonALTfwd
+            if (DP4[2] + DP4[3]) > ALTcount:    # that the ALTcount is larger  happens often due to BAQ during samtools mpileup which doesn't change the base qual in the BAM file, but decreases base qual during calling                
+                if DP4af >= nonREFnonALTfwd: DP4af -= nonREFnonALTfwd
+
+                if DP4ar >= nonREFnonALTrev: DP4ar -= nonREFnonALTrev
+
+                nonREFnonALT = nonREFnonALTrev + nonREFnonALTfwd
+                count_nonREFnonALT.update_nonREFnonALT(nonREFnonALT)
+
             #Format: DP2 -> "reference(forward + reverse), alt(forward + reverse)"
             supple_dup_str = 'DP2sup=' + ','.join(map(str, count_supple.counted()))
             supple_dup_str += ';DP2dup=' + ','.join(map(str, count_duplicate.counted()))
             supple_dup_str += ';DP2pairEnd=' + ','.join(map(str, count_PE.counted()))
             supple_dup_str += ';DP2mis=' + ','.join(map(str, count_mismatch.counted()))
-            supple_dup_str += ';DPnonREFnonALT=' + str(nonREFnonALT)
+            supple_dup_str += ';DP2nonREFnonALT=' + ','.join(map(str, count_nonREFnonALT.counted()))
 
-            if (DP4[2] + DP4[3]) > ALTcount:    # that the ALTcount is larger  happens often due to BAQ during samtools mpileup which doesn't change the base qual in the BAM file, but decreases base qual during calling                
-                if DP4af >= nonREFnonALTfwd: DP4af -= nonREFnonALTfwd
-                if DP4ar >= nonREFnonALTrev: DP4ar -= nonREFnonALTrev
-            
             ACGTNacgtn1_string = "ACGTNacgtnPLUS="+",".join([str(i) for i in ACGTNacgtn1])
             ACGTNacgtn2_string = "ACGTNacgtnMINUS="+",".join([str(i) for i in ACGTNacgtn2])
 
