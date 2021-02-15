@@ -132,6 +132,7 @@ def performAnalysis(args):
     reference_file = pysam.Fastafile(args.refFileName)
 
     mode = "r"
+    multiple_iterators = False
     if args.alignmentFile[-4:] == ".bam":
         mode += "b"
     elif args.alignmentFile[-5:] == ".cram":
@@ -206,7 +207,7 @@ def performAnalysis(args):
             count_nonREFnonALT = BoolCounter(REF, ALT) # " to count the non-ref and non-alt base at POS
 
             # To match pysam and mpileup counts, a reference file is added. Given the reference file, Pysam by default computes BAQ (compute_baq).
-            for pileupcolumn in samfile.pileup(chrom, (pos-1), pos, flag_filter=3844, redo_baq=True, ignore_overlaps=False):
+            for pileupcolumn in samfile.pileup(chrom, (pos-1), pos, flag_filter=3844, redo_baq=True, ignore_overlaps=False, multiple_iterators=multiple_iterators):
                 if pileupcolumn.pos == (pos-1):                	
                     #print 'coverage at base %s = %s' % (pileupcolumn.pos , pileupcolumn.nsegments)                    
                     for pileupread in pileupcolumn.pileups:                    	
