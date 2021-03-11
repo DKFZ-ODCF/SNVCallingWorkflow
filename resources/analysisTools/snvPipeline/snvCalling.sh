@@ -24,8 +24,8 @@ fi
 PARM_CHR_INDEX=${PARM_CHR_INDEX-}
 
 # Ignore chr prefix and set it manually
-#source ${TOOL_ANALYZE_BAM_HEADER}
-#getRefGenomeAndChrPrefixFromHeader ${TUMOR_BAMFILE_FULLPATH_BP} # Sets CHR_PREFIX and REFERENCE_GENOME
+source ${TOOL_ANALYZE_BAM_HEADER}
+getRefGenomeAndChrPrefixFromHeader ${TUMOR_BAMFILE_FULLPATH_BP} # Sets CHR_PREFIX and REFERENCE_GENOME
 
 chr=""
 if [[ -n "$PARM_CHR_INDEX" ]]
