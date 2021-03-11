@@ -1,0 +1,68 @@
+<configuration name='snvCallingAnalysisGRCh38' description='SNV Calling for NGS data.'
+               configurationType='analysis' class='de.dkfz.roddy.core.Analysis' workflowClass='de.dkfz.b080.co.snvpipeline.SNVCallingWorkflow'
+               runtimeServiceClass='de.dkfz.b080.co.common.BasicCOProjectsRuntimeService'
+               imports="commonCOWorkflowsSettings,snvCallingAnalysis"
+               canCreateTestdata='true'
+               listOfUsedTools="snvCalling,snvJoinVcfFiles,snvAnnotation,snvDeepAnnotation,snvFilter"
+               usedToolFolders="snvPipeline,tools"
+               cleanupScript="cleanupScript">
+
+  <configurationvalues>
+
+    <!--hg38 base directory-->
+    <cvalue name='hg38BaseDirectory' value='/icgc/ngs_share/assemblies/hg_GRCh38' type='path' />    
+    
+    <!-- Reference genomes -->
+    <cvalue name='REFERENCE_GENOME' value="${hg38BaseDirectory}/sequence/GRCh38_decoy_ebv_phiX_alt_hla_chr.fa" type="path"/>
+    <cvalue name='INDEX_PREFIX' value="${hg38BaseDirectory}/indexes/bwa/bwa07_GRCh38_decoy_ebv_phiX_alt_hla_chr/GRCh38_decoy_ebv_phiX_alt_hla_chr.fa" type="path"/>
+    <cvalue name="CHROM_SIZES_FILE" value="${hg38BaseDirectory}/stats/GRCh38_decoy_ebv_phiX_alt_hla_chr.fa.chrLenOnlyACGT_realChromosomes.tsv" type="path" />
+    <cvalue name='CHROMOSOME_LENGTH_FILE' value='${hg38BaseDirectory}/stats/GRCh38_decoy_ebv_phiX_alt_hla_chr.fa.chrLength.tsv' type="path" />
+
+    <cvalue name='CHR_PREFIX' value='chr' type='string' />
+    <cvalue name="disableAutoBAMHeaderAnalysis" value="true" type="boolean"/>
+    
+    <!--## Databases -->
+    <cvalue name='hg38DatabasesDirectory' value="${hg38BaseDirectory}/databases" type='path' />
+    <cvalue name='hg38DatabaseUCSCDirectory' value="${hg38DatabasesDirectory}/UCSC" type='path' />    
+    
+    <cvalue name="DBSNP" value="${hg38DatabasesDirectory}/dbSNP/dbSNP_151_GRCh38.p7/00-All_v151_GRCh38.SNV.vcf.gz" type="path"/>
+    <cvalue name="DBSNP_COL" value="DBSNP" type="string"/>
+    <cvalue name="KGENOME" value="${hg38DatabasesDirectory}/1000Genome/hg38/ALL.wgs.shapeit2_integrated_snvindels_v2a.GRCh38.27022019.sites.vcf.gz" type="path"/>
+    <cvalue name="KGENOMES_COL" value="1K_GENOMES" type="string"/>
+    <cvalue name="GNOMAD_WES_COL" value="GNOMAD_EXOMES" type="string"/>
+    <cvalue name="GNOMAD_WES_ALL_SNV" value= "${hg38DatabasesDirectory}/gnomAD/v2.1.1/exomes_liftover_grch38/gnomad.exomes.r2.1.1.sites.liftover_grch38.SNV.vcf.gz" type="path"/>
+    <cvalue name="GNOMAD_WGS_COL" value="GNOMAD_GENOMES" type="string"/>
+    <cvalue name="GNOMAD_WGS_ALL_SNV" value= "${hg38DatabasesDirectory}/gnomAD/v3/genomes/gnomad.genomes.r3.0.sites.SNV.vcf.gz" type="path"/>
+    <cvalue name="LOCALCONTROL_WGS" value="${hg38DatabasesDirectory}/LocalControls/ExclusionList_2019_liftover/MPsnvs_PLindels/GRCh38_ExclusionList_2019_HIPO-PCAWG_MP_PL_WGS.SNVs.AFgt1.vcf.gz" type="path" />
+    <cvalue name="LOCALCONTROL_WGS_COL" value="LocalControlAF_WGS" type="string"/>
+    <cvalue name="LOCALCONTROL_WES" value="${hg38DatabasesDirectory}/LocalControls/ExclusionList_2019_liftover/MPsnvs_PLindels/GRCh38_ExclusionList_2019_H021_MP_PL_WES.SNVs.AFgt1.vcf.gz" type="path" />
+    <cvalue name="LOCALCONTROL_WES_COL" value="LocalControlAF_WES" type="string"/>
+
+    <cvalue name='ANNOVAR_BINARY' value='${hg38DatabasesDirectory}/ANNOVAR/annovar_April2018/annotate_variation.pl' type='path'/>
+    <cvalue name='ANNOVAR_BUILDVER' value='hg38' type='string'/>
+    <cvalue name='ANNOVAR_DBPATH' value='${hg38DatabasesDirectory}/ANNOVAR/annovar_April2018/humandb/' type='path'/>
+    <cvalue name='ANNOVAR_DBTYPE' value="'-dbtype wgEncodeGencodeCompV31'" type='string'/>
+    
+    <!--Reference annotations during confidene annotation-->
+    <cvalue name="CONFIDENCE_OPTS" value="-t 500 --refgenome GRCh38 ftp://ftp.sanger.ac.uk/pub/cancer/dockstore/human/GRCh38_hla_decoy_ebv/core_ref_GRCh38_hla_decoy_ebv.tar.gz" type="string"
+            description="max read depth in control (-t INT default 150 for genomes, set to 500 for exomes) can now be ommited to avoid depth dependent punishing by setting -c 0. It is also possible to get a justification for the confidence score by setting the -p 1 flag"/>
+    
+    <!--SNV reliability bundle-->
+    <configurationValueBundle name='PIPE_CONFIG:SNV_RELIABILITY'>
+     	<cvalue name='MAPABILITY' value='${hg38DatabasesDirectory}/mappability/GRCh38_Mappability_Align_100mer.bedGraph.gz' type="path"/>
+     	<cvalue name='SIMPLE_TANDEMREPEATS' value='${hg38DatabaseUCSCDirectory}/simple_tandem_repeats/2019-08-15_SimpleTandemRepeats_Human_hg38.sorted_plain.bed.gz:4' type="path"/>
+     	<cvalue name='REPEAT_MASKER' value='${hg38DatabaseUCSCDirectory}/repeatMasker/2019-08-14_RepeatMasker_Human_hg38.sorted_plain.bed.gz' type="path"/>
+    </configurationValueBundle>
+
+    <!--SNV deep annotation bundle-->
+    <configurationValueBundle name='PIPE_CONFIG:SNV_DEEPANNOTATION'>
+      <cvalue name='CpGislands' value='${hg38DatabaseUCSCDirectory}/cpg_islands/2019-08-15_CpG_Islands_Human_hg38.sorted_plain.bed.gz' type="path"/>
+      <cvalue name='Enhancers' value='${hg38DatabasesDirectory}/enhancers/FANTOM5/F5.hg38.enhancers.sorted_plain.bed.gz' type="path"/>
+      <cvalue name='miRNAs_sncRNAs' value='${hg38DatabasesDirectory}/miRNA/dashr.v2.sncRNA.annotation.hg38.sncType.sorted_plain.bed.gz' type="path"/>
+      <cvalue name='miRBase' value='${hg38DatabasesDirectory}/miRNA/miRBase_version-22_hg38.sorted_plain.bed.gz' type="path"/>
+      <cvalue name='COSMIC' value='${hg38DatabasesDirectory}/COSMIC/cosmic_v81/Cosmic_v81_hg38_all.coding_snvs.bed.gz:7,8,9:1' type="path"/>
+      <cvalue name='ENCODE_DNASE' value='${hg38DatabaseUCSCDirectory}/DNAase/2019-08-15_Encode_DNAase_clusters_Human_hg38.sorted_plain.bed.gz' type="path"/>
+      <cvalue name='ENCODE_TFBS' value='${hg38DatabaseUCSCDirectory}/TF_clusters/2019-08-15_Encode_TF_clusters_Human_hg38.sorted_plain.bed.gz' type="path"/>
+    </configurationValueBundle>
+  </configurationvalues>
+</configuration>
