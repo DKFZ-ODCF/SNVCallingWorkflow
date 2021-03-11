@@ -96,20 +96,20 @@ def decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, D
 class BoolCounter:
     """ A class for counter objects """ 
 
-    def __init__(self, ref, alt):
-        self.REF = ref
-        self.ALT = alt
+    def __init__(self, ref_base, alt_base):
+        self.ref_base = ref_base
+        self.alt_base = alt_base
         self.ref_count = 0
         self.alt_count = 0
 
     def update(self, current_base):
-        if self.REF == current_base:
+        if self.ref_base == current_base:
             self.ref_count += 1
-        elif self.ALT == current_base:
+        elif self.alt_base == current_base:
             self.alt_count += 1
 
-    def update_nonREFnonALT(self, remove_count):
-        self.alt_count =+ remove_count
+    def update_nonREFnonALT(self, count):
+        self.alt_count =+ count
 
     def counted(self):
         return [self.ref_count, self.alt_count]
@@ -132,13 +132,12 @@ def performAnalysis(args):
     reference_file = args.refFileName
 
     mode = "r"
-    if args.alignmentFile[-4:] == ".bam":
-        mode += "b"
-        multiple_iterators = False
+    multiple_iterators = False
+    if args.alignmentFile.split(".")[-1] == "bam":
+        mode += "b"        
         samfile = pysam.Samfile(args.alignmentFile, mode)
-    elif args.alignmentFile[-5:] == ".cram":
-        mode += "c"
-        multiple_iterators = False
+    elif args.alignmentFile.split(".")[-1] == "cram":
+        mode += "c"        
         samfile = pysam.Samfile(args.alignmentFile, mode, reference_filename = reference_file)        
 
     if args.altPosF != '':
@@ -274,14 +273,6 @@ def performAnalysis(args):
                                             ACGTNacgtn1[ACGTNacgtn_index[1]] += 1
                                         else:
                                             ACGTNacgtn2[ACGTNacgtn_index[1]] += 1
- 
-                                        # Supplementary reads are removed with 'flag_filter=3844' argument in samfile.pileup() above, so this block is commented out. 
-                                        #if(pileupread.alignment.is_supplementary):
-                                        #    remove_base = pileupread.alignment.seq[pileupread.query_position]
-                                        #    remove_is_reverse = pileupread.alignment.is_reverse
-                                        #    count_supple.update(remove_base == REF)
-                                        #    (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)
-                                        #    continue
 
 
                                         #if transformQualStr(pileupread.alignment.qual[pileupread.query_position])[0] >= args.baseq:        # DEBUG July 23 2012: BROAD BAM problem due to pileupread.alignment.qqual being shorter sometimes than pileupread.alignment.qual
@@ -405,16 +396,13 @@ def performAnalysis(args):
                         count_duplicate.update(remove_base)
                         (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)
 
-            nonREFnonALT = nonREFnonALTrev + nonREFnonALTfwd
-
             if (DP4[2] + DP4[3]) > ALTcount:    # that the ALTcount is larger  happens often due to BAQ during samtools mpileup which doesn't change the base qual in the BAM file, but decreases base qual during calling                        
-                if DP4af >= nonREFnonALTfwd: 
-                    DP4af -= nonREFnonALTfwd
-                    count_nonREFnonALT.update_nonREFnonALT(nonREFnonALTfwd)
+                if DP4af >= nonREFnonALTfwd: DP4af -= nonREFnonALTfwd                
 
-                if DP4ar >= nonREFnonALTrev: 
-                    DP4ar -= nonREFnonALTrev
-                    count_nonREFnonALT.update_nonREFnonALT(nonREFnonALTrev)
+                if DP4ar >= nonREFnonALTrev: DP4ar -= nonREFnonALTrev
+                
+                nonREFnonALT = nonREFnonALTrev + nonREFnonALTfwd
+                count_nonREFnonALT.update_nonREFnonALT(nonREFnonALT)
             
             #Format: DP2 -> "reference(forward + reverse), alt(forward + reverse)"
             supple_dup_str = 'DP2sup=' + ','.join(map(str, count_supple.counted()))
