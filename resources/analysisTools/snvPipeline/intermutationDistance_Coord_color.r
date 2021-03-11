@@ -45,6 +45,11 @@ c.array <- unlist(strsplit(opt$chrArray, ',', fixed = TRUE))
 data <- read.table(opt$chrLengthFile, header=FALSE)
 chrLength <- data.frame(data)
 rownames(chrLength) <- chrLength$V1
+
+if((opt$chrPrefix != "" && grepl(opt$chrPrefix, chrLength$V1[1])) && !grepl(opt$chrPrefix, c.array[1])){
+	c.array <- paste0(opt$chrPrefix, c.array, opt$chrSuffix)
+}
+
 xtotal <- sum(chrLength[c.array,2]/10)
 xoffsets <- c(0)
 
@@ -84,7 +89,7 @@ pdf(opt$outFilePrefix, width=20, height=8)
 plotColors = c("CA"="blue","CG"="black","CT"="red","TA"="purple","TC"="orange","TG"="green")
 baseChanges <- c("CA", "CG", "CT", "TA", "TC","TG")
 
-c.name <- paste0(opt$chrPrefix, c.array[1], opt$chrSuffix)  
+c.name <- c.array[1]
 
 sel <- which(dat$diff > 0)
 if(length(sel)){
@@ -101,7 +106,7 @@ if(length(sel)){
 	# chromosomes <- c(2:22, 'X')
 
 	for (chr in c.array) {
-	  c.name <- paste0(opt$chrPrefix, chr, opt$chrSuffix)  
+	  c.name <- chr
 
 	  sel <- which(dat$X.CHROM == c.name & dat$diff > 0)
 	  points((dat$POS[sel]/10+xoffset)/xtotal, log10(dat$diff[sel]), col = plotColors[dat$change[sel]], pch=16,cex=0.8)
