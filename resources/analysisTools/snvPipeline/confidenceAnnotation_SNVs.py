@@ -107,7 +107,8 @@ def main(args):
             if args.no_control:
                 variable_headers["GNOMAD_EXOMES_COL"] = "^GNOMAD_EXOMES$"
                 variable_headers["GNOMAD_GENOMES_COL"] = "^GNOMAD_GENOMES$"
-                variable_headers["LOCALCONTROL_COL"] = "^LocalControlAF$"
+                variable_headers["LOCALCONTROL_WGS_COL"] = "^LocalControlAF_WGS$"
+                variable_headers["LOCALCONTROL_WES_COL"] = "^LocalControlAF_WES$"                
             else:
                 fixed_headers += [ "^INFO_control", "^ANNOTATION_control$", ]
 
@@ -187,7 +188,8 @@ def main(args):
             classification = "somatic" # start with default somatic
             inGnomAD_WES = False
             inGnomAD_WGS = False
-            inLocalControl = False
+            inLocalControl_WES = False
+            inLocalControl_WGS = False
         else:
             # for potential re-classification (e.g. low coverage in control and in dbSNP => probably germline)
             classification = help["ANNOTATION_control"] # start with original classification
@@ -239,10 +241,15 @@ def main(args):
                 infofield["gnomAD_Genomes"] = "gnomAD_Genomes"
                 reasons += "gnomAD_Genomes(NoControl)"
 
-            if help["LOCALCONTROL_COL_VALID"] and any(af > 0.02 for af in map(float, extract_info(help["LOCALCONTROL_COL"], "AF").split(','))):
-                inLocalControl = True
-                infofield["LocalControl"] = "LocalControl"
-                reasons += "LocalControl(NoControl)"
+            if help["LOCALCONTROL_WGS_COL_VALID"] and any(af > args.localControl_WGS_maxMAF for af in map(float, extract_info(help["LOCALCONTROL_WGS_COL"], "AF").split(','))):
+                inLocalControl_WGS = True
+                infofield["LocalControl_WGS"] = "LocalControl_WGS"
+                reasons += "LocalControl_WGS(NoControl)"
+            if help["LOCALCONTROL_WES_COL_VALID"] and any(af > args.localControl_WES_maxMAF for af in map(float, extract_info(help["LOCALCONTROL_WES_COL"], "AF").split(','))):
+                inLocalControl_WES = True
+                infofield["LocalControl_WES"] = "LocalControl_WES"
+                reasons += "LocalControl_WES(NoControl)"
+
 
         # Punish for biases round 1
         if idx_pcrbias != -1 and idx_seqbias != -1 and args.round == 1:
@@ -391,7 +398,7 @@ def main(args):
 
         if (args.no_control):
             # an SNV that is in dbSNP but not "clinic" or/and in 1 KG with high frequency is probably germline
-            if (in1KG_AF or (indbSNP and is_commonSNP and not is_clinic) or inGnomAD_WES or inGnomAD_WGS or inLocalControl):
+            if (in1KG_AF or (indbSNP and is_commonSNP and not is_clinic) or inGnomAD_WES or inGnomAD_WGS or inLocalControl_WGS or inLocalControl_WES):
                classification = "SNP_support_germline"
 
         # 3) information from the calls and germline comparisons: coverage, strand bias, variant support, ..

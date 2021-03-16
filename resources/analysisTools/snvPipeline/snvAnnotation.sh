@@ -91,9 +91,10 @@ fi
 
 cmdFilter="${cmdFilter} | ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${DBSNP} --columnName=${DBSNP_COL} --reportMatchType  --bAdditionalColumn=2 --reportLevel 4 | \
     ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${KGENOME} --columnName=${KGENOMES_COL}  --reportMatchType --bAdditionalColumn=2 --reportLevel 4 | \
-    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} -a - -b ${GNOMAD_WES_ALL_SNV} --columnName=${GNOMAD_WES_COL} --bFileType vcf --reportMatchType --reportLevel 4 | \
-    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} -a - -b ${GNOMAD_WGS_ALL_SNV} --columnName=${GNOMAD_WGS_COL} --bFileType vcf --reportMatchType --reportLevel 4 | \
-    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${LOCALCONTROL} --columnName ${LOCALCONTROL_COL} --bFileType vcf --reportMatchType --reportLevel 4 "
+    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${GNOMAD_WES_ALL_SNV} --columnName=${GNOMAD_WES_COL} --bFileType vcf --reportMatchType --reportLevel 4 | \
+    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${GNOMAD_WGS_ALL_SNV} --columnName=${GNOMAD_WGS_COL} --bFileType vcf --reportMatchType --reportLevel 4 | \
+    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${LOCALCONTROL_WGS} --columnName ${LOCALCONTROL_WGS_COL} --bFileType vcf --reportMatchType --reportLevel 4 | \
+    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${LOCALCONTROL_WES} --columnName ${LOCALCONTROL_WES_COL} --bFileType vcf --reportMatchType --reportLevel 4 "
 
 if [[ -f ${RECURRENCE} ]]; then
     cmdFilter="${cmdFilter} | ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} -a - -b ${RECURRENCE} --columnName ${RECURRENCE_COL} --bFileType vcf"
