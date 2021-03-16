@@ -43,49 +43,24 @@ while ($header = <FH>)
 }
 chomp $header;
 
-my $DBSBP = 13;
-my $KG = 14;
-my $CONFIDENCE = 28;
-my $CANNOTATION = -1;
-my $RECLASSIFICATION = -1;
-my $CLASSIFICATION;
+my @head=split("\t", $header);
+my %col;
 
-@help = split(/\t/, $header);
-for (my $c = 0; $c < @help; $c++)
+my $i = 0;
+while($i < @head)
 {
-	# fixed column labels (from vcf_pileup_compare)
-	if ($help[$c] eq "CONFIDENCE")
-	{
-		$CONFIDENCE = $c;
-		print STDERR "CONFIDENCE in column $c\n";
-	}
-	if ($help[$c] eq "1K_GENOMES")
-	{
-		$KG = $c;
-		print STDERR "INFO in column $c\n";
-	}
-	if ($help[$c] eq "DBSNP")
-	{
-		$DBSBP = $c;
-		print STDERR "DBSNP_COL in column $c\n";
-	}
-	if ($help[$c] eq "ANNOTATION_control")
-    {
-    	$CANNOTATION = $c;
-    	print STDERR "ANNOTATION_control in column $c\n";
-    }
-    if ($help[$c] eq "RECLASSIFICATION")
-    {
-        $RECLASSIFICATION = $c;
-        print STDERR "RECLASSIFICATION in column $c\n";
-    }
+	if($head[$i] eq "DBSNP"){$col{"DBSNP"} = $i; print STDERR "DBSNP in column ", $i+1,"\n";}
+	if($head[$i] eq "1K_GENOMES"){$col{"1K_GENOMES"} = $i; print STDERR "1K_GENOMES in column ", $i+1,"\n";}
+	if($head[$i] eq "RECLASSIFICATION"){$col{"RECLASSIFICATION"} = $i; print STDERR "RECLASSIFICATION in column ", $i+1,"\n";}
+	if($head[$i] eq "ANNOTATION_control"){$col{"ANNOTATION_control"} = $i; print STDERR "ANNOTATION_control in column ", $i+1,"\n";}
+	if($head[$i] eq "CONFIDENCE"){$col{"CONFIDENCE"} = $i; print STDERR "CONFIDENCE in column ", $i+1,"\n";}
+	$i++;
 }
 
-if ($CANNOTATION > 0) {
-    $CLASSIFICATION = $CANNOTATION;
-} else {
-    $CLASSIFICATION = $RECLASSIFICATION;
-}
+my $DBSBP = $col{"DBSNP"};
+my $KG = $col{"1K_GENOMES"};
+my $CONFIDENCE = $col{"CONFIDENCE"};
+my $CLASSIFICATION = $col{"RECLASSIFICATION"};
 
 # I know that it's evilly hardcoded!
 while (<FH>)
