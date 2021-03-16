@@ -225,7 +225,7 @@ def main(args):
             in1KG = True
             if args.no_control:
                 af = extract_info(help["KGENOMES_COL"].split("&")[0], "EUR_AF")
-                if af is not None and any(af > 0.01 for af in map(float, af.split(','))) > 0.01:
+                if af is not None and any(af > args.kgenome_maxMAF for af in map(float, af.split(','))):
                     in1KG_AF = True
             infofield["1000G"] = "1000G"
         # dbSNP
@@ -247,11 +247,11 @@ def main(args):
         if args.no_control:
             if indbSNP and is_commonSNP and not is_clinic:
                 reasons += "dbSNP(NoControl)"
-            if help["GNOMAD_EXOMES_COL_VALID"] and any(af > 0.001 for af in map(float, extract_info(help["GNOMAD_EXOMES_COL"], "AF").split(','))):
+            if help["GNOMAD_EXOMES_COL_VALID"] and any(af > args.gnomAD_WES_maxMAF for af in map(float, extract_info(help["GNOMAD_EXOMES_COL"], "AF").split(','))):
                 inGnomAD_WES = True
                 infofield["gnomAD_Exomes"] = "gnomAD_Exomes"
                 reasons += "gnomAD_Exomes(NoControl)"
-            if help["GNOMAD_GENOMES_COL_VALID"] and any(af > 0.001 for af in map(float, extract_info(help["GNOMAD_GENOMES_COL"], "AF").split(','))):
+            if help["GNOMAD_GENOMES_COL_VALID"] and any(af > args.gnomAD_WGS_maxMAF for af in map(float, extract_info(help["GNOMAD_GENOMES_COL"], "AF").split(','))):
                 inGnomAD_WGS = True
                 infofield["gnomAD_Genomes"] = "gnomAD_Genomes"
                 reasons += "gnomAD_Genomes(NoControl)"
@@ -800,5 +800,10 @@ if __name__ == "__main__":
     parser.add_argument("-x", "--runexome", dest="runexome", action="store_true", default=False,
                         help="Run on exome, will turn off the high control coverage punishment " \
                              "and the PCR bias filter.")
+    parser.add_argument("--gnomAD_WGS_maxMAF", dest="gnomAD_WGS_maxMAF", help="Max gnomAD WGS MAF", default=0.001, type=float)
+    parser.add_argument("--gnomAD_WES_maxMAF", dest="gnomAD_WES_maxMAF", help="Max gnomAD WES MAF", default=0.001, type=float)
+    parser.add_argument("--localControl_WGS_maxMAF", dest="localControl_WGS_maxMAF", help="Max local control WGS MAF", default=0.01, type=float)
+    parser.add_argument("--localControl_WES_maxMAF", dest="localControl_WES_maxMAF", help="Max local control WES MAF", default=0.01, type=float)
+    parser.add_argument("--1000genome_maxMAF", dest="kgenome_maxMAF", help="Max 1000 genome MAF", default=0.01, type=float)
     args = parser.parse_args()
     main(args)
