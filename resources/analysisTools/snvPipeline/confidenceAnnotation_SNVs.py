@@ -32,7 +32,15 @@ def extract_info(info, keys, sep=";"):
         rtn = '0' if rtn == "None" else rtn
         return rtn
 
+def validate_refgenome(refname):
+    valid_refgenome = ('hs37d5', 'GRCh38')
+    if refname not in valid_refgenome:
+        raise ValueError('Reference name (--refgenome) is not valid: %s. Valid reference genome names are %s' % (refname, ', '.join(valid_refgenome)))
+
 def main(args):
+
+    validate_refgenome(args.refgenome[0])
+
     if args.pancanout is not None and not args.no_makehead:
         header = '##fileformat=VCFv4.1\n' \
                  '##fileDate=' + time.strftime("%Y%m%d") + '\n' \
@@ -102,6 +110,13 @@ def main(args):
                              "^CONFIDENCE$", "^RECLASSIFICATION$", "^PENALTIES$",
                              "^seqBiasPresent$", "^seqingBiasPresent$", "^seqBiasPresent_1$", "^seqingBiasPresent_1$",
                              "^seqBiasPresent_2$", "^seqingBiasPresent_2$"]
+            
+            if args.refgenome[0] == "hs37d5":
+                fixed_headers = ["^INFO$", "MAPABILITY", "HISEQDEPTH", "SIMPLE_TANDEMREPEATS", "REPEAT_MASKER", "DUKE_EXCLUDED",
+                                 "DAC_BLACKLIST", "SELFCHAIN", "^CONFIDENCE$", "^RECLASSIFICATION$", "^PENALTIES$",
+                                 "^seqBiasPresent$", "^seqingBiasPresent$", "^seqBiasPresent_1$", "^seqingBiasPresent_1$",
+                                 "^seqBiasPresent_2$", "^seqingBiasPresent_2$"]
+
             variable_headers = { "ANNOVAR_SEGDUP_COL": "^SEGDUP$", "KGENOMES_COL": "^1K_GENOMES$", "DBSNP_COL": "^DBSNP$", }
 
             if args.no_control:
@@ -327,27 +342,23 @@ def main(args):
             reasons += "Segmental_dup(-2)"
             filterfield["RE"] = 1
 
-        # Encode blacklist, generated for hg38 mappings
-#        if help["ENCODE_BLACKLIST_VALID"]:
-#            confidence -= 3 # High signal region and low mappability
-#            is_weird = True
-#            reasons += "Blacklist(-3)"
-#            filterfield["BL"] = 1
+        # Only for hg19 reference genome
+        if args.refgenome[0] == "hs37d5":
 
-        # Duke excluded and ENCODE DAC blacklist, only consider if not already annotated as suspicious repeat
-        #if help["DUKE_EXCLUDED_VALID"] or help["DAC_BLACKLIST_VALID"]:
-        #    confidence -= 3 # really bad region, usually centromeric repeats
-        #    is_weird = True
-        #    reasons += "Blacklist(-3)"
-        #    filterfield["BL"] = 1
+            # Duke excluded and ENCODE DAC blacklist, only consider if not already annotated as suspicious repeat
+            if help["DUKE_EXCLUDED_VALID"] or help["DAC_BLACKLIST_VALID"]:
+                confidence -= 3 # really bad region, usually centromeric repeats
+                is_weird = True
+                reasons += "Blacklist(-3)"
+                filterfield["BL"] = 1
 
-        # HiSeqDepth: regions "attracting" reads; often coincide with tandem repeats and CEN/TEL,
-        # not always with low mapability
-        #if help["HISEQDEPTH_VALID"]:
-        #    confidence -= 3 # really really bad region!
-        #    is_weird = True
-        #    reasons += "Hiseqdepth(-3)"
-        #    filterfield["HSDEPTH"] = 1
+            # HiSeqDepth: regions "attracting" reads; often coincide with tandem repeats and CEN/TEL,
+            # not always with low mapability
+            if help["HISEQDEPTH_VALID"]:
+                confidence -= 3 # really really bad region!
+                is_weird = True
+                reasons += "Hiseqdepth(-3)"
+                filterfield["HSDEPTH"] = 1
 
         # Mapability is 1 for unique regions, 0.5 for regions appearing twice, 0.33... 3times, ...
         # Everything with really high number of occurences is artefacts
