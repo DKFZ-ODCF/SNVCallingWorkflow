@@ -273,8 +273,7 @@ def performAnalysis(args):
                                             ACGTNacgtn1[ACGTNacgtn_index[1]] += 1
                                         else:
                                             ACGTNacgtn2[ACGTNacgtn_index[1]] += 1
-
-
+ 
                                         #if transformQualStr(pileupread.alignment.qual[pileupread.query_position])[0] >= args.baseq:        # DEBUG July 23 2012: BROAD BAM problem due to pileupread.alignment.qqual being shorter sometimes than pileupread.alignment.qual
                                         if(pileupread.alignment.query_name in readNameHash):
                                             old_qual = readNameHash[pileupread.alignment.query_name][0]
