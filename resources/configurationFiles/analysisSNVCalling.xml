@@ -39,15 +39,15 @@
         <cvalue name='SNVFILE_PREFIX' value='snvs_' type="string"/>
         <!--<cvalue name='analysisMethodNameOnInput' value='whole_genome_analysis' type='string' />-->
         <cvalue name="RAW_SNV_FILTER_OPTIONS" value='" --minVac=3 --minVaf=0.03 --minVacPS=2"' type="string"/>
-        
+
 
     	<!-- Reference genomes -->
         <cvalue name='REFERENCE_GENOME' value="${referenceGenome_hg19_chr}" type="string"/>
-        
-        <!--## Databases -->        
-        <cvalue name='hg19DatabasesDirectory' value="/icgc/ngs_share/assemblies/hg19_GRCh37_1000genomes/databases" type="path" />        
+
+        <!--## Databases -->
+        <cvalue name='hg19DatabasesDirectory' value="/icgc/ngs_share/assemblies/hg19_GRCh37_1000genomes/databases" type="path" />
         <cvalue name="hg19DatabaseUCSCDirectory" value="/icgc/ngs_share/assemblies/hg19_GRCh37_1000genomes/databases/UCSC" type="path" />
-        
+
         <cvalue name="DBSNP" value="${hg19DatabasesDirectory}/dbSNP/dbSNP_147/00-All.SNV.vcf.gz" type="path"/>
         <cvalue name="DBSNP_COL" value="DBSNP" type="string"/>
         <cvalue name="KGENOME" value="${hg19DatabasesDirectory}/1000genomes/ALL.wgs.phase1_integrated_calls.20101123.snps_chr.vcf.gz" type="path"/>

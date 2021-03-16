@@ -110,7 +110,7 @@ def main(args):
                              "^CONFIDENCE$", "^RECLASSIFICATION$", "^PENALTIES$",
                              "^seqBiasPresent$", "^seqingBiasPresent$", "^seqBiasPresent_1$", "^seqingBiasPresent_1$",
                              "^seqBiasPresent_2$", "^seqingBiasPresent_2$"]
-            
+
             if args.refgenome[0] == "hs37d5":
                 fixed_headers = ["^INFO$", "MAPABILITY", "HISEQDEPTH", "SIMPLE_TANDEMREPEATS", "REPEAT_MASKER", "DUKE_EXCLUDED",
                                  "DAC_BLACKLIST", "SELFCHAIN", "^CONFIDENCE$", "^RECLASSIFICATION$", "^PENALTIES$",
@@ -123,7 +123,7 @@ def main(args):
                 variable_headers["GNOMAD_EXOMES_COL"] = "^GNOMAD_EXOMES$"
                 variable_headers["GNOMAD_GENOMES_COL"] = "^GNOMAD_GENOMES$"
                 variable_headers["LOCALCONTROL_WGS_COL"] = "^LocalControlAF_WGS$"
-                variable_headers["LOCALCONTROL_WES_COL"] = "^LocalControlAF_WES$"                
+                variable_headers["LOCALCONTROL_WES_COL"] = "^LocalControlAF_WES$"
             else:
                 fixed_headers += [ "^INFO_control", "^ANNOTATION_control$", ]
 

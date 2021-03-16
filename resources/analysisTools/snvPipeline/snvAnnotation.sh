@@ -221,7 +221,7 @@ then
 	NRSOMSNV=`grep -v "^#" ${filenameSomaticSNVsTmp} | wc -l`
 	echo -e "SOMATIC_SNVS_UNFILTERED\t${NRSOMSNV}">> ${filenameQCValues}
 
-	mv ${filenameSNVVCFTemp}.tmp ${filenameSNVVCFTemp}    
+	mv ${filenameSNVVCFTemp}.tmp ${filenameSNVVCFTemp}
 
     wait ${zipAlternativeAlleleBaseScores} ; [[ $? -gt 0 ]] && echo "Error from zipAlternativeAlleleBaseScores" && exit 31
     wait ${zipReferenceAlleleBaseScores} ; [[ $? -gt 0 ]] && echo "Error from zipReferenceAlleleBaseScores" && exit 32

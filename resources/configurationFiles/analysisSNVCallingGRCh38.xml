@@ -10,8 +10,8 @@
   <configurationvalues>
 
     <!--hg38 base directory-->
-    <cvalue name='hg38BaseDirectory' value='/icgc/ngs_share/assemblies/hg_GRCh38' type='path' />    
-    
+    <cvalue name='hg38BaseDirectory' value='/icgc/ngs_share/assemblies/hg_GRCh38' type='path' />
+
     <!-- Reference genomes -->
     <cvalue name='REFERENCE_GENOME' value="${hg38BaseDirectory}/sequence/GRCh38_decoy_ebv_phiX_alt_hla_chr.fa" type="path"/>
     <cvalue name='INDEX_PREFIX' value="${hg38BaseDirectory}/indexes/bwa/bwa07_GRCh38_decoy_ebv_phiX_alt_hla_chr/GRCh38_decoy_ebv_phiX_alt_hla_chr.fa" type="path"/>
@@ -20,11 +20,11 @@
 
     <cvalue name='CHR_PREFIX' value='chr' type='string' />
     <cvalue name="disableAutoBAMHeaderAnalysis" value="true" type="boolean"/>
-    
+
     <!--## Databases -->
     <cvalue name='hg38DatabasesDirectory' value="${hg38BaseDirectory}/databases" type='path' />
-    <cvalue name='hg38DatabaseUCSCDirectory' value="${hg38DatabasesDirectory}/UCSC" type='path' />    
-    
+    <cvalue name='hg38DatabaseUCSCDirectory' value="${hg38DatabasesDirectory}/UCSC" type='path' />
+
     <cvalue name="DBSNP" value="${hg38DatabasesDirectory}/dbSNP/dbSNP_151_GRCh38.p7/00-All_v151_GRCh38.SNV.vcf.gz" type="path"/>
     <cvalue name="DBSNP_COL" value="DBSNP" type="string"/>
     <cvalue name="KGENOME" value="${hg38DatabasesDirectory}/1000Genome/hg38/ALL.wgs.shapeit2_integrated_snvindels_v2a.GRCh38.27022019.sites.vcf.gz" type="path"/>
@@ -42,11 +42,11 @@
     <cvalue name='ANNOVAR_BUILDVER' value='hg38' type='string'/>
     <cvalue name='ANNOVAR_DBPATH' value='${hg38DatabasesDirectory}/ANNOVAR/annovar_April2018/humandb/' type='path'/>
     <cvalue name='ANNOVAR_DBTYPE' value="'-dbtype wgEncodeGencodeCompV31'" type='string'/>
-    
+
     <!--Reference annotations during confidene annotation-->
     <cvalue name="CONFIDENCE_OPTS" value="-t 500 --refgenome GRCh38 ftp://ftp.sanger.ac.uk/pub/cancer/dockstore/human/GRCh38_hla_decoy_ebv/core_ref_GRCh38_hla_decoy_ebv.tar.gz" type="string"
             description="max read depth in control (-t INT default 150 for genomes, set to 500 for exomes) can now be ommited to avoid depth dependent punishing by setting -c 0. It is also possible to get a justification for the confidence score by setting the -p 1 flag"/>
-    
+
     <!--SNV reliability bundle-->
     <configurationValueBundle name='PIPE_CONFIG:SNV_RELIABILITY'>
      	<cvalue name='MAPABILITY' value='${hg38DatabasesDirectory}/mappability/GRCh38_Mappability_Align_100mer.bedGraph.gz' type="path"/>
