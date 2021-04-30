@@ -46,8 +46,11 @@ data <- read.table(opt$chrLengthFile, header=FALSE)
 chrLength <- data.frame(data)
 rownames(chrLength) <- chrLength$V1
 
-if((opt$chrPrefix != "" && grepl(opt$chrPrefix, chrLength$V1[1])) && !grepl(opt$chrPrefix, c.array[1])){
-	c.array <- paste0(opt$chrPrefix, c.array, opt$chrSuffix)
+if(opt$chrPrefix != "" && 
+  grepl(opt$chrPrefix, chrLength$V1[1]) && 
+	!grepl(opt$chrPrefix, c.array[1])){
+
+    c.array <- paste0(opt$chrPrefix, c.array, opt$chrSuffix)
 }
 
 xtotal <- sum(chrLength[c.array,2]/10)
