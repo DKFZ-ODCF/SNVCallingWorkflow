@@ -49,11 +49,26 @@ my %col;
 my $i = 0;
 while($i < @head)
 {
-	if($head[$i] eq "DBSNP"){$col{"DBSNP"} = $i; print STDERR "DBSNP in column ", $i+1,"\n";}
-	if($head[$i] eq "1K_GENOMES"){$col{"1K_GENOMES"} = $i; print STDERR "1K_GENOMES in column ", $i+1,"\n";}
-	if($head[$i] eq "RECLASSIFICATION"){$col{"RECLASSIFICATION"} = $i; print STDERR "RECLASSIFICATION in column ", $i+1,"\n";}
-	if($head[$i] eq "ANNOTATION_control"){$col{"ANNOTATION_control"} = $i; print STDERR "ANNOTATION_control in column ", $i+1,"\n";}
-	if($head[$i] eq "CONFIDENCE"){$col{"CONFIDENCE"} = $i; print STDERR "CONFIDENCE in column ", $i+1,"\n";}
+	if($head[$i] eq "DBSNP"){
+		$col{"DBSNP"} = $i;
+		print STDERR "DBSNP in column ", $i+1,"\n";
+	}
+	if($head[$i] eq "1K_GENOMES"){
+		$col{"1K_GENOMES"} = $i;
+		print STDERR "1K_GENOMES in column ", $i+1,"\n";
+	}
+	if($head[$i] eq "RECLASSIFICATION"){
+		$col{"RECLASSIFICATION"} = $i;
+		print STDERR "RECLASSIFICATION in column ", $i+1,"\n";
+	}
+	if($head[$i] eq "ANNOTATION_control"){
+		$col{"ANNOTATION_control"} = $i;
+		print STDERR "ANNOTATION_control in column ", $i+1,"\n";
+	}
+	if($head[$i] eq "CONFIDENCE"){
+		$col{"CONFIDENCE"} = $i;
+		print STDERR "CONFIDENCE in column ", $i+1,"\n";
+	}
 	$i++;
 }
 
