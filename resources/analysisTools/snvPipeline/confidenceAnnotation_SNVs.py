@@ -32,7 +32,15 @@ def extract_info(info, keys, sep=";"):
         rtn = '0' if rtn == "None" else rtn
         return rtn
 
+def validate_refgenome(refname):
+    valid_refgenome = ('hs37d5', 'GRCh38')
+    if refname not in valid_refgenome:
+        raise ValueError('Reference name (--refgenome) is not valid: %s. Valid reference genome names are %s' % (refname, ', '.join(valid_refgenome)))
+
 def main(args):
+
+    validate_refgenome(args.refgenome[0])
+
     if args.pancanout is not None and not args.no_makehead:
         header = '##fileformat=VCFv4.1\n' \
                  '##fileDate=' + time.strftime("%Y%m%d") + '\n' \
@@ -54,7 +62,7 @@ def main(args):
                   '##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read depth at this position in the sample">\n' \
                   '##FORMAT=<ID=DP4,Number=4,Type=Integer,Description="Number of high-quality ref-forward, ref-reverse, alt-forward and alt-reverse bases">\n' \
                   '##FILTER=<ID=RE,Description="variant in UCSC_27Sept2013_RepeatMasker.bed.gz region and/or SimpleTandemRepeats_chr.bed.gz region, downloaded from UCSC genome browser and/or variant in segmental duplication region, annotated by annovar">\n' \
-                  '##FILTER=<ID=BL,Description="variant in DAC-Blacklist from ENCODE or in DUKE_EXCLUDED list, both downloaded from UCSC genome browser">\n' \
+                  '##FILTER=<ID=BL,Description="variant in DAC-Blacklist from ENCODE or in DUKE_EXCLUDED list, both downloaded from UCSC genome browser - # not used in hg38">\n' \
                   '##FILTER=<ID=DP,Description="<= 5 reads total at position in tumor">\n' \
                   '##FILTER=<ID=SB,Description="Strand bias of reads with mutant allele = zero reads on one strand">\n' \
                   '##FILTER=<ID=TAC,Description="less than 6 reads in Tumor at position">\n' \
@@ -98,19 +106,24 @@ def main(args):
 
         if line[0] == "#":
             headers = list(line[1:].rstrip().split('\t'))
-            fixed_headers = ["^INFO$", "MAPABILITY", "HISEQDEPTH", "SIMPLE_TANDEMREPEATS", "REPEAT_MASKER", "DUKE_EXCLUDED",
-                             "DAC_BLACKLIST", "SELFCHAIN", "^CONFIDENCE$", "^RECLASSIFICATION$", "^PENALTIES$",
+            fixed_headers = ["^INFO$", "MAPABILITY", "SIMPLE_TANDEMREPEATS", "REPEAT_MASKER", 
+                             "^CONFIDENCE$", "^RECLASSIFICATION$", "^PENALTIES$",
                              "^seqBiasPresent$", "^seqingBiasPresent$", "^seqBiasPresent_1$", "^seqingBiasPresent_1$",
                              "^seqBiasPresent_2$", "^seqingBiasPresent_2$"]
+
+            if args.refgenome[0] == "hs37d5":
+                fixed_headers = ["^INFO$", "MAPABILITY", "HISEQDEPTH", "SIMPLE_TANDEMREPEATS", "REPEAT_MASKER", "DUKE_EXCLUDED",
+                                 "DAC_BLACKLIST", "SELFCHAIN", "^CONFIDENCE$", "^RECLASSIFICATION$", "^PENALTIES$",
+                                 "^seqBiasPresent$", "^seqingBiasPresent$", "^seqBiasPresent_1$", "^seqingBiasPresent_1$",
+                                 "^seqBiasPresent_2$", "^seqingBiasPresent_2$"]
+
             variable_headers = { "ANNOVAR_SEGDUP_COL": "^SEGDUP$", "KGENOMES_COL": "^1K_GENOMES$", "DBSNP_COL": "^DBSNP$", }
 
             if args.no_control:
-                variable_headers["ExAC_COL"] = "^ExAC$"
-                variable_headers["EVS_COL"] = "^EVS$"
                 variable_headers["GNOMAD_EXOMES_COL"] = "^GNOMAD_EXOMES$"
                 variable_headers["GNOMAD_GENOMES_COL"] = "^GNOMAD_GENOMES$"
                 variable_headers["LOCALCONTROL_WGS_COL"] = "^LocalControlAF_WGS$"
-                variable_headers["LOCALCONTROL_WES_COL"] = "^LocalControlAF_WES$"  
+                variable_headers["LOCALCONTROL_WES_COL"] = "^LocalControlAF_WES$"
             else:
                 fixed_headers += [ "^INFO_control", "^ANNOTATION_control$", ]
 
@@ -188,12 +201,10 @@ def main(args):
         is_weird = False # coindicende with known artefact-producing regions
         if args.no_control:
             classification = "somatic" # start with default somatic
-            inExAC = False
-            inEVS = False
             inGnomAD_WES = False
             inGnomAD_WGS = False
-            inLocalControl_WGS = False
             inLocalControl_WES = False
+            inLocalControl_WGS = False
         else:
             # for potential re-classification (e.g. low coverage in control and in dbSNP => probably germline)
             classification = help["ANNOTATION_control"] # start with original classification
@@ -214,7 +225,7 @@ def main(args):
             in1KG = True
             if args.no_control:
                 af = extract_info(help["KGENOMES_COL"].split("&")[0], "EUR_AF")
-                if af is not None and any(af > 0.01 for af in map(float, af.split(','))) > 0.01:
+                if af is not None and any(af > args.kgenome_maxMAF for af in map(float, af.split(','))):
                     in1KG_AF = True
             infofield["1000G"] = "1000G"
         # dbSNP
@@ -236,32 +247,24 @@ def main(args):
         if args.no_control:
             if indbSNP and is_commonSNP and not is_clinic:
                 reasons += "dbSNP(NoControl)"
-            if help["ExAC_COL_VALID"] and any(af > 1.0 for af in map(float, extract_info(help["ExAC_COL"], "AF").split(','))):
-                inExAC = True
-                infofield["ExAC"] = "ExAC"
-                reasons += "ExAC(NoControl)"
-            if help["EVS_COL_VALID"] and any(af > 1.0 for af in map(float, extract_info(help["EVS_COL"], "MAF").split(','))):
-                inEVS = True
-                infofield["EVS"] = "EVS"
-                reasons += "EVS(NoControl)"
-
-            if help["GNOMAD_EXOMES_COL_VALID"] and any(af > 0.001 for af in map(float, extract_info(help["GNOMAD_EXOMES_COL"], "AF").split(','))):
+            if help["GNOMAD_EXOMES_COL_VALID"] and any(af > args.gnomAD_WES_maxMAF for af in map(float, extract_info(help["GNOMAD_EXOMES_COL"], "AF").split(','))):
                 inGnomAD_WES = True
                 infofield["gnomAD_Exomes"] = "gnomAD_Exomes"
                 reasons += "gnomAD_Exomes(NoControl)"
-            if help["GNOMAD_GENOMES_COL_VALID"] and any(af > 0.001 for af in map(float, extract_info(help["GNOMAD_GENOMES_COL"], "AF").split(','))):
+            if help["GNOMAD_GENOMES_COL_VALID"] and any(af > args.gnomAD_WGS_maxMAF for af in map(float, extract_info(help["GNOMAD_GENOMES_COL"], "AF").split(','))):
                 inGnomAD_WGS = True
                 infofield["gnomAD_Genomes"] = "gnomAD_Genomes"
                 reasons += "gnomAD_Genomes(NoControl)"
 
-            if help["LOCALCONTROL_WGS_COL_VALID"] and any(af > 0.01 for af in map(float, extract_info(help["LOCALCONTROL_WGS_COL"], "AF").split(','))):
+            if help["LOCALCONTROL_WGS_COL_VALID"] and any(af > args.localControl_WGS_maxMAF for af in map(float, extract_info(help["LOCALCONTROL_WGS_COL"], "AF").split(','))):
                 inLocalControl_WGS = True
                 infofield["LocalControl_WGS"] = "LocalControl_WGS"
                 reasons += "LocalControl_WGS(NoControl)"
-            if help["LOCALCONTROL_WES_COL_VALID"] and any(af > 0.01 for af in map(float, extract_info(help["LOCALCONTROL_WES_COL"], "AF").split(','))):
+            if help["LOCALCONTROL_WES_COL_VALID"] and any(af > args.localControl_WES_maxMAF for af in map(float, extract_info(help["LOCALCONTROL_WES_COL"], "AF").split(','))):
                 inLocalControl_WES = True
                 infofield["LocalControl_WES"] = "LocalControl_WES"
                 reasons += "LocalControl_WES(NoControl)"
+
 
         # Punish for biases round 1
         if idx_pcrbias != -1 and idx_seqbias != -1 and args.round == 1:
@@ -339,20 +342,23 @@ def main(args):
             reasons += "Segmental_dup(-2)"
             filterfield["RE"] = 1
 
-        # Duke excluded and ENCODE DAC blacklist, only consider if not already annotated as suspicious repeat
-        if help["DUKE_EXCLUDED_VALID"] or help["DAC_BLACKLIST_VALID"]:
-            confidence -= 3 # really bad region, usually centromeric repeats
-            is_weird = True
-            reasons += "Blacklist(-3)"
-            filterfield["BL"] = 1
+        # Only for hg19 reference genome
+        if args.refgenome[0] == "hs37d5":
 
-        # HiSeqDepth: regions "attracting" reads; often coincide with tandem repeats and CEN/TEL,
-        # not always with low mapability
-        if help["HISEQDEPTH_VALID"]:
-            confidence -= 3 # really really bad region!
-            is_weird = True
-            reasons += "Hiseqdepth(-3)"
-            filterfield["HSDEPTH"] = 1
+            # Duke excluded and ENCODE DAC blacklist, only consider if not already annotated as suspicious repeat
+            if help["DUKE_EXCLUDED_VALID"] or help["DAC_BLACKLIST_VALID"]:
+                confidence -= 3 # really bad region, usually centromeric repeats
+                is_weird = True
+                reasons += "Blacklist(-3)"
+                filterfield["BL"] = 1
+
+            # HiSeqDepth: regions "attracting" reads; often coincide with tandem repeats and CEN/TEL,
+            # not always with low mapability
+            if help["HISEQDEPTH_VALID"]:
+                confidence -= 3 # really really bad region!
+                is_weird = True
+                reasons += "Hiseqdepth(-3)"
+                filterfield["HSDEPTH"] = 1
 
         # Mapability is 1 for unique regions, 0.5 for regions appearing twice, 0.33... 3times, ...
         # Everything with really high number of occurences is artefacts
@@ -403,7 +409,7 @@ def main(args):
 
         if (args.no_control):
             # an SNV that is in dbSNP but not "clinic" or/and in 1 KG with high frequency is probably germline
-            if (in1KG_AF or (indbSNP and is_commonSNP and not is_clinic) or inExAC or inEVS or inGnomAD_WES or inGnomAD_WGS or inLocalControl_WES or inLocalControl_WGS):
+            if (in1KG_AF or (indbSNP and is_commonSNP and not is_clinic) or inGnomAD_WES or inGnomAD_WGS or inLocalControl_WGS or inLocalControl_WES):
                classification = "SNP_support_germline"
 
         # 3) information from the calls and germline comparisons: coverage, strand bias, variant support, ..
@@ -770,8 +776,10 @@ if __name__ == "__main__":
     parser.add_argument("-g", "--refgenome", dest="refgenome", nargs=2,
                         default=["hs37d5", "ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/" \
                                            "phase2_reference_assembly_sequence/hs37d5.fa.gz", ],
-                        help="reference genome used for calling ID, path (default hs37d5, ftp://ftp.1000genomes.ebi" \
-                             ".ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz)")
+                        help="Argument's first value is used to determine if the workflow is using hg19 or hg38 reference genome. " \
+                             "Allowed first values are 'hs37d5' or 'GRCh37', second value could be the downloaded URL of the reference genome. " \
+                             "(default hs37d5, ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz)" \
+                             "")
     parser.add_argument("-z", "--center", dest="center", nargs="?", default="DKFZ",
                         help="Center (unclear if the center where the data was produced or the center of the " \
                              "calling pipeline; default DKFZ).")
@@ -794,5 +802,10 @@ if __name__ == "__main__":
     parser.add_argument("-x", "--runexome", dest="runexome", action="store_true", default=False,
                         help="Run on exome, will turn off the high control coverage punishment " \
                              "and the PCR bias filter.")
+    parser.add_argument("--gnomAD_WGS_maxMAF", dest="gnomAD_WGS_maxMAF", help="Max gnomAD WGS MAF", default=0.001, type=float)
+    parser.add_argument("--gnomAD_WES_maxMAF", dest="gnomAD_WES_maxMAF", help="Max gnomAD WES MAF", default=0.001, type=float)
+    parser.add_argument("--localControl_WGS_maxMAF", dest="localControl_WGS_maxMAF", help="Max local control WGS MAF", default=0.01, type=float)
+    parser.add_argument("--localControl_WES_maxMAF", dest="localControl_WES_maxMAF", help="Max local control WES MAF", default=0.01, type=float)
+    parser.add_argument("--1000genome_maxMAF", dest="kgenome_maxMAF", help="Max 1000 genome MAF", default=0.01, type=float)
     args = parser.parse_args()
     main(args)

@@ -17,7 +17,7 @@ declare -r outputDirectory=`dirname ${FILENAME_VCF_OUT}`
 relinked=false
 # (Re-)link bam file and index. The pipeline cannot handle i.e. .mdup.bam and .mdup.bai
 # Look up the index with .bam.bai. If the file exists nothing happens.
-if [[ ! -f ${TUMOR_BAMFILE_FULLPATH_BP}.bai ]]
+if [[ ! -f ${TUMOR_BAMFILE_FULLPATH_BP}.bai && ! -f ${TUMOR_BAMFILE_FULLPATH_BP}.crai ]]
 then
     shortBamIdx=`dirname ${TUMOR_BAMFILE_FULLPATH_BP}`"/"`basename ${TUMOR_BAMFILE_FULLPATH_BP} .bam`".bai"
     [[ ! -f ${shortBamIdx} ]] && echo "Bam index file cannot be found!" && exit -15
@@ -91,12 +91,10 @@ fi
 
 cmdFilter="${cmdFilter} | ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${DBSNP} --columnName=${DBSNP_COL} --reportMatchType  --bAdditionalColumn=2 --reportLevel 4 | \
     ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${KGENOME} --columnName=${KGENOMES_COL}  --reportMatchType --bAdditionalColumn=2 --reportLevel 4 | \
-    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${ExAC} --columnName ${ExAC_COL} --bFileType vcf --reportMatchType --reportLevel 4 | \
-    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${EVS} --columnName ${EVS_COL} --bFileType vcf --reportMatchType --reportLevel 4 | \
-    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} -a - -b ${GNOMAD_WES_ALL_SNV} --columnName=${GNOMAD_WES_COL} --bFileType vcf --reportMatchType --reportLevel 4 | \
-    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} -a - -b ${GNOMAD_WGS_ALL_SNV} --columnName=${GNOMAD_WGS_COL} --bFileType vcf --reportMatchType --reportLevel 4 | \
+    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${GNOMAD_WES_ALL_SNV} --columnName=${GNOMAD_WES_COL} --bFileType vcf --reportMatchType --reportLevel 4 | \
+    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${GNOMAD_WGS_ALL_SNV} --columnName=${GNOMAD_WGS_COL} --bFileType vcf --reportMatchType --reportLevel 4 | \
     ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${LOCALCONTROL_WGS} --columnName ${LOCALCONTROL_WGS_COL} --bFileType vcf --reportMatchType --reportLevel 4 | \
-    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${LOCALCONTROL_WES} --columnName ${LOCALCONTROL_WES_COL} --bFileType vcf --reportMatchType --reportLevel 4"
+    ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b ${LOCALCONTROL_WES} --columnName ${LOCALCONTROL_WES_COL} --bFileType vcf --reportMatchType --reportLevel 4 "
 
 if [[ -f ${RECURRENCE} ]]; then
     cmdFilter="${cmdFilter} | ${PERL_BINARY} ${TOOL_ANNOTATE_VCF_FILE} -a - -b ${RECURRENCE} --columnName ${RECURRENCE_COL} --bFileType vcf"
@@ -199,7 +197,8 @@ mkfifo ${npConfidence}
 if [[ ${isNoControlWorkflow-false} == "false" ]]; then
     cat ${filenameSNVVCF} > ${npConfidence} &
 else
-    cat ${filenameSNVVCF} | ${PYPY_OR_PYTHON_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 0 > ${npConfidence} &
+    cat ${filenameSNVVCF} | ${PYPY_OR_PYTHON_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 0 \
+        --gnomAD_WGS_maxMAF=${CRIT_GNOMAD_GENOMES_maxMAF} --gnomAD_WES_maxMAF=${CRIT_GNOMAD_EXOMES_maxMAF} --localControl_WGS_maxMAF=${CRIT_LOCALCONTROL_maxMAF} --localControl_WES_maxMAF=${CRIT_LOCALCONTROL_maxMAF} --1000genome_maxMAF=${CRIT_1KGENOMES_maxMAF} > ${npConfidence} &
 fi
 
 # create BaseScore FIFOs and their consumer processes (zip and write to target file)
@@ -214,7 +213,8 @@ cat ${filenameReferenceAlleleReadPositions}_NP | ${BGZIP_BINARY} -f >${filenameR
 if [[ ${runArtifactFilter-true} == true ]]
 then
 	cat ${npConfidence} | filterPeOverlap ${noControlFlag} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} --altBaseQualFile=${filenameAlternativeAlleleBaseScores}_NP --refBaseQualFile=${filenameReferenceAlleleBaseScores}_NP --altBasePositionsFile=${filenameAlternativeAlleleReadPositions}_NP --refBasePositionsFile ${filenameReferenceAlleleReadPositions}_NP --referenceFile=${REFERENCE_GENOME} \
-						| ${PYPY_OR_PYTHON_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 0 -f ${filenameSomaticSNVsTmp} > ${filenameSNVVCFTemp}.tmp
+						| ${PYPY_OR_PYTHON_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 0 -f ${filenameSomaticSNVsTmp} \
+                            --gnomAD_WGS_maxMAF=${CRIT_GNOMAD_GENOMES_maxMAF} --gnomAD_WES_maxMAF=${CRIT_GNOMAD_EXOMES_maxMAF} --localControl_WGS_maxMAF=${CRIT_LOCALCONTROL_maxMAF} --localControl_WES_maxMAF=${CRIT_LOCALCONTROL_maxMAF} --1000genome_maxMAF=${CRIT_1KGENOMES_maxMAF} > ${filenameSNVVCFTemp}.tmp
 
     [[ $? != 0 ]] && echo "Error in first iteration of confidence annotation" && exit 2
 
@@ -243,7 +243,8 @@ then
     fi
 
 	cat ${filenameSNVVCFTemp} | ${PYTHON_BINARY} ${TOOL_FLAG_BIAS} --vcfFile="/dev/stdin" --referenceFile=${REFERENCE_GENOME} --sequence_specificFile=${filenamePCRerrorMatrix} --sequencing_specificFile=${filenameSequencingErrorMatrix} --numReads=${nReads} --numMuts=${nMuts} --biasPValThreshold=${biasPValThreshold} --biasRatioThreshold=${biasRatioThreshold} --biasRatioMinimum=${biasRatioMinimum} --maxNumOppositeReadsSequencingWeakBias=${maxNumOppositeReadsSequencingWeakBias} --maxNumOppositeReadsSequenceWeakBias=${maxNumOppositeReadsSequenceWeakBias} --maxNumOppositeReadsSequencingStrongBias=${maxNumOppositeReadsSequencingStrongBias} --maxNumOppositeReadsSequenceStrongBias=${maxNumOppositeReadsSequenceStrongBias} --ratioVcf=${rVcf} --bias_matrixSeqFile=${filenameBiasMatrixSeqFile} --bias_matrixSeqingFile=${filenameBiasMatrixSeqingFile} --vcfFileFlagged="/dev/stdout" | \
-	${PYPY_OR_PYTHON_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 1 -f ${filenameSomaticSNVsTmp} > ${filenameSNVVCFTemp}.tmp
+	${PYPY_OR_PYTHON_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS} -a 1 -f ${filenameSomaticSNVsTmp} \
+        --gnomAD_WGS_maxMAF=${CRIT_GNOMAD_GENOMES_maxMAF} --gnomAD_WES_maxMAF=${CRIT_GNOMAD_EXOMES_maxMAF} --localControl_WGS_maxMAF=${CRIT_LOCALCONTROL_maxMAF} --localControl_WES_maxMAF=${CRIT_LOCALCONTROL_maxMAF} --1000genome_maxMAF=${CRIT_1KGENOMES_maxMAF} > ${filenameSNVVCFTemp}.tmp
 
 	[[ $? != 0 ]] && echo "Error in first filtering and/or second interation of confidence annotation" && exit 5
 
@@ -267,7 +268,8 @@ then
     fi
 
 	cat ${filenameSNVVCFTemp} | ${PYTHON_BINARY} -u ${TOOL_FLAG_BIAS} --vcfFile="/dev/stdin" --referenceFile=${REFERENCE_GENOME} --sequence_specificFile=${filenamePCRerrorMatrix} --sequencing_specificFile=${filenameSequencingErrorMatrix} --numReads=${nReads} --numMuts=${nMuts} --biasPValThreshold=${biasPValThreshold} --biasRatioThreshold=${biasRatioThreshold} --biasRatioMinimum=${biasRatioMinimum} --maxNumOppositeReadsSequencingWeakBias=${maxNumOppositeReadsSequencingWeakBias} --maxNumOppositeReadsSequenceWeakBias=${maxNumOppositeReadsSequenceWeakBias} --maxNumOppositeReadsSequencingStrongBias=${maxNumOppositeReadsSequencingStrongBias} --maxNumOppositeReadsSequenceStrongBias=${maxNumOppositeReadsSequenceStrongBias} --ratioVcf=${rVcf} --bias_matrixSeqFile=${filenameBiasMatrixSeqFile} --bias_matrixSeqingFile=${filenameBiasMatrixSeqingFile} --vcfFileFlagged="/dev/stdout" | \
-	${PYPY_OR_PYTHON_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS_PANCAN} -a 2  > ${filenameSNVVCF}
+	${PYPY_OR_PYTHON_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS_PANCAN} -a 2 \
+    --gnomAD_WGS_maxMAF=${CRIT_GNOMAD_GENOMES_maxMAF} --gnomAD_WES_maxMAF=${CRIT_GNOMAD_EXOMES_maxMAF} --localControl_WGS_maxMAF=${CRIT_LOCALCONTROL_maxMAF} --localControl_WES_maxMAF=${CRIT_LOCALCONTROL_maxMAF} --1000genome_maxMAF=${CRIT_1KGENOMES_maxMAF} > ${filenameSNVVCF}
 
 	[[ $? != 0 ]] && echo "Error in second filtering and/or third iteration of confidence annotation" && exit 8
 
@@ -289,7 +291,8 @@ then
 	fi
 else
 	cat ${npConfidence} | filterPeOverlap ${noControlFlag} --alignmentFile=${tumorbamfullpath} --mapq=$mapqual --baseq=$basequal --qualityScore=phred --maxNumberOfMismatchesInRead=${NUMBER_OF_MISMACTHES_THRESHOLD--1} --altBaseQualFile=${filenameAlternativeAlleleBaseScores}_NP --refBaseQualFile=${filenameReferenceAlleleBaseScores}_NP --altBasePositionsFile=${filenameAlternativeAlleleReadPositions}_NP --refBasePositionsFile=${filenameReferenceAlleleReadPositions}_NP --referenceFile=${REFERENCE_GENOME} | \
-	${PYPY_OR_PYTHON_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS_PANCAN} > ${filenameSNVVCFTemp}
+	${PYPY_OR_PYTHON_BINARY} -u ${TOOL_CONFIDENCE_ANNOTATION} ${noControlFlag} -i - ${CONFIDENCE_OPTS_PANCAN} \
+    --gnomAD_WGS_maxMAF=${CRIT_GNOMAD_GENOMES_maxMAF} --gnomAD_WES_maxMAF=${CRIT_GNOMAD_EXOMES_maxMAF} --localControl_WGS_maxMAF=${CRIT_LOCALCONTROL_maxMAF} --localControl_WES_maxMAF=${CRIT_LOCALCONTROL_maxMAF} --1000genome_maxMAF=${CRIT_1KGENOMES_maxMAF} > ${filenameSNVVCFTemp}
 
     exitCode=$?
     [[ $exitCode == 0 ]] && [[ -f ${filenameSNVVCFTemp} ]] && mv ${filenameSNVVCFTemp} ${filenameSNVVCF}

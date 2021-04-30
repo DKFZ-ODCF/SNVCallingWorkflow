@@ -64,18 +64,17 @@ while(<IN>)
 print STDERR "NOTE: The reading of the VCF will end with a broken pipe error, because we only read the header and then stop.\n";
 close IN;
 
-my @head=split("\t", $head);
+my @header=split("\t", $head);
 my %col;
 
-
 my $i = 0;
-while($i < @head)
+while($i < @header)
 {
-	if($head[$i] eq "EXONIC_CLASSIFICATION"){$col{"EXONIC_CLASSIFICATION"} = $i; print "EXONIC_CLASSIFICATION in column ", $i+1,"\n";}
-	if($head[$i] eq "ANNOVAR_FUNCTION"){$col{"ANNOVAR_FUNCTION"} = $i; print "ANNOVAR_FUNCTION in column ", $i+1,"\n";}
-	if($head[$i] eq "RECLASSIFICATION"){$col{"RECLASSIFICATION"} = $i; print "RECLASSIFICATION in column ", $i+1,"\n";}
-	if($head[$i] eq "ANNOTATION_control"){$col{"ANNOTATION_control"} = $i; print "ANNOTATION_control in column ", $i+1,"\n";}
-	if($head[$i] eq "CONFIDENCE"){$col{"CONFIDENCE"} = $i; print "CONFIDENCE in column ", $i+1,"\n";}
+	if($header[$i] eq "EXONIC_CLASSIFICATION"){$col{"EXONIC_CLASSIFICATION"} = $i; print "EXONIC_CLASSIFICATION in column ", $i+1,"\n";}
+	if($header[$i] eq "ANNOVAR_FUNCTION"){$col{"ANNOVAR_FUNCTION"} = $i; print "ANNOVAR_FUNCTION in column ", $i+1,"\n";}
+	if($header[$i] eq "RECLASSIFICATION"){$col{"RECLASSIFICATION"} = $i; print "RECLASSIFICATION in column ", $i+1,"\n";}
+	if($header[$i] eq "ANNOTATION_control"){$col{"ANNOTATION_control"} = $i; print "ANNOTATION_control in column ", $i+1,"\n";}
+	if($header[$i] eq "CONFIDENCE"){$col{"CONFIDENCE"} = $i; print "CONFIDENCE in column ", $i+1,"\n";}
 	$i++;
 }
 
