@@ -776,8 +776,10 @@ if __name__ == "__main__":
     parser.add_argument("-g", "--refgenome", dest="refgenome", nargs=2,
                         default=["hs37d5", "ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/" \
                                            "phase2_reference_assembly_sequence/hs37d5.fa.gz", ],
-                        help="reference genome used for calling ID, path (default hs37d5, ftp://ftp.1000genomes.ebi" \
-                             ".ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz)")
+                        help="Argument's first value is used to determine if the workflow is using hg19 or hg38 reference genome. " \
+                             "Allowed first values are 'hs37d5' or 'GRCh37', second value could be the downloaded URL of the reference genome. " \
+                             "(default hs37d5, ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz)" \
+                             "")
     parser.add_argument("-z", "--center", dest="center", nargs="?", default="DKFZ",
                         help="Center (unclear if the center where the data was produced or the center of the " \
                              "calling pipeline; default DKFZ).")
