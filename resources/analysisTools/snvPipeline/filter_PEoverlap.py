@@ -139,6 +139,8 @@ def performAnalysis(args):
     elif args.alignmentFile.split(".")[-1] == "cram":
         mode += "c"
         samfile = pysam.Samfile(args.alignmentFile, mode, reference_filename = reference_file)
+    else:
+        raise "Unknown file alignment suffix '%s'. Need 'bam' or 'cram'" % args.alignmentFile.split(".")[-1]
 
     if args.altPosF != '':
         ALT_basePositions_file = args.altPosF
