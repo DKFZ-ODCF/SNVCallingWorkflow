@@ -231,8 +231,8 @@
                 <rset size="t" memory="1" cores="1" nodes="1" walltime="1" queue="devel"/>
                 <rset size="s" memory="3" cores="2" nodes="1" walltime="6"/>
                 <rset size="m" memory="5" cores="3" nodes="1" walltime="12"/>
-                <rset size="l" memory="5" cores="3" nodes="1" walltime="24"/>
-                <rset size="xl" memory="6" cores="3" nodes="1" walltime="48"/>
+                <rset size="l" memory="7" cores="3" nodes="1" walltime="24"/>
+                <rset size="xl" memory="9" cores="3" nodes="1" walltime="48"/>
             </resourcesets>
             <input type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_VCF_IN"/>
             <input type="file" typeof="de.dkfz.b080.co.files.TumorBamFile" scriptparameter="TUMOR_BAMFILE_FULLPATH_BP"/>
@@ -247,7 +247,7 @@
                 <rset size="t" memory="1" cores="1" nodes="1" walltime="1" queue="devel"/>
                 <rset size="s" memory="1" cores="3" nodes="1" walltime="4"/>
                 <rset size="m" memory="1" cores="3" nodes="1" walltime="8"/>
-                <rset size="l" memory="1" cores="3" nodes="1" walltime="12"/>
+                <rset size="l" memory="2" cores="3" nodes="1" walltime="12"/>
                 <rset size="xl" memory="4" cores="3" nodes="1" walltime="24"/>
             </resourcesets>
             <input type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_VCF"/>
@@ -261,7 +261,7 @@
                 <rset size="t" memory="1" cores="1" nodes="1" walltime="1" queue="devel"/>
                 <rset size="s" memory="1" cores="1" nodes="1" walltime="1"/>
                 <rset size="m" memory="1" cores="1" nodes="1" walltime="2"/>
-                <rset size="l" memory="1" cores="1" nodes="1" walltime="4"/>
+                <rset size="l" memory="2" cores="1" nodes="1" walltime="4"/>
                 <rset size="xl" memory="4" cores="1" nodes="1" walltime="8"/>
             </resourcesets>
             <input type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_VCF"/>
