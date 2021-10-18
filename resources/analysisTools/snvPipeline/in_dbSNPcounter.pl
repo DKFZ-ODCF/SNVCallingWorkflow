@@ -23,7 +23,7 @@ unless (defined $minscore)
 {
 	$minscore = 8;
 }
-open (FH, $file) or die "Could not open $file: $!\n";
+open (my $FH, $file) or die "Could not open $file: $!\n";
 
 # count all, somatic, s. with minconfidence, in dbSNP, in 1KG
 my $all = 0;
@@ -37,75 +37,75 @@ my @help = ();
 
 
 my $header = "";
-while ($header = <FH>)
-{
-	last if ($header =~ /^\#CHROM/); # that is the line with the column names
-}
-chomp $header;
+my ($DBSBP, $KG, $CONFIDENCE, $CLASSIFICATION);
 
-my @head=split("\t", $header);
-my %col;
-
-my $i = 0;
-while($i < @head)
-{
-	if($head[$i] eq "DBSNP"){
-		$col{"DBSNP"} = $i;
-		print STDERR "DBSNP in column ", $i+1,"\n";
-	}
-	if($head[$i] eq "1K_GENOMES"){
-		$col{"1K_GENOMES"} = $i;
-		print STDERR "1K_GENOMES in column ", $i+1,"\n";
-	}
-	if($head[$i] eq "RECLASSIFICATION"){
-		$col{"RECLASSIFICATION"} = $i;
-		print STDERR "RECLASSIFICATION in column ", $i+1,"\n";
-	}
-	if($head[$i] eq "ANNOTATION_control"){
-		$col{"ANNOTATION_control"} = $i;
-		print STDERR "ANNOTATION_control in column ", $i+1,"\n";
-	}
-	if($head[$i] eq "CONFIDENCE"){
-		$col{"CONFIDENCE"} = $i;
-		print STDERR "CONFIDENCE in column ", $i+1,"\n";
-	}
-	$i++;
-}
-
-my $DBSBP = $col{"DBSNP"};
-my $KG = $col{"1K_GENOMES"};
-my $CONFIDENCE = $col{"CONFIDENCE"};
-my $CLASSIFICATION = $col{"RECLASSIFICATION"};
-
-# I know that it's evilly hardcoded!
-while (<FH>)
-{
-	if ($_ =~ /^#/)	# skip header lines
+while(!eof($FH)){
+	my $line = readline($FH) || die "Could not read line: $?";
+	chomp $line;
+	if ($line =~ /^#/)
 	{
-		next;
-	}
-	$all++;
-	@help = split ("\t", $_);
-	if ($help[$CLASSIFICATION] =~ /somatic/)
-	{
-		$somatic++;
-		if ($help[$CONFIDENCE] >= $minscore)
-		{
-			$scored++;
-			#print STDERR $_;
-			if ($help[$DBSBP] =~ /MATCH=exact/)
+		#print STDOUT "HELLO\n";
+		if ($line =~/^#CHROM/){
+			chomp $line;
+
+			my @head=split("\t", $line);
+			my %col;
+
+			my $i = 0;
+			while($i < @head)
 			{
-				$dbSNP++;
+				if($head[$i] eq "DBSNP"){
+					$col{"DBSNP"} = $i;
+					print STDERR "DBSNP in column ", $i+1,"\n";
+				}
+				if($head[$i] eq "1K_GENOMES"){
+					$col{"1K_GENOMES"} = $i;
+					print STDERR "1K_GENOMES in column ", $i+1,"\n";
+				}
+				if($head[$i] eq "RECLASSIFICATION"){
+					$col{"RECLASSIFICATION"} = $i;
+					print STDERR "RECLASSIFICATION in column ", $i+1,"\n";
+				}
+				if($head[$i] eq "ANNOTATION_control"){
+					$col{"ANNOTATION_control"} = $i;
+					print STDERR "ANNOTATION_control in column ", $i+1,"\n";
+				}
+				if($head[$i] eq "CONFIDENCE"){
+					$col{"CONFIDENCE"} = $i;
+					print STDERR "CONFIDENCE in column ", $i+1,"\n";
+				}
+				$i++;
 			}
-			if ($help[$KG] =~ /MATCH=exact/)
+
+			$DBSBP = $col{"DBSNP"};
+			$KG = $col{"1K_GENOMES"};
+			$CONFIDENCE = $col{"CONFIDENCE"};
+			$CLASSIFICATION = $col{"RECLASSIFICATION"};
+		}
+	}
+	else{
+		$all++;
+		@help = split ("\t", $line);
+		if ($help[$CLASSIFICATION] =~ /somatic/)
+		{
+			$somatic++;
+			if ($help[$CONFIDENCE] >= $minscore)
 			{
-				$oneKG++;
+				$scored++;
+				if ($help[$DBSBP] =~ /MATCH=exact/)
+				{
+					$dbSNP++;
+				}
+				if ($help[$KG] =~ /MATCH=exact/)
+				{
+					$oneKG++;
+				}
 			}
 		}
 	}
 }
+close $FH;
 
-close FH;
 if ($scored > 0)
 {
 	$perc_dbSNP = sprintf ("%.2f", ($dbSNP/$scored*100));
@@ -116,6 +116,5 @@ if ($scored > 0)
 else	# there might be no ...
 {
 	die "!!! There are no SNVs with confidence >= $minscore in the input, it makes no sense to do further analyses with the current settings on these data!!!\n";
-	
 }
 exit;
