@@ -15,13 +15,10 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="DefaultPlugin" />
-    <orderEntry type="module" module-name="PluginBase" />
     <orderEntry type="library" name="Gradle: org.codehaus.groovy:groovy-all:2.4.9" level="project" />
-    <orderEntry type="module" module-name="RoddyToolLib" />
-    <orderEntry type="module" module-name="Roddy" />
-    <orderEntry type="library" name="R User Library" level="project" />
-    <orderEntry type="library" name="R Skeletons" level="application" />
     <orderEntry type="module" module-name="COWorkflowsBasePlugin_1.2.1" />
+    <orderEntry type="module" module-name="PluginBase_1.2.1" />
+    <orderEntry type="module" module-name="Roddy.main" />
+    <orderEntry type="module" module-name="RoddyToolLib.main" />
   </component>
 </module>
