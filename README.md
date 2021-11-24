@@ -115,8 +115,6 @@ low. By contrast, a high proportion of synonymous mutations suggests cross-speci
   - Deactivating the use to ExAC for no-control workflow filtering.
   - Updating to new local control and change the max AF threshold to 0.01
 
-* 2.0.0
-
 * 1.4.1
 
 * 1.4.0
@@ -127,7 +125,7 @@ low. By contrast, a high proportion of synonymous mutations suggests cross-speci
 
 * 1.3.0
 
-* 1.2.166-3
+* 1.2.166-3 (ReleaseBranch_1.2.166)
 
   * Long-term support version.
 
@@ -136,6 +134,8 @@ low. By contrast, a high proportion of synonymous mutations suggests cross-speci
 * 1.2.166-2
 
 * 1.2.166-1
+
+  * This version derives from 1.0.166-2_R2.4 and was done in the context of a migration of our cluster from PBS to IBM LSF and associated update of the workflow manager Roddy.
 
 * 1.1.4-2
 
@@ -153,7 +153,7 @@ low. By contrast, a high proportion of synonymous mutations suggests cross-speci
 
 * 1.0.166-1
 
-The versions listed below are not reflected in this repository and are only listed as legacy versions. At the time the code was managed in an SVN repository and its history was not completely migrated into the current git repository.
+The versions listed below are absent from this repository and are only listed as legacy versions. At the time, the code was managed in an SVN repository and its history was not migrated into the current git repository.
 
 * 1.0.166
 
