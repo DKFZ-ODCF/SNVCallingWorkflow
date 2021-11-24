@@ -46,6 +46,14 @@ TBD
 
 # Running the workflow
 
+The SNV workflow takes two merged bam files as input (control and tumor sample)
+
+It performs four steps:
+   1. snv calling
+   2. snv annotation
+   3. snv deep annotation
+   4. snv filter
+
 ## Configuration Values
 
 |Switch                    |  Default     | Description
@@ -60,6 +68,12 @@ TBD
 | CHR_PREFIX | "" | Prefix added to the chromosome names |
 | extractSamplesFromOutputFiles | true | Refer to the documentation of the [COWorkflowBasePlugin](https://github.com/DKFZ-ODCF/COWorkflowsBasePlugin) for further information |
 | PYPY_OR_PYTHON_BINARY | pypy | The binary to use for a some of the Python scripts. For `filter_PEoverlap.py` using a PyPy binary here also triggers the use of [hts-python](https://github.com/pjb7687/hts-python) instead of pysam.|  
+| runSNVMetaCallingStep | false | Run a single job for snv calling instead of a job per chromosome. The meta job is optimized in regards to runtime and cpu / memory utilization. On the other hand it is a larger job which might be more difficult to schedule. |
+| runDeepAnnotation | true | Run the deep annotation step or stop the workflow before it. |
+| runFilter | true |Run the filter step or stop the workflow before it. |
+| runOnPancan | false | Run a special analysis type for pancancer type  projects. | 
+| NUMBER_OF_MISMATCHES_THRESHOLD | -1 | resources/analysisTools/snvPipeline/snvAnnotation.sh: Number of mismatches that are allowed per read in order to consider this read. |
+
 
 ## Example Call
 
@@ -86,9 +100,98 @@ low. By contrast, a high proportion of synonymous mutations suggests cross-speci
 
 ## Changelog
 
-| Version | log
-|--|--
-|2.1.1 | Patch level: Removed hardcoded path to ExAC database
+* 2.1.1
+
+  * Patch level: Removed hardcoded path to ExAC database
+
+* 2.1.0
+
+* 2.0.0
+
+  - Upgrading to BCFtools/SAMtools/htslib to 1.9
+  - Calling variants using BCFtools mpileup and samtools mpileup for lookup in control (similar to the old way)
+  - PE overlaps are removed as before
+  - Removing supplementary reads and left-out duplicate reads from variant calling
+  - Deactivating the use to ExAC for no-control workflow filtering.
+  - Updating to new local control and change the max AF threshold to 0.01
+
+* 2.0.0
+
+* 1.4.1
+
+* 1.4.0
+
+* 1.3.2
+
+* 1.3.1
+
+* 1.3.0
+
+* 1.2.166-3
+
+  * Long-term support version.
+
+* 1.2.166-3
+
+* 1.2.166-2
+
+* 1.2.166-1
+
+* 1.1.4-2
+
+* 1.1.4-1
+
+* 1.1.4
+
+* 1.1.3
+
+* 1.1.2
+
+* 1.0.166-2_R2.4
+
+* 1.0.166-1_priorLsfTransition
+
+* 1.0.166-1
+
+The versions listed below are not reflected in this repository and are only listed as legacy versions. At the time the code was managed in an SVN repository and its history was not completely migrated into the current git repository.
+
+* 1.0.166
+
+* 1.0.164
+
+* 1.0.163
+
+* 1.0.162
+
+* 1.0.158
+
+* 1.0.156
+
+* 1.0.155
+
+  * Move SNV Calling workflow to a custom plugin
+
+* 1.0.132
+
+* 1.0.131
+
+  * Change workflow class to override another execute method. This makes the workflow a bit cleaner.
+  * filterVcfForBias.py
+  * filter_PEoverlap.py
+
+* 1.0.114
+
+* 1.0.109
+
+  - Bugfix: Rainfall plots work now also if there are less than two SNVs on chromosome 1 or any other chromosome
+
+* 1.0.105
+
+  - Bugfix: Use CHROMOSOME_LENGTH_FILE instead of CHROM_SIZES_FILE in snv filter (filter_vcf.sh) script.
+
+* 1.0.104
+
+* 1.0.103
 
 
 ## Contributors
