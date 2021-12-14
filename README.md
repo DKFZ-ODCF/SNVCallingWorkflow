@@ -4,6 +4,24 @@ An SNV calling workflow developed in the Applied Bioinformatics and Theoretical 
 
 > <table><tr><td><a href="https://www.denbi.de/"><img src="docs/images/denbi.png" alt="de.NBI logo" width="300" align="left"></a></td><td><strong>Your opinion matters!</strong> The development of this workflow is supported by the <a href="https://www.denbi.de/">German Network for Bioinformatic Infrastructure (de.NBI)</a>. By completing <a href="https://www.surveymonkey.de/r/denbi-service?sc=hd-hub&tool=SNVCallingWorkflow">this very short (30-60 seconds) survey</a> you support our efforts to improve this tool.</td></tr></table>
 
+## Citing
+
+The SNV workflow was in the pan-cancer analysis of whole genomes (PCAWG) and can be cited with the following publication:
+
+* Pan-cancer analysis of whole genomes.<br>
+  The ICGC/TCGA Pan-Cancer Analysis of Whole Genomes Consortium.<br>
+  Nature volume 578, pages 82–93 (2020).<br>
+  DOI [10.1038/s41586-020-1969-6](https://doi.org/10.1038/s41586-020-1969-6)
+
+Containers are available in [Dockstore](https://dockstore.org/containers/quay.io/pancancer/pcawg-dkfz-workflow).
+
+Furthermore, the workflow is regularly used at the DKFZ throug the automation system [One-Touch Pipeline](https://gitlab.com/one-touch-pipeline/otp):
+
+* OTP: An automatized system for managing and processing NGS data.<br>
+  Eva Reisinger, Lena Genthner, Jules Kerssemakers, Philip Kenschea, Stefan Borufka, Alke Jugold, Andreas Kling, Manuel Prinz, Ingrid Scholz, Gideon Zipprich, Roland Eils, Christian Lawerenz, Jürgen Eils.<br>
+  Journal of Biotechnology, volume 261, pages 53-62 (2017).<br>
+  DOI: [10.1016/j.jbiotec.2017.08.006](https://doi.org/10.1016/j.jbiotec.2017.08.006)
+
 ## Installation
 
 To run the workflow you first need to install a number of components and dependencies.
@@ -38,7 +56,7 @@ Note that the Conda environment not exactly the same as the software stack used 
 
 #### PyPy
 
-PyPy is an alternative Python interpreter. Some of the Python scripts in the workflow can use PyPy to achieve higher performance by employing a fork of [hts-python](https://github.com/eilslabs/hts-python). Currently, this is not implemented for the Conda environment. For most cases you therefore should set the `PYPY_OR_PYTHON_BINARY` variable to just `python` to use the Python binary from the Conda environment. You could set up a `resources/analysisTools/snvPipeline/environments/conda_snvAnnotation.sh` similar to the `tbi-lsf-cluster_snvAnnotation.sh` file in the same directory.  
+PyPy is an alternative Python interpreter. Some Python scripts in the workflow can use PyPy to achieve higher performance by employing a fork of [hts-python](https://github.com/eilslabs/hts-python). Currently, this is not implemented for the Conda environment. For most cases you therefore should set the `PYPY_OR_PYTHON_BINARY` variable to just `python` to use the Python binary from the Conda environment. You could set up a `resources/analysisTools/snvPipeline/environments/conda_snvAnnotation.sh` similar to the `tbi-lsf-cluster_snvAnnotation.sh` file in the same directory.  
 
 ### Reference data installation
 
@@ -79,30 +97,45 @@ It performs four steps:
 
 ```bash
 roddy.sh run projectConfigurationName@analysisName patientId \
---useconfig=/path/to/your/applicationProperties.ini --configurationDirectories=/path/to/your/projectConfigs \
---useiodir=/input/directory,/output/directory/snv \
---usePluginVersion=SNVCallingWorkflow:1.3.2 \
---cvalues="bamfile_list:/path/to/your/control.bam;/path/to/your/tumor.bam,sample_list:normal;tumor,possibleTumorSampleNamePrefixes:tumor,possibleControlSampleNamePrefixes:normal,REFERENCE_GENOME:/reference/data/hs37d5_PhiX.fa,CHROMOSOME_LENGTH_FILE:/reference/data/hs37d5_PhiX.chromSizes,extractSamplesFromOutputFiles:false"
+  --useconfig=/path/to/your/applicationProperties.ini \
+  --configurationDirectories=/path/to/your/projectConfigs \
+  --useiodir=/input/directory,/output/directory/snv \
+  --usePluginVersion=SNVCallingWorkflow:1.3.2 \
+  --cvalues="bamfile_list:/path/to/your/control.bam;/path/to/your/tumor.bam,sample_list:normal;tumor,possibleTumorSampleNamePrefixes:tumor,possibleControlSampleNamePrefixes:normal,REFERENCE_GENOME:/reference/data/hs37d5_PhiX.fa,CHROMOSOME_LENGTH_FILE:/reference/data/hs37d5_PhiX.chromSizes,extractSamplesFromOutputFiles:false"
 ```
 
 ### No Control
 
-TBD
+* Set the parameter `isNoControlWorkflow` to `true`.
+* In `bamfile_list` provide only the tumor BAM as only BAM file. The same for `sample_list`.
+* `possibleTumorSampleNamePrefixes` must still be set to the name of the tumor sample
+
+### Cross-Species Contamination
+
+In coding regions, the expected proportion of synonymous mutations compared to the total number of mutations should be low. By contrast, a high proportion of synonymous mutations suggests cross-species contamination. Any value above 0.5 (i.e. at least 50% of mutations are synonymous) is indicating a contamination. A value below 0.35 is considered to be OK. Values in the range of 0.35-0.5 are unclear. 
 
 
-### Cross-Species Contaminations
+### VCF Conversion Script
 
-In coding regions, the expected proportion of synonymous mutations compared to the total number of mutations should be
-low. By contrast, a high proportion of synonymous mutations suggests cross-species contamination. Any value
- above 0.5 (i.e. at least 50% of mutations are synonymous) is indicating a contamination. A value below 0.35 is considered to be
-  OK. Values in the range of 0.35-0.5 are unclear. 
+The [convertToStdVCF.py](./blob/master/resources/analysisTools/snvPipeline/convertToStdVCF.py) may be helpful to convert the VCFs of the workflow to standard 4.2-conform VCFs.
 
+  * Not all columns of the DKFZ VCF are currently migrated into the standard-conform VCF.
+  * The VCF must only contain a single sample column.
+  * Only uncompressed VCFs are processed and the input must not be a stream/pipe, because the script does two passes over the input.
+
+```bash
+convertToStdVCF.py <infile> <outfile> <sampleId>
+```
 
 ## Changelog
 
+* 2.2.0
+
+  * minor: Added `vcfConvertToStd.py`; slightly modified from code by @juleskers and Sophia Stahl
+
 * 2.1.1
 
-  * Patch level: Removed hardcoded path to ExAC database
+  * patch: Removed hardcoded path to ExAC database
 
 * 2.1.0
 
