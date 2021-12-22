@@ -6,8 +6,11 @@
 #
 # Authors: Jules Kerssemakers, Sophia Stahl
 #
+import os
 
+import json
 import sys
+
 import gzip
 
 # Import tool for converting DKFZ vcf files to vcf files conforming to the specifications of the
@@ -21,98 +24,16 @@ StdVCF_header_cols = [
     # headernames added in convert()
     'FORMAT']
 
-FILTER_metainfo = {
-    "PASS": {"number": 0, "type": "Flag", "description": "Position passed all filters, call is made"},
-    "q10":  {"number": 0, "type": "Flag", "description": "Quality below 10"},
-    "s50":  {"number": 0, "type": "Flag", "description": "Less than 50% of samples have data"},
-}
 
-FORMAT_metainfo = {
-    "GT":  {"number": 1, "type": "String",  "description": "Genotype, /:unphased, |:phased"},
-    "DP":  {"number": 1, "type": "Integer", "description": "Read Depth"},
-    "FT":  {"number": 0, "type": "String",  "description": "Sample genotype filter indicating if this genotype was called SUBFIELDS???"},
-    "GL":  {"number": 0, "type": "Float",   "description": "Genotype likelihoods, log10-scaled "},
-    "GLE": {"number": 0, "type": "String",  "description": "Genotype likelihoods of heterogeneous ploidy"},
-    "PL":  {"number": 0, "type": "Integer", "description": "Phred-scaled genotype likelihoods rounded to closest integer"},
-    "GP":  {"number": 0, "type": "Float",   "description": "Phred-scaled genotype posterior probabilities"},
-    "GQ":  {"number": 1, "type": "Integer", "description": "Genotype quality"},
-    "HQ":  {"number": 2, "type": "Integer", "description": "Haplotype quality"},
-    "PS":  {"number": 1, "type": "Integer", "description": "Phase set"},
-    "PQ":  {"number": 1, "type": "Integer", "description": "Phasing quality"},
-    "EC":  {"number": 0, "type": "Integer", "description": "Expected alternate allele counts"},
-    "MQ":  {"number": 1, "type": "Integer", "description": "RMS mapping quality"},
-}
+def read_meta_information(file):
 
-# Comment out lines to exclude them from the result files
-INFO_metainfo = {
-    #-----------------------------------------------------------
-    # Reserved by VCF 4.2 specification
-    #-----------------------------------------------------------
-    #"AA":        {"number": 1,  "type": "Integer",  "description": "Ancestral allele"},
-    #"AC":        {"number": 0,  "type": "Integer",  "description": "Allele count"},
-    #"AF":        {"number":"A", "type": "Float",    "description": "Allele frequency"},
-    #"AN":        {"number": 1,  "type": "Integer",  "description": "Total number of alleles in called genotypes"},
-    #"BQ":        {"number":-1,  "type": "?",        "description": "RMS base quality"},
-    #"CIGAR":     {"number":-1,  "type": "String",   "description": "Cigar string describing how to align an alternate allele to the reference allele"},
-    #"DB":        {"number": 0,  "type": "Flag",     "description": "dbSNP membership"},
-    "DP":        {"number": 1,   "type": "Integer",  "description": "Total depth"},
-    #"END":       {"number": 1,  "type": "Integer",  "description": "End position of the variant described in this record"},
-    #"H2":        {"number": 0,  "type": "Flag",     "description": "HapMap2 membership"},
-    #"H3":        {"number": 0,  "type": "Flag",     "description": "HapMap3 membership"},
-    "MQ":        {"number": 1,  "type": "Float",    "description": "RMS mapping quality"},
-    #"MQ0":       {"number": 1,  "type": "Integer",  "description": "Number of MAPQ == 0 reads covering this record"},
-    #"NS":        {"number": 1,  "type": "Integer",  "description": "Number of samples with data"},
-    #"SB":        {"number":-1,  "type": "?",        "description": "Strand bias"},
-    #"SOMATIC":   {"number": 0,  "type": "Flag",     "description": "Record is somatic mutation"},
-    #"VALIDATED": {"number":-1,  "type": "?",        "description": "Validated by follow-up experiment"},
-    #"1000G":     {"number": 0,  "type": "Flag",     "description": "Membership in 1000 Genomes"},
+    def dict_without_comments(d):
+        return dict(filter(lambda (k, v): not k.startswith("__"), d.items()))
 
-    #-----------------------------------------------------------
-    # DKFZ in-house INFO fields
-    # partially already in INFO, partially present as INFO_control, partially as freestanding column.
-    #
-    # Freestanding columns must have a "new_info_id" to be extracted into the new spec-conforming VCF's INFO field.
-    # Their key must be the column header name as it occurs in the in-house input file.
-    #-----------------------------------------------------------
-    "DP_ctrl":               {"number": 1,  "type": "Integer",
-                              "description": "Total depth of control"},
-    "DP4":                   {"number": 4,  "type": "Integer",
-                              "description": "Counts of REF and ALT reads on forward and reverse strand"},
-    "DP5_ctrl":              {"number": 5,  "type": "Integer",
-                              "description": "Counts of ?"},
-    "MQ_ctrl":               {"number": 1,  "type": "Float",
-                              "description": "Mapping quality of Control"},
-    "ACGTNacgtnPLUS":        {"number": 10, "type": "Integer",
-                              "description": "Nucleotide counts on Plus Strand"},
-    "ACGTNacgtnMINUS":       {"number": 10, "type": "Integer",
-                              "description": "Nucleotide counts on Minus Strand"},
-    "ACGTNacgtnHQ_ctrl":     {"number": 10, "type": "Integer",
-                              "description": "Nucleotide counts on ?"},
-    "ACGTNacgtn_ctrl":       {"number": 10, "type": "Integer",
-                              "description": "Nucleotide counts on ?"},
-    "GENE":                  {"number": 1,  "type": "String",
-                              "description": "GeneSymbol if variation overlaps gene",
-                              "new_info_id": "GENE"},
-    "EXONIC_CLASSIFICATION": {"number": 1,  "type": "String",
-                              "description": "Functional implication if variation is located with respect to exon",
-                              "new_info_id": "EXONICCL" },
-    "ANNOVAR_TRANSCRIPTS":   {"number": 1,  "type": "String",
-                              "description": "Details of non-synonymous variation's impact on protein",
-                              "new_info_id": "ANNOVARTR"},
-    "CONFIDENCE":            {"number": 1,  "type": "Integer",
-                              "description": "Empirical confidence level of call, ten levels (1-10), >7=trustworthy",
-                              "new_info_id": "CONF"},
-    "RECLASSIFICATION":      {"number": 1,  "type": "String",
-                              "description": "Reclassification of the germline/somatic state based on additional information",
-                              "new_info_id": "RECL"},
-}
-
-# implementation detail: make it easier to loop over these fields
-meta_information = {
-    "INFO": INFO_metainfo,
-    "FORMAT": FORMAT_metainfo,
-    "FILTER": FILTER_metainfo
-}
+    with open(file, "r") as f:
+        raw_infos = json.load(f)
+        return dict(map(lambda (k, v): (k, dict_without_comments(v)),
+                        dict_without_comments(raw_infos).items()))
 
 
 def open_maybe_compressed_file(filename, mode="r"):
@@ -218,7 +139,7 @@ def infer_vcf_column_indices(file_object):
     return indices
 
 
-def write_metadata_definitions(keys_to_write, category, output_vcf_object):
+def write_metadata_definitions(keys_to_write, category, output_vcf_object, meta_information):
     """
     Write the annotation for used-and-desired metadata keys to the VCF file meta-information block.
     See also: VCF 4.2 spec 1.2
@@ -307,7 +228,7 @@ def get_all_used_metadata_keys(col_indices, input_file):
     return keys_used
 
 
-def extract_freestanding_columns_into_dict(line_original, col_indices):
+def extract_freestanding_columns_into_dict(line_original, col_indices, meta_information):
     """
     Convert column names and contents to a dictionary that can be inserted into the new INFO field.
 
@@ -319,7 +240,7 @@ def extract_freestanding_columns_into_dict(line_original, col_indices):
 
     columns_to_extract = [
         column_name for (column_name, details)
-        in INFO_metainfo.items()
+        in meta_information["INFO"].items()
         if "new_info_id" in details
     ]
 
@@ -327,7 +248,7 @@ def extract_freestanding_columns_into_dict(line_original, col_indices):
     for column_name in columns_to_extract:
         old_column_contents = line_original[col_indices[column_name]]
 
-        new_INFO_id = INFO_metainfo[column_name]["new_info_id"]
+        new_INFO_id = meta_information["INFO"][column_name]["new_info_id"]
         cols_as_INFO_dict[new_INFO_id] = old_column_contents
     return cols_as_INFO_dict
 
@@ -359,7 +280,8 @@ def extract_desired_INFO_fields_from_all(raw_INFO_field, used_and_desired_keys, 
     ))
 
 
-def merge_and_format_INFO_sources(col_indices, line_original, used_and_desired_keys):
+def merge_and_format_INFO_sources(col_indices, line_original, used_and_desired_keys,
+                                  meta_information):
     """
     Combines the three sources for the new INFO field (old, control and other columns) into
     first a dictionary, that is then converted into a string.
@@ -368,6 +290,7 @@ def merge_and_format_INFO_sources(col_indices, line_original, used_and_desired_k
     :param line_original: Data line in vcf file that is to be converted
     :param used_and_desired_keys: Dictionary with the intersections of available and used
            meta-information keys per category
+    :param meta_information: Meta information configuration dictionary.
     :return: String that replaces the old INFO field with filtered and new information
     """
     new_info = {}
@@ -377,12 +300,14 @@ def merge_and_format_INFO_sources(col_indices, line_original, used_and_desired_k
     new_info.update(extract_desired_INFO_fields_from_all(line_original[col_indices["INFO_control"]],
                                                          used_and_desired_keys["INFO"],
                                                          rename_control=True))
-    new_info.update(extract_freestanding_columns_into_dict(line_original, col_indices))
+    new_info.update(extract_freestanding_columns_into_dict(line_original,
+                                                           col_indices,
+                                                           meta_information))
 
     return convert_dict_to_str(new_info, ";", "=")
 
 
-def convert(input_filename, output_filename, sample_id):
+def convert(input_filename, output_filename, sample_id, meta_information):
     """
     Does the actual conversion of one VCF file format into another (here DKFZ -> standard).
 
@@ -427,7 +352,8 @@ def convert(input_filename, output_filename, sample_id):
 
             write_metadata_definitions(used_and_desired_category_keys,
                                        category,
-                                       output_file)
+                                       output_file,
+                                       meta_information)
 
             used_and_desired_keys[category] = used_and_desired_category_keys
 
@@ -462,7 +388,8 @@ def convert(input_filename, output_filename, sample_id):
                     # gather all the different tidbits that end up in the final INFO field
                     new_info_str = merge_and_format_INFO_sources(col_indices,
                                                                  line_original,
-                                                                 used_and_desired_keys)
+                                                                 used_and_desired_keys,
+                                                                 meta_information)
                     new_line[INFO_col_index] = new_info_str
 
                     # FORMAT Column copied as is
@@ -476,15 +403,22 @@ def convert(input_filename, output_filename, sample_id):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 4:
-
+    if 4 <= len(sys.argv) <= 5:
         input_file = sys.argv[1]
         output_file = sys.argv[2]
         sample_id = sys.argv[3]
 
-        print("converting", input_file, "into", output_file, "for", sample_id)
-        convert(input_file, output_file, sample_id)
+        if len(sys.argv) == 5:
+            meta_info_file = sys.argv[4]
+        else:
+            meta_info_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                          "convertToStdVCF.json")
+
+        print(" ".join(["Converting", input_file, "into", output_file,
+                        "for", sample_id, "using", meta_info_file]))
+        meta_information = read_meta_information(meta_info_file)
+        convert(input_file, output_file, sample_id, meta_information)
 
     else:
-        print("USAGE: convertToStdVCF.py input-file output-file sample-id")
+        print("USAGE: convertToStdVCF.py input-file output-file sample-id [meta-info.json]")
         sys.exit(10)
