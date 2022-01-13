@@ -18,10 +18,14 @@ module load perl/"${PERL_VERSION:?PERL_VERSION undefined}"
 module load bedtools/"${BEDTOOLS_VERSION:?BEDTOOLS_VERSION undefined}"
 module load pypy/"${PYPY_VERSION:?PYPY_VERSION undefined}"
 
-set +ue
-source /dkfz/cluster/virtualenvs/warsow/python_2.7.9_SNVCalling_1.4.2_dkfz
-set -ue
+if [[ ! -x "$tbiLsfVirtualEnvDir" ]]; then
+  echo "Cannot access virtualenv directory: '$tbiLsfVirtualEnvDir'" >> /dev/stderr
+  exit 1
+fi
 
+set +ue
+source "$tbiLsfVirtualEnvDir/bin/activate"
+set -ue
 
 export BGZIP_BINARY=bgzip
 export TABIX_BINARY=tabix

@@ -8,8 +8,11 @@
                cleanupScript="cleanupScript">
     <configurationvalues>
 
+        <!-- The following options are only relevant for the ODCF cluster at the DKFZ -->
         <cvalue name='workflowEnvironmentScript' value="workflowEnvironment_tbiLsf" type='string'/>
         <cvalue name='snvAnnotationEnvironmentScript' value="snvAnnotationEnvironment_tbiLsf" type="string"/>
+        <cvalue name='tbiLsfVirtualEnvDir' value="/odcf/cluster//virtualenvs/warsow/python_2.7.9_SNVCalling_1.4.2_dkfz" type="path"
+                description="The path on the execution hosts to the virtualenv used in the tbi-lsf-cluster."/>
 
         <cvalue name='RSCRIPT_VERSION' value='3.3.1' type="string"/>
         <cvalue name='PERL_VERSION' value='5.20.2' type="string"/>
@@ -18,18 +21,20 @@
         <cvalue name='PYTHON_VERSION' value='2.7.9' type="string"/>
         <cvalue name='BEDTOOLS_VERSION' value='2.16.2' type="string"/>
         <cvalue name='HTSLIB_VERSION' value='1.9' type="string"/>
+
+        <!-- Using CPython or PyPy -->
+        <cvalue name="PYPY_OR_PYTHON_BINARY" value="pypy-c" type="string"
+                description="If you use a PyPy binary here, some scripts are interpreted with higher performance by PyPy and hts-python is used instead of pysam in the filter_PEoverlap.py script."/>
         <cvalue name='HTSLIB_VERSION_FOR_HTS_PYTHON' value='1.2' type="string"
                 description="Only used if PYPY_OR_PYTHON_BINARY evaluates to a PyPy binary."/>
         <cvalue name='PYPY_VERSION' value='5.8.0' type="string"/>
         <cvalue name='GIT_VERSION' value='2.9.4' type="string"/>
-
-        <cvalue name="PYPY_OR_PYTHON_BINARY" value="pypy-c" type="string"
-                description="If you use a PyPy binary here, some scripts are interpreted with higher performance by PyPy and hts-python is used instead of pysam in the filter_PEoverlap.py script."/>
         <cvalue name="HTS_PYTHON_GIT_REPOSITORY" value="https://github.com/pjb7687/hts-python" type="string"
                 description="Git repository link with the hts-python version for PyPy. Try to avoid DoS on Github!"/>
         <cvalue name="HTS_PYTHON_COMMIT" value="cd35d6f15221bb09c218d0f978c0b92c560fcdd6" type="string"
                 description="Specific Git commit of the PyPy-compatible hts-python to download from HTS_PYTHON_GIT_REPOSITORY."/>
 
+        <!-- Workflow configuration -->
         <cvalue name='mpileupOutputDirectory' value='mpileup' type="path"/>
         <cvalue name='MPILEUP_OPTS' value='"-EI -q 30 -O u --ignore-RG --ff UNMAP,SECONDARY,QCFAIL,DUP,SUPPLEMENTARY -d 9999 -a AD -x"' type="string"/>
         <cvalue name='BCFTOOLS_OPTS' value='"-vc -p 2.0"' type="string"/>

@@ -33,6 +33,8 @@ Furthermore you need a number of tools and of course reference data, like a geno
 
 ### Tool installation
 
+#### Conda
+
 The workflow contains a description of a [Conda](https://conda.io/docs/) environment. A number of Conda packages from [BioConda](https://bioconda.github.io/index.html) are required. 
 
 First install the BioConda channels:
@@ -54,9 +56,28 @@ The name of the Conda environment is arbitrary but needs to be consistent with t
 
 Note that the Conda environment not exactly the same as the software stack used for the [Pancancer](https://dockstore.org/containers/quay.io/pancancer/pcawg-dkfz-workflow) project.
 
+###### VirtualEnv
+
+The virtual env does not provide a full software stack. This section is only relevant for the ODCF cluster and mostly for developers. In rare cases it may be necessary for other users to set the `tbiLsfVirtualEnvDir`.
+
+This assumes, `tbiLsfVirtualEnvDir` is installed centrally and accessible from all compute nodes. Furthermore, Python 2.7.9 in this example is assumed to be available via a module named "python/2.7.9".
+
+```bash
+module load python/2.7.9
+virtualenv "$tbiLsfVirtualEnvDir"
+source "$tbiLsfVirtualEnvDir/bin/activate"
+# The order of installations may go wrong with Biopython before numpy, which results in an error.
+# Therefore:
+pip install numpy==1.11.3
+pip install -r "$pluginInstallationDir/resources/analysisTools/snvPipeline/environments/requirements.txt
+```
+
+Then, in your configuration files, you need to set the `tbiLsfVirtualEnvDir` variable.
+
+
 #### PyPy
 
-PyPy is an alternative Python interpreter. Some Python scripts in the workflow can use PyPy to achieve higher performance by employing a fork of [hts-python](https://github.com/eilslabs/hts-python). Currently, this is not implemented for the Conda environment. For most cases you therefore should set the `PYPY_OR_PYTHON_BINARY` variable to just `python` to use the Python binary from the Conda environment. You could set up a `resources/analysisTools/snvPipeline/environments/conda_snvAnnotation.sh` similar to the `tbi-lsf-cluster_snvAnnotation.sh` file in the same directory.  
+PyPy is an alternative Python interpreter. Some Python scripts in the workflow can use PyPy to achieve higher performance by employing a fork of [hts-python](https://github.com/eilslabs/hts-python). Currently, this is not implemented for the Conda environment. For most cases you therefore should set the `PYPY_OR_PYTHON_BINARY` variable to just `python` to use the Python binary from the Conda environment. You could set up a `resources/analysisTools/snvPipeline/environments/conda_snvAnnotation.sh` similar to the `tbi-lsf-cluster_snvAnnotation.sh` file in the same directory.
 
 ### Reference data installation
 
@@ -92,6 +113,7 @@ It performs four steps:
 | runOnPancan | false | Run a special analysis type for pancancer type  projects. | 
 | NUMBER_OF_MISMATCHES_THRESHOLD | -1 | resources/analysisTools/snvPipeline/snvAnnotation.sh: Number of mismatches that are allowed per read in order to consider this read. |
 
+Please have a look at the `resources/configurationFiles/analysisSNVCalling.xml` for a more complete list of parameters.
 
 ## Example Call
 
@@ -115,7 +137,7 @@ roddy.sh run projectConfigurationName@analysisName patientId \
 In coding regions, the expected proportion of synonymous mutations compared to the total number of mutations should be low. By contrast, a high proportion of synonymous mutations suggests cross-species contamination. Any value above 0.5 (i.e. at least 50% of mutations are synonymous) is indicating a contamination. A value below 0.35 is considered to be OK. Values in the range of 0.35-0.5 are unclear. 
 
 
-### VCF Conversion Script
+### VCF Conversion Script (branch: ReleaseBranch_1.2.166)
 
 The [convertToStdVCF.py](./blob/master/resources/analysisTools/snvPipeline/convertToStdVCF.py) may be helpful to convert the VCFs of the workflow to standard 4.2-conform VCFs.
 
@@ -133,9 +155,14 @@ The optional configuration JSON file defaults to the `convertToStdVCF.json` resi
 
 * 2.2.0
 
-  * minor: Bugfix. The configuration value for `PYPY_OR_PYTHON_BINARY` was set to "pypy", which is appropriate for Conda, but not for the `tbi-lsf-cluster` configuration, which is much more used. Set the default to "pypy-c". Added a test in the environment script to check that the binary is really available. 
-  * minor: Added `vcfConvertToStd.py`; slightly modified from code by @juleskers and Sophia Stahl
-  * minor: Previously assumed 'nose' is installed for pypy. Now install "nose" needed for setup.py in pypy htslib installation in the home htslib directory.
+  * minor: Bugfix: CPython variant was broken, because wrong venv was set up.
+  * minor: Bugfix: PyPy version was broken, because code working in CPython was not implemented for PyPy (`reference_file` in `filter_PEoverlap.py`)
+  * minor: Bugfix: The configuration value for `PYPY_OR_PYTHON_BINARY` was set to "pypy", which is appropriate for the Conda environment, but not for the `tbi-lsf-cluster.sh` configuration, which is much more used. Set the default to "pypy-c". Added a test in the environment script to check that the binary is really available.
+  * minor: Allow configuration of virtualenv in `tbi-lsf-cluster.sh`
+  * minor: More robust installation of hts-python by `tbi-lsf-cluster.sh`.
+    * Previously assumed 'nose' is installed for pypy. Now install "nose" needed for setup.py in pypy htslib installation in the home htslib directory.
+    * Better test and conditional code for nose, git clone, build/install of 
+  * Lifted readme from ReleaseBranch_1.2.166
 
 * 2.1.1
 
