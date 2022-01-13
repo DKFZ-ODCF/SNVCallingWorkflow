@@ -1,13 +1,31 @@
-== Description
+# Description
 
 The SNV workflow takes two merged bam files as input (control and tumor sample)
 It performs four steps:
-1) snv calling
-2) snv annotation
-3) snv deep annotation
-4) snv filter
 
-== Run flags / switches
+1. SNV calling
+2. SNV annotation
+3. SNV deep annotation 
+4. SNV filter
+
+## Installation of the virtual env at central place in the cluster
+
+This assumes, `tbiLsfVirtualEnvDir` is accessible from all compute nodes. Furthermore, Python 2.7.9 in this example is assumed to be available via a module named "python/2.7.9".
+
+```bash
+module load python/2.7.9
+virtualenv "$tbiLsfVirtualEnvDir"
+source "$tbiLsfVirtualEnvDir/bin/activate"
+# The order of installations may go wrong with Biopython before numpy, which results in an error.
+# Therefore:
+pip install numpy==1.11.3
+pip install -r "$pluginInstallationDir/resources/analysisTools/snvPipeline/environments/requirements.txt
+```
+
+Then, in your configuration files, you need to set the `tbiLsfVirtualEnvDir` variable.
+
+
+## Run flags / switches
 
 Switch                      Default Description
 runSNVMetaCallingStep       false   Run a single job for snv calling instead of a job per chromosome.
@@ -17,7 +35,19 @@ runDeepAnnotation           true    Run the deep annotation step or stop the wor
 runFilter                   true    Run the filter step or stop the workflow before it.
 runOnPancan                 false   Run a special analysis type for pancancer type projects.
 
-== Changelist
+## Changelist
+
+* Version update to 1.2.166-4
+
+  * introduced variable `tbiLsfVirtualEnvDir` to configure the path to the virtual env used in the `tbi-lsf-cluster.sh` environment setup script.
+
+* Version update to 1.2.166-3
+
+* Version update to 1.2.166-2
+
+* Version update to 1.2.166-1
+
+* Version update to 1.2.166
 
 * Version update to 1.0.166
 
