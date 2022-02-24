@@ -124,8 +124,10 @@ The [convertToStdVCF.py](./blob/master/resources/analysisTools/snvPipeline/conve
   * Only uncompressed VCFs are processed and the input must not be a stream/pipe, because the script does two passes over the input.
 
 ```bash
-convertToStdVCF.py <infile> <outfile> <sampleId>
+convertToStdVCF.py <infile> <outfile> <sampleId> [<config.json>]
 ```
+
+The optional configuration JSON file defaults to the `convertToStdVCF.json` residing besides the `convertToStdVCF.py` script. The [default JSON](./blob/master/resources/analysisTools/snvPipeline/convertToStdVCF.json) contains some comments that may help you to customize the script output.
 
 ## Changelog
 
