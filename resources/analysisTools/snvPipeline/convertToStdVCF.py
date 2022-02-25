@@ -6,14 +6,14 @@
 #
 # Authors: Jules Kerssemakers, Sophia Stahl
 #
-import os
-
-import json
-import sys
-
 import gzip
+import json
+import os
+import sys
+import textwrap
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
-# Import tool for converting DKFZ vcf files to vcf files conforming to the specifications of the
+# Import tool for converting DKFZ VCF files to vcf files conforming to the specifications of the
 # standard VCF version:
 vcf_version = 'VCFv4.2'
 
@@ -402,23 +402,34 @@ def convert(input_filename, output_filename, sample_id, meta_information):
                     output_file.write("\t".join(new_line)+"\n")
 
 
-if __name__ == '__main__':
-    if 4 <= len(sys.argv) <= 5:
-        input_file = sys.argv[1]
-        output_file = sys.argv[2]
-        sample_id = sys.argv[3]
+def parse_options(argv):
+    parser = ArgumentParser(description=textwrap.dedent("""
+    The VCFs produced by the SNVCallingWorkflow are not standard conform in that some values are not added as additional columns after a single variant column. By contrast, in the standard format, additional columns should only be used to show variants occurring in additional samples.
 
-        if len(sys.argv) == 5:
-            meta_info_file = sys.argv[4]
-        else:
-            meta_info_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                          "convertToStdVCF.json")
-
-        print(" ".join(["Converting", input_file, "into", output_file,
-                        "for", sample_id, "using", meta_info_file]))
-        meta_information = read_meta_information(meta_info_file)
-        convert(input_file, output_file, sample_id, meta_information)
-
+    This script can be used to convert the DKFZ VCFs to standard VCFs (version 4.2).
+    """),
+                            formatter_class=ArgumentDefaultsHelpFormatter)
+    parser.add_argument("-i", "--input", dest="input_file", required=True, type=str,
+                        help="Input DKFZ-formatted VCF file")
+    parser.add_argument("-s", "--sample-id", dest="sample_id", required=True, type=str,
+                        help="Name to use for the sample column in the output VCF")
+    parser.add_argument("-o", "--output", dest="output_file", default="/dev/stderr",
+                        required=False, type=str,
+                        help="Output standard 4.2 VCF file")
+    parser.add_argument("-c", "--config", dest="config_file", required=False, type=str,
+                        default=os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                             "convertToStdVCF.json"),
+                        help="Configuration JSON file")
+    if len(argv) == 1:
+        parser.print_help(file=sys.stderr)
+        sys.exit(1)
     else:
-        print("USAGE: convertToStdVCF.py input-file output-file sample-id [meta-info.json]")
-        sys.exit(10)
+        return parser.parse_args(argv[1:])
+
+
+if __name__ == '__main__':
+    args = parse_options(sys.argv)
+    print(" ".join(["Converting", args.input_file, "into", args.output_file,
+                    "for", args.sample_id, "using", args.config_file]))
+    meta_information = read_meta_information(args.config_file)
+    convert(args.input_file, args.output_file, args.sample_id, meta_information)
