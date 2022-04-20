@@ -4,8 +4,10 @@
 #
 # Distributed under the MIT License (https://opensource.org/licenses/MIT).
 #
-# Authors: Jules Kerssemakers, Sophia Stahl
+# Authors: Jules Kerssemakers, Sophia Stahl, Philip Kensche
 #
+from __future__ import print_function
+
 import gzip
 import json
 import os
@@ -96,7 +98,7 @@ def infer_vcf_column_indices(file_object):
     Returns a dictionary indices["HEADER"]=index of each column-heading, indices are zero-based,
     so indices[CHROM]===0. This reads the first couple of lines of the file. To do so it `seek()`s
     to the beginning of the file. The filepointer is returned to its starting location afterwards.
-    If no header line was found before the first data line (first line without '#'), an empyt
+    If no header line was found before the first data line (first line without '#'), an empty
     dictionary is returned.
 
     :param file_object: The vcf file to read the header from.
@@ -158,10 +160,16 @@ def write_metadata_definitions(keys_to_write, category, output_vcf_object, meta_
             # If we have defined a 'better' name for this field, use that instead
             key = key_info.get("new_info_id", key)
 
-            output_vcf_object.write(
-                "##{CATEGORY}=<ID={id},Number={number},Type={type},Description=\"{description}\">\n".format(
-                    CATEGORY=category, id=key, **key_info)
-            )
+            if category == "INFO" or category == "FORMAT":
+                output_vcf_object.write(
+                    "##{category}=<ID={id},Number={number},Type={type},Description=\"{description}\">\n".format(
+                        category=category, id=key, **key_info)
+                ),
+            elif category == "FILTER":
+                output_vcf_object.write(
+                    "##{category}=<ID={id},Description=\"{description}\">\n".format(
+                        category=category, id=key, **key_info)
+                )
     except KeyError:
         raise KeyError("Meta-information incomplete for '%s' in meta_information.py" % key)
 
@@ -188,7 +196,7 @@ def update_keys_used(line, col_indices, keys_used):
     FORMAT_keys = line_as_list[col_indices["FORMAT"]].split(":")
     keys_used["FORMAT"].update(FORMAT_keys)
 
-    FILTER_keys = line_as_list[col_indices["FILTER"]].split(",")
+    FILTER_keys = line_as_list[col_indices["FILTER"]].split(";")
     keys_used["FILTER"].update(FILTER_keys)
 
 
@@ -336,7 +344,7 @@ def convert(input_filename, output_filename, sample_id, meta_information):
 
     with open_maybe_compressed_file(output_filename, 'w') as output_file:
         # Write Meta-information lines
-        output_file.write('##fileformat=%s\n' %(vcf_version))  # Required as first line in the file
+        output_file.write('##fileformat=%s\n' % vcf_version)  # Required as first line in the file
 
         # First pass through input file, check which tags/keys occur so that we may write our
         # meta-information block
@@ -361,6 +369,10 @@ def convert(input_filename, output_filename, sample_id, meta_information):
         # convert all data lines
         with open_maybe_compressed_file(input_filename, 'r') as input_file:
             for line in input_file:
+
+                # copy reference info
+                if line.startswith("##referenc"):
+                    output_file.write(line)
 
                 # copy contig info
                 if line.startswith("##contig"):
@@ -413,7 +425,7 @@ def parse_options(argv):
                         help="Input DKFZ-formatted VCF file")
     parser.add_argument("-s", "--sample-id", dest="sample_id", required=True, type=str,
                         help="Name to use for the sample column in the output VCF")
-    parser.add_argument("-o", "--output", dest="output_file", default="/dev/stderr",
+    parser.add_argument("-o", "--output", dest="output_file", default="/dev/stdout",
                         required=False, type=str,
                         help="Output standard 4.2 VCF file")
     parser.add_argument("-c", "--config", dest="config_file", required=False, type=str,
@@ -430,6 +442,7 @@ def parse_options(argv):
 if __name__ == '__main__':
     args = parse_options(sys.argv)
     print(" ".join(["Converting", args.input_file, "into", args.output_file,
-                    "for", args.sample_id, "using", args.config_file]))
+                    "for", args.sample_id, "using", args.config_file]),
+          file=sys.stderr)
     meta_information = read_meta_information(args.config_file)
     convert(args.input_file, args.output_file, args.sample_id, meta_information)
