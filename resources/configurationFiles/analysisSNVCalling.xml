@@ -23,7 +23,7 @@
         <cvalue name='PYPY_VERSION' value='5.8.0' type="string"/>
         <cvalue name='GIT_VERSION' value='2.9.4' type="string"/>
 
-        <cvalue name="PYPY_OR_PYTHON_BINARY" value="pypy" type="string"
+        <cvalue name="PYPY_OR_PYTHON_BINARY" value="pypy-c" type="string"
                 description="If you use a PyPy binary here, some scripts are interpreted with higher performance by PyPy and hts-python is used instead of pysam in the filter_PEoverlap.py script."/>
         <cvalue name="HTS_PYTHON_GIT_REPOSITORY" value="https://github.com/pjb7687/hts-python" type="string"
                 description="Git repository link with the hts-python version for PyPy. Try to avoid DoS on Github!"/>

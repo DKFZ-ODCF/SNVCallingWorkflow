@@ -15,7 +15,11 @@ export HTSLIB_INCLUDE_PATH="/tbi/software/x86_64/htslib/htslib-$HTSLIB_VERSION_F
 export PYPY_LOCAL_LIBPATH="$HOME/.local/lib/pypy/hts-python/$HTS_PYTHON_COMMIT"
 
 usePypy() {
-    if [[ $("$PYPY_OR_PYTHON_BINARY" --version 2>&1 | grep -P "PyPy") != "" ]]; then
+    # shellcheck disable=SC1073
+    if [[ "$(which "$PYPY_OR_PYTHON_BINARY" 2> /dev/null)" == "" ]]; then
+        echo "Couldn't find binary '$PYPY_OR_PYTHON_BINARY'" >> /dev/stderr
+        exit 1
+    elif [[ $("$PYPY_OR_PYTHON_BINARY" --version 2>&1 | grep -P "PyPy") != "" ]]; then
         echo true
     else
         echo false
