@@ -11,12 +11,14 @@ if (@ARGV < 2)
 	die "1. vcf file to calculate tumor variant frequency for MAF plot - 2.minimal coverage cutoff (default 0) 3.minimal confidence thereshold (default 8)\n";
 }
 my $file = shift;
-open (FH, $file) or die "Could not open $file: $!\n";
+open (my $FH, $file) or die "Could not open $file: $!\n";
 
 ################################################################################
 my $header = "";
-while ($header = <FH>)
+while (!eof($FH))
 {
+	defined($header = readline($FH))
+		|| die "Could not read from '$file': $!";
 	last if ($header =~ /^\#CHROM/); # that is the line with the column names
 }
 chomp $header;
@@ -67,14 +69,16 @@ my $depth = 0;
 # tumor variant frequency from DP4 fields (pos. 7 of vcf file)
 my $tumvarfrq = 0;
 
-while (<FH>)
+while (!eof($FH))
 {
-	if ($_ =~ /^#/)
+	defined(my $line = readline($FH))
+		|| die "Could not read from '$file': $!";
+	if ($line =~ /^#/)
 	{
 		next;
 	}
-	chomp;
-	@help = split ("\t", $_);
+	chomp $line;
+	@help = split ("\t", $line);
 	if ($help[$CONFIDENCE] >= $minconfidence)
 	{
 		($trf, $trr, $tvf, $tvr) = $help[$INFO] =~/DP4=(\d+),(\d+),(\d+),(\d+);/;
@@ -93,5 +97,5 @@ while (<FH>)
 		}
 	}
 }
-close FH;
+close $FH;
 exit;

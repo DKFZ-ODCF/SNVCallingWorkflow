@@ -19,7 +19,8 @@ if (@ARGV < 2)
 my $file = shift;
 my $configfile = shift;
 
-open (CF, $configfile) or die "Could not open $configfile: $!\n";
+open (my $CF, $configfile)
+	or die "Could not open $configfile: $!\n";
 
 # get colunm labels from config file:
 ### Annotation (SNV and Indel)
@@ -30,16 +31,18 @@ open (CF, $configfile) or die "Could not open $configfile: $!\n";
 
 my %labels = ();
 my @help = ();
-while (<CF>)
+while (!eof($CF))
 {
-	if ($_ =~ /_COL=/)
+	defined(my $line = readline($CF))
+		|| die "Could not read from '$configfile': $!";
+	if ($line =~ /_COL=/)
 	{
-		chomp;
-		@help = split ("=", $_);
+		chomp $line;
+		@help = split ("=", $line);
 		$labels{$help[0]} = $help[1];
 	}
 }
-close CF;
+close $CF;
 
 foreach my $key (keys %labels)
 {
@@ -47,11 +50,14 @@ foreach my $key (keys %labels)
 }
 
 #exit;
-open (FH, $file) or die "Could not open $file: $!\n";
+open (my $FH, $file)
+	or die "Could not open $file: $!\n";
 
 my $header = "";
-while ($header = <FH>)
+while (!eof($FH))
 {
+	defined($header = readline($FH))
+		|| die "Could not read from '$file': $!";
 	last if ($header =~ /^\#CHROM/); # that is the line with the column names
 	print "$header";
 }
@@ -73,6 +79,7 @@ my $CHAIN = 0;
 my $ExAC  = 0;
 my $EVS   = 0;
 my $CILC  = 0;
+
 @help = (split "\t", $header);
 for (my $c = 0; $c < @help; $c++)
 {
@@ -172,7 +179,7 @@ my $indbSNP = 0;
 my $precious = 0;
 my $class = "";	# for germline/somatic classification (e.g. in dbSNP => probably germline)
 
-while (<FH>)
+while (!eof($FH))
 {
 	$confidence=10;	# start with maximum value
 	# reset global variables
@@ -181,8 +188,10 @@ while (<FH>)
 	$precious = 0;
 	$is_repeat = 0;
 	$is_STR = 0;
-	$is_weird = 0;
-	$line = $_;
+ 	$is_weird = 0;
+
+	defined($line = readline($FH))
+		|| die "Could not read from '$file': $!";
 	chomp $line;
 	@help = split ("\t", $line);
 	$class = "somatic";	# start with default somatic
@@ -353,5 +362,4 @@ while (<FH>)
 	}
 	print $line, "\t$confidence\t$class\n";
 }
-close FH;
-exit;
+close $FH;

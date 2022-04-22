@@ -80,16 +80,22 @@ if (defined $help || ! defined $file)
 	-x/--runExome		Run on exome, will turn off the high control coverage punishment and the PCR bias filter
 	-h/--help			help\n";
 }
+
+my $FH;
 if($file =~ /vcf\.gz$/){
-	open(FH, "zcat $file |") or die "Could not open $file: $!\n";
+	open($FH, "zcat $file |") or die "Could not open $file: $!\n";
 }else{
-	open (FH, $file) or die "Could not open $file: $!\n";
+	open($FH, $file) or die "Could not open $file: $!\n";
 }
-if(defined $panCanOut){
-	if($panCanOut =~ /\.gz$/){
-		open(PANOUT, "| bgzip > $panCanOut") or die "The outfile for panCan was set: $panCanOut but could not be opened\n";
-	}else{
-		open(PANOUT, ">$panCanOut") or die "The outfile for panCan was set: $panCanOut but could not be opened\n";
+
+my $PANOUT;
+if (defined $panCanOut) {
+	if ($panCanOut =~ /\.gz$/) {
+		open($PANOUT, "| bgzip > $panCanOut")
+			or die "The outfile for panCan was set: $panCanOut but could not be opened\n";
+	} else {
+		open($PANOUT, ">$panCanOut")
+			or die "The outfile for panCan was set: $panCanOut but could not be opened\n";
 	}
 }
 
@@ -101,7 +107,7 @@ if(defined $additionalHeader[0]){
 	$additionalHeader = "";
 }
 
-my $date = strftime "%Y%m%d", localtime;
+my $date = strftime("%Y%m%d", localtime);
 my @refgenome = split(",", $refgenome);
 
 my $pancanhead = "##fileformat=VCFv4.1
@@ -149,14 +155,14 @@ $pancanhead .= "##INFO=<ID=SOMATIC,Number=0,Type=Flag,Description=\"Indicates if
 ##SAMPLE=<ID=TUMOR,SampleName=tumor_$pid,Individual=$pid,Description=\"Tumor\">
 #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tCONTROL\tTUMOR\n";
 
-if ($makehead == 1 && defined $panCanOut)
-{
-print PANOUT $pancanhead;
+if ($makehead == 1 && defined $panCanOut) {
+	print $PANOUT $pancanhead;
 }
 
 my $header = "";
-while ($header = <FH>)
-{
+while (!eof($FH)) {
+	defined($header = readline($FH))
+		|| die "Could not read from '$file': $!";
 	last if ($header =~ /^\#CHROM/); # that is the line with the column names
 	print "$header";
 }
@@ -326,7 +332,7 @@ for (my $c = 0; $c < @help; $c++)
 
 if(defined $PCRERR && defined $SEQERR && $round == 2 && (!defined $PCRERR1 || !defined $SEQERR1))
 {
-	die "There was no column with the first bias filereing present\n";
+	die "There was no column with the first bias filtering present\n";
 }
 
 if(defined $PCRERR && defined $SEQERR && $round == 1)
@@ -350,10 +356,12 @@ print join("\t", @help);
 
 print "\n";
 
+my $SOM;
 if(defined $somout)
 {
-	open(SOM, ">$somout") or die "Could not open the outfile for somatic SNVs $somout\n";
-	print SOM join("\t", @help), "\n";
+	open($SOM, ">$somout")
+		or die "Could not open the outfile for somatic SNVs $somout\n";
+	print $SOM join("\t", @help), "\n";
 }
 
 ####################-END-HEADER-######################
@@ -388,9 +396,12 @@ my $indbSNP = 0;
 my $precious = 0;
 my $class = ""; # for potential re-classification (e.g. low coverage in control and in dbSNP => probably germline)
 
-while (<FH>)
+while (!eof($FH))
 {
-	$confidence=10; # start with maximum value
+	defined($line = readline($FH))
+		|| die "Could not read from '$file': $!";
+
+ 	$confidence = 10; # start with maximum value
 	my $reasons = "";	# collect info on which penalties came into effect
 	my $dbsnpPos;
 	my $dbsnpId;
@@ -401,7 +412,7 @@ while (<FH>)
 	$is_repeat = 0;
 	$is_STR = 0;
 	$is_weird = 0;
-	$line = $_;
+
 	chomp $line;
 	@help = split ("\t", $line);
 	$class = $help[$CLASS]; # start with original classification
@@ -979,7 +990,7 @@ while (<FH>)
 
 ### Print
 	if(defined $panCanOut){
-		print PANOUT join("\t", @panout), "\n";
+		print $PANOUT join("\t", @panout), "\n";
 	}
 	if ($print_info)
 	{
@@ -992,7 +1003,11 @@ while (<FH>)
 	print join ("\t", @help);
 	print "\n";
 
-	if(defined $somout && $confidence > 7 && $help[$CLASS] eq "somatic" && $help[$RECLASSIFICATION] !~ /lowCov_SNP_support_germline/){print SOM join("\t", @help), "\n";}
+	if (defined $somout
+		&& $confidence > 7
+		&& $help[$CLASS] eq "somatic"
+		&& $help[$RECLASSIFICATION] !~ /lowCov_SNP_support_germline/){
+		print $SOM join("\t", @help), "\n";
+	}
 }
-close FH;
-exit;
+close $FH;

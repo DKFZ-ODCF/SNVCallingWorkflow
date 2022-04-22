@@ -17,10 +17,12 @@ if (@ARGV < 2)
 my $file = shift;
 my $minconfidence = shift;
 
-open (FH, $file) or die "Could not open $file: $!\n";
+open (my $FH, $file) or die "Could not open $file: $!\n";
 my $header;
-while ($header = <FH>)
+while (!eof($FH))
 {
+    defined($header = readline($FH))
+        || die "Could not read from '$file': $!";
 	last if ($header =~ /^\#CHR/); # that is the line with the column names
 }
 
@@ -40,11 +42,13 @@ my %counts;
 say join "\t", (qw(REF ALT preceeding following type exonic value));
 my ($ref, $alt, $pre, $fo, $ty, $ex);
 
-while (<FH>)
+while (!eof($FH))
 {
-  chomp;
+  defined(my $line = readline($FH))
+      || die "Could not read from '$file': $!";
+  chomp $line;
   # make hash of array with header lines => header names are keys
-  @fields{@columns} = split(/\t/);
+  @fields{@columns} = split(/\t/, $line);
   # skip low confidence calls
   next if ($fields{CONFIDENCE} < $minconfidence);
   # skip unclear, LQVSIG, and multi_ (bc. of eq instead of =~ //)
@@ -71,7 +75,7 @@ while (<FH>)
   }
   $counts{join ':', @fields{(qw(REF ALT preceeding following type exonic))}}++;
 }
-close FH;
+close $FH;
 for $ref ('T','C') {
   for $alt ('A','C','G','T') {
     next if ($alt eq $ref);

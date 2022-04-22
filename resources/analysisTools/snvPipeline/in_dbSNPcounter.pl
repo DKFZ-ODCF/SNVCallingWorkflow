@@ -23,7 +23,7 @@ unless (defined $minscore)
 {
 	$minscore = 8;
 }
-open (FH, $file) or die "Could not open $file: $!\n";
+open (my $FH, $file) or die "Could not open $file: $!\n";
 
 # count all, somatic, s. with minconfidence, in dbSNP, in 1KG
 my $all = 0;
@@ -37,8 +37,10 @@ my @help = ();
 
 
 my $header = "";
-while ($header = <FH>)
+while (!eof($FH))
 {
+	defined($header = readline($FH))
+		|| die "Could not read from '$file': $!";
 	last if ($header =~ /^\#CHROM/); # that is the line with the column names
 }
 chomp $header;
@@ -88,14 +90,16 @@ if ($CANNOTATION > 0) {
 }
 
 # I know that it's evilly hardcoded!
-while (<FH>)
+while (!eof($FH))
 {
-	if ($_ =~ /^#/)	# skip header lines
+	defined(my $line = readline($FH))
+		|| die "Could not read from '$file': $!";
+	if ($line =~ /^#/)	# skip header lines
 	{
 		next;
 	}
 	$all++;
-	@help = split ("\t", $_);
+	@help = split("\t", $line);
 	if ($help[$CLASSIFICATION] =~ /somatic/)
 	{
 		$somatic++;
@@ -115,7 +119,7 @@ while (<FH>)
 	}
 }
 
-close FH;
+close $FH;
 if ($scored > 0)
 {
 	$perc_dbSNP = sprintf ("%.2f", ($dbSNP/$scored*100));

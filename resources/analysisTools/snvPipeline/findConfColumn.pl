@@ -10,22 +10,28 @@ use warnings;
 
 my $infile = $ARGV[0];
 
-if($infile =~ /\.gz/){open(IN, "zcat $infile |") or die "Could not open the $infile to detect the confidence column\n";}
-else{open(IN, "<$infile") or die "Could not open the $infile to detect the confidence column\n";}
+my $IN;
+if ($infile =~ /\.gz/) {
+	open($IN, "zcat $infile |")
+		or die "Could not open the $infile to detect the confidence column\n";
+} else {
+	open($IN, "<$infile")
+		or die "Could not open the $infile to detect the confidence column\n";
+}
 
 my $line;
-while(<IN>)
-{
-	chomp;
-	$line=$_;
-	last if($_ =~ /^#CHROM\s/);
+while (!eof($IN)) {
+	defined($line = readline($IN))
+		|| die "Could not read from '$infile': $!";
+	chomp $line;
+	last if($line =~ /^#CHROM\s/);
 }
-close IN;
+close $IN;
+
 my $i = 0;
 my @line = split("\t", $line);
-while($i <= @line)
-{
-	last if($line[$i] =~ /^CONFIDENCE$/);
+while ($i <= @line) {
+	last if ($line[$i] =~ /^CONFIDENCE$/);
 	$i++;
 }
 print $i;

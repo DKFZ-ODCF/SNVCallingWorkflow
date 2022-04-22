@@ -26,8 +26,8 @@ my $tumor = shift;
 my $control = shift;
 my $makeheader = shift;
 
-open (T, $tumor) or die "Could not open $tumor: $!\n";
-open (C, $control) or die "Could not open $control: $!\n";
+open (my $T, $tumor) or die "Could not open $tumor: $!\n";
+open (my $C, $control) or die "Could not open $control: $!\n";
 
 # hardcoded:
 # at least 1/30th of reads must support the variant in control to call it germline
@@ -125,8 +125,10 @@ my $plus = 0;
 my $header = "";
 if (defined $makeheader && $makeheader ne "no")
 {
-	while ($header = <T>)
+	while (!eof($T))
 	{
+		defined($header = readline($T))
+			|| die "Could not read from '$tumor': $!";
 		last if ($header =~ /^\#CHROM/); # that is the line with the column names
 		print "$header";
 	}
@@ -138,8 +140,10 @@ my $tcoord = 0;
 
 # one file is longer than the other, nevermind which
 #(if we did pileup for only the tumor SNV positions, control will be shorter; otherwise longer)
-TUMORFILE_LOOP: while ($lineT=<T>)
+TUMORFILE_LOOP: while (!eof($T))
 {
+	defined($lineT = readline($T))
+		|| die "Could not read from '$tumor': $!";
 	# after reading over the comments, see above, we start with a line containing chromosome and coordinate etc.
 	# in tumor:
 	#chr1	16566	.	A	C	10.7	.	DP=11;AF1=0.6642;CI95=0.5,0.75;DP4=0,4,0,3;MQ=30;PV4=1,0.14,0.096,0.012	PL:GT:GQ	29,3,0:1/1:5	16,0,82:0/1:22	
@@ -170,8 +174,10 @@ TUMORFILE_LOOP: while ($lineT=<T>)
 		next;	# read next line from tumor
 	}
 	# else missing in tumor - can never be the case!
-	while ($lineC = <C>)	# when we are here tcoord is higher than ccoord; read new control line
+	while (!eof($C))	# when we are here tcoord is higher than ccoord; read new control line
 	{
+		defined($lineC = readline($C))
+			|| die "Could not read from '$control': $!";
 		chomp $lineC;
 		$ctrC++;
 		# split lines
@@ -199,8 +205,8 @@ TUMORFILE_LOOP: while ($lineT=<T>)
 	print $lineT, "\tDP=0;DP5=0,0,0,0,0;DP5all=0,0,0,0,0;ACGTNacgtnHQ=0,0,0,0,0,0,0,0,0,0;ACGTNacgtn=0,0,0,0,0,0,0,0,0,0;VAF=0;TSR=0\t$notcovered\n";
 	$missingC++;
 }
-close C;
-close T;
+close $C;
+close $T;
 # if there are lines left in control pileup, these are not interesting anyways
 print STDERR "$ctrT lines of tumor and $ctrC of control processed, $match are paired. After filtering, $trueSNP normal SNPs, $multi multiallelic SNPs, $insert insertions, $delet deletions. $germline_ctr $germline, $somatic_ctr $somatic, $unclear_ctr with different allele, $artefact_ctr 'LQVCIG' possible artefacts, $missingC missing in control.\n";
 

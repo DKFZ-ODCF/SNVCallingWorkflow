@@ -11,20 +11,22 @@ use v5.10;
 my $snv_of = shift @ARGV;
 my $indel_of = shift @ARGV;
 
-open(SNV, ">$snv_of") || die "Could not open $snv_of for writing ($!)";
-open(INDEL, ">$indel_of")  || die "Could not open $indel_of for writing ($!)";
+open(my $SNV, ">$snv_of") || die "Could not open $snv_of for writing ($!)";
+open(my $INDEL, ">$indel_of")  || die "Could not open $indel_of for writing ($!)";
 
-while(<>) {
-  if (/^\#/) {
-    print SNV;
-    print INDEL;
+while(!eof(\*STDIN)) {
+  defined (my $line = readline(\*STDIN))
+      || die "Could not read from STDIN: $!";
+  if ($line =~/^\#/) {
+    print $SNV $line;
+    print $INDEL $line;
     next;
   }
-  if ((split(/\t/))[7] =~ /^INDEL/) {
-    print INDEL;
+  if ((split(/\t/, $line))[7] =~ /^INDEL/) {
+    print INDEL $line;
   } else {
-    print SNV;
+    print SNV $line;
   }
 }
-close SNV;
-close INDEL;
+close $SNV;
+close $INDEL;

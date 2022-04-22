@@ -21,16 +21,18 @@ my @fields;
 my @alts;
 my @homlens;
 
-while (<>) {
-  if (/^#/) {
-    print $_;
+while (!eof(\*STDIN)) {
+  defined(my $line = readline(\*STDIN))
+      || die "Error reading from STDIN: $!";
+  if ($line =~ /^#/) {
+    print $line;
     next;
   }
-  chomp;
-  DEBUG && say $_;
-  @fields = split(/\t/);
+  chomp $line;
+  DEBUG && say $line;
+  @fields = split(/\t/, $line);
   $ref = $fields[3];
-  @alts = split(/,/,$fields[4]);
+  @alts = split(/,/, $fields[4]);
   $ri = $rl = length($ref) -1;
   @homlens = ();
   foreach $alt (@alts) {
