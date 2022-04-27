@@ -29,7 +29,6 @@
                 description="Git repository link with the hts-python version for PyPy. Try to avoid DoS on Github!"/>
         <cvalue name="HTS_PYTHON_COMMIT" value="cd35d6f15221bb09c218d0f978c0b92c560fcdd6" type="string"
                 description="Specific Git commit of the PyPy-compatible hts-python to download from HTS_PYTHON_GIT_REPOSITORY."/>
-        <cvalue name="usePypy" value='true' type="boolean" />
 
         <cvalue name='mpileupOutputDirectory' value='mpileup' type="path"/>
         <cvalue name='MPILEUP_OPTS' value='"-EI -q 30 -O u --ignore-RG --ff UNMAP,SECONDARY,QCFAIL,DUP,SUPPLEMENTARY -d 9999 -a AD -x"' type="string"/>
