@@ -65,8 +65,11 @@ cloneAndBuildHtsPython() {
         if [[ ! -d `echo "$sitePackageDir/hts-*.egg"` ]]; then
             "$GIT_BINARY" clone "$HTS_PYTHON_GIT_REPOSITORY" "$HTS_PYTHON_REPODIR"
             "$GIT_BINARY" -C "$HTS_PYTHON_REPODIR" checkout "$HTS_PYTHON_COMMIT"
-            # Below assume that 'nose' is already installed with PyPy
             pushd "$HTS_PYTHON_REPODIR"
+            ls .eggs/nose* > /dev/null 2>&1
+            if [[ $? -ne 0 ]]; then
+                pip3 install -t .eggs/ nose==1.3.7
+            fi
             C_INCLUDE_PATH="$HTSLIB_INCLUDE_PATH" PYTHONPATH="$sitePackageDir" "$PYPY_OR_PYTHON_BINARY" setup.py build
             C_INCLUDE_PATH="$HTSLIB_INCLUDE_PATH" PYTHONPATH="$sitePackageDir" "$PYPY_OR_PYTHON_BINARY" setup.py install --prefix="$PYPY_LOCAL_LIBPATH"
             popd

@@ -135,59 +135,60 @@ The optional configuration JSON file defaults to the `convertToStdVCF.json` resi
 
   * minor: Bugfix. The configuration value for `PYPY_OR_PYTHON_BINARY` was set to "pypy", which is appropriate for Conda, but not for the `tbi-lsf-cluster` configuration, which is much more used. Set the default to "pypy-c". Added a test in the environment script to check that the binary is really available. 
   * minor: Added `vcfConvertToStd.py`; slightly modified from code by @juleskers and Sophia Stahl
+  * minor: Previously assumed 'nose' is installed for pypy. Now install "nose" needed for setup.py in pypy htslib installation in the home htslib directory.
 
-  * 2.1.1
+* 2.1.1
 
-    * patch: Removed hardcoded path to ExAC database
+  * patch: Removed hardcoded path to ExAC database
 
-  * 2.1.0
+* 2.1.0
 
-  * 2.0.0
+* 2.0.0
 
-    - Upgrading to BCFtools/SAMtools/htslib to 1.9
-    - Calling variants using BCFtools mpileup and samtools mpileup for lookup in control (similar to the old way)
-    - PE overlaps are removed as before
-    - Removing supplementary reads and left-out duplicate reads from variant calling
-    - Deactivating the use to ExAC for no-control workflow filtering.
-    - Updating to new local control and change the max AF threshold to 0.01
+  - Upgrading to BCFtools/SAMtools/htslib to 1.9
+  - Calling variants using BCFtools mpileup and samtools mpileup for lookup in control (similar to the old way)
+  - PE overlaps are removed as before
+  - Removing supplementary reads and left-out duplicate reads from variant calling
+  - Deactivating the use to ExAC for no-control workflow filtering.
+  - Updating to new local control and change the max AF threshold to 0.01
 
-  * 1.4.1
+* 1.4.1
 
-  * 1.4.0
+* 1.4.0
 
-  * 1.3.2
+* 1.3.2
 
-  * 1.3.1
+* 1.3.1
 
-  * 1.3.0
+* 1.3.0
 
-  * 1.2.166-3 (ReleaseBranch_1.2.166)
+* 1.2.166-3 (ReleaseBranch_1.2.166)
 
-    * Long-term support version.
+  * Long-term support version.
 
-  * 1.2.166-3
+* 1.2.166-3
 
-  * 1.2.166-2
+* 1.2.166-2
 
-  * 1.2.166-1
+* 1.2.166-1
 
-    * This version derives from 1.0.166-2_R2.4 and was done in the context of a migration of our cluster from PBS to IBM LSF and associated update of the workflow manager Roddy.
+  * This version derives from 1.0.166-2_R2.4 and was done in the context of a migration of our cluster from PBS to IBM LSF and associated update of the workflow manager Roddy.
 
-  * 1.1.4-2
+* 1.1.4-2
 
-  * 1.1.4-1
+* 1.1.4-1
 
-  * 1.1.4
+* 1.1.4
 
-  * 1.1.3
+* 1.1.3
 
-  * 1.1.2
+* 1.1.2
 
-  * 1.0.166-2_R2.4
+* 1.0.166-2_R2.4
 
-  * 1.0.166-1_priorLsfTransition
+* 1.0.166-1_priorLsfTransition
 
-  * 1.0.166-1
+* 1.0.166-1
 
 The versions listed below are absent from this repository and are only listed as legacy versions. At the time, the code was managed in an SVN repository and its history was not migrated into the current git repository.
 
