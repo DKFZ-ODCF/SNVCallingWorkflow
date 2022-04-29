@@ -53,31 +53,38 @@ cloneAndBuildHtsPython() {
     local HTS_PYTHON_REPODIR="$PYPY_LOCAL_LIBPATH/repository"
     if [[ ! -d "$sitePackageDir" ]]; then
         mkdir -p "$sitePackageDir"
-        local LOCK="$sitePackageDir/hts-egg~"
-        lock "$LOCK"
+    fi
+    local LOCK="$sitePackageDir/hts-egg~"
+    lock "$LOCK"
 
+    if [[ ! -d "$(echo "$sitePackageDir/hts-*.egg")" ]]; then
+        echo "Installing hts for pypy" >> /dev/stderr
         module load git/"${GIT_VERSION:?GIT_VERSION undefined}"
         export GIT_BINARY=git
+
+        "$GIT_BINARY" clone "$HTS_PYTHON_GIT_REPOSITORY" "$HTS_PYTHON_REPODIR"
+        "$GIT_BINARY" -C "$HTS_PYTHON_REPODIR" checkout "$HTS_PYTHON_COMMIT"
+        pushd "$HTS_PYTHON_REPODIR"
+        ls .eggs/nose* > /dev/null 2>&1
+        if [[ $? -ne 0 ]]; then
+            pip3 install -t .eggs/ nose==1.3.7
+        fi
 
         # Needed for CFFI
         module switch "htslib/$HTSLIB_VERSION_FOR_HTS_PYTHON"
 
-        if [[ ! -d `echo "$sitePackageDir/hts-*.egg"` ]]; then
-            "$GIT_BINARY" clone "$HTS_PYTHON_GIT_REPOSITORY" "$HTS_PYTHON_REPODIR"
-            "$GIT_BINARY" -C "$HTS_PYTHON_REPODIR" checkout "$HTS_PYTHON_COMMIT"
-            pushd "$HTS_PYTHON_REPODIR"
-            ls .eggs/nose* > /dev/null 2>&1
-            if [[ $? -ne 0 ]]; then
-                pip3 install -t .eggs/ nose==1.3.7
-            fi
-            C_INCLUDE_PATH="$HTSLIB_INCLUDE_PATH" PYTHONPATH="$sitePackageDir" "$PYPY_OR_PYTHON_BINARY" setup.py build
-            C_INCLUDE_PATH="$HTSLIB_INCLUDE_PATH" PYTHONPATH="$sitePackageDir" "$PYPY_OR_PYTHON_BINARY" setup.py install --prefix="$PYPY_LOCAL_LIBPATH"
-            popd
-        fi
+        C_INCLUDE_PATH="$HTSLIB_INCLUDE_PATH" PYTHONPATH="$sitePackageDir" \
+          "$PYPY_OR_PYTHON_BINARY" setup.py build
+        C_INCLUDE_PATH="$HTSLIB_INCLUDE_PATH" PYTHONPATH="$sitePackageDir" \
+          "$PYPY_OR_PYTHON_BINARY" setup.py install --prefix="$PYPY_LOCAL_LIBPATH"
+
+        popd
         unset C_INCLUDE_PATH
         module switch "htslib/$HTSLIB_VERSION"
-        unlock "$LOCK"
+    else
+        echo "hts for pypy is already installed" >> /dev/stderr
     fi
+    unlock "$LOCK"
 }
 
 pypyCopySam() {
