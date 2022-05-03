@@ -1,10 +1,10 @@
-numpy==1.11.3
-biopython==1.57
+biopython==1.71
 Cython==0.27.3
 funcsigs==1.0.2
 matplotlib==1.4.3
 mock==2.0.0
 nose==1.3.7
+numpy==1.11.3
 pbr==3.1.1
 pyparsing==2.2.0
 pysam==0.7.7

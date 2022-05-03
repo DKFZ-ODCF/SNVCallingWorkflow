@@ -11,7 +11,7 @@
         <!-- The following options are only relevant for the ODCF cluster at the DKFZ -->
         <cvalue name='workflowEnvironmentScript' value="workflowEnvironment_tbiLsf" type='string'/>
         <cvalue name='snvAnnotationEnvironmentScript' value="snvAnnotationEnvironment_tbiLsf" type="string"/>
-        <cvalue name='tbiLsfVirtualEnvDir' value="/odcf/cluster//virtualenvs/warsow/python_2.7.9_SNVCalling_1.4.2_dkfz" type="path"
+        <cvalue name='tbiLsfVirtualEnvDir' value="/odcf/cluster/virtualenvs/warsow/python_2.7.9_SNVCalling_1.4.2_dkfz" type="path"
                 description="The path on the execution hosts to the virtualenv used in the tbi-lsf-cluster."/>
 
         <cvalue name='RSCRIPT_VERSION' value='3.3.1' type="string"/>
