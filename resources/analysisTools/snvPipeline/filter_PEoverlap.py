@@ -129,7 +129,7 @@ def performAnalysis(args):
     #outFile = open(args.outf, "w")
 
     # Reference file for BAQ_recalcuation and local realignment
-    reference_file = pysam.Fastafile(args.refFileName)
+    # reference_file = pysam.Fastafile(args.refFileName)
 
     mode = "r"
     multiple_iterators = False
