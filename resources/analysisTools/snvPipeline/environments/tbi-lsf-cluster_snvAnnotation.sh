@@ -56,35 +56,48 @@ cloneAndBuildHtsPython() {
     fi
     local LOCK="$sitePackageDir/hts-egg~"
     lock "$LOCK"
+    # Registering a trap to ensure that the lock is removed also in case of an error. To not
+    # pollute the outer trap namespace, the block is put into a subshell by parentheses.
+    (
+        trap "echo 'Forced unlock: $LOCK' >> /dev/stderr; unlock $LOCK" ERR
+        # The trap must be set after the lock was successfully acquired, or it may delete a lock
+        # set by another process.
 
-    if [[ ! -d "$(echo "$sitePackageDir/hts-*.egg")" ]]; then
-        echo "Installing hts for pypy" >> /dev/stderr
-        module load git/"${GIT_VERSION:?GIT_VERSION undefined}"
-        export GIT_BINARY=git
+        if [[ $(ls -d $sitePackageDir/hts-*.egg 2>> /dev/null | wc -l) -eq 0 ]]; then
+            module load git/"${GIT_VERSION:?GIT_VERSION undefined}"
+            export GIT_BINARY=git
 
-        "$GIT_BINARY" clone "$HTS_PYTHON_GIT_REPOSITORY" "$HTS_PYTHON_REPODIR"
-        "$GIT_BINARY" -C "$HTS_PYTHON_REPODIR" checkout "$HTS_PYTHON_COMMIT"
-        pushd "$HTS_PYTHON_REPODIR"
-        ls .eggs/nose* > /dev/null 2>&1
-        if [[ $? -ne 0 ]]; then
-            pip3 install -t .eggs/ nose==1.3.7
+            if [[ ! -d "$(echo "$HTS_PYTHON_REPODIR")" ]]; then
+                echo "Cloning hts-python repository" >> /dev/stderr
+                "$GIT_BINARY" clone "$HTS_PYTHON_GIT_REPOSITORY" "$HTS_PYTHON_REPODIR"
+                "$GIT_BINARY" -C "$HTS_PYTHON_REPODIR" checkout "$HTS_PYTHON_COMMIT"
+            fi
+            pushd "$HTS_PYTHON_REPODIR"
+
+            if [[ $(ls .eggs/nose* 2> /dev/null | wc -l) -eq 0 ]]; then
+                echo "Installing nose (needed for installation)" >> /dev/stderr
+                pip3 install -t .eggs/ nose==1.3.7
+            fi
+
+            # Needed for CFFI
+            module switch "htslib/$HTSLIB_VERSION_FOR_HTS_PYTHON"
+
+            echo "Building and installing hts-python for pypy" >> /dev/stderr
+            C_INCLUDE_PATH="$HTSLIB_INCLUDE_PATH" PYTHONPATH="$sitePackageDir" \
+              "$PYPY_OR_PYTHON_BINARY" setup.py build
+            C_INCLUDE_PATH="$HTSLIB_INCLUDE_PATH" PYTHONPATH="$sitePackageDir" \
+              "$PYPY_OR_PYTHON_BINARY" setup.py install --prefix="$PYPY_LOCAL_LIBPATH"
+
+            popd
+            unset C_INCLUDE_PATH
+            module switch "htslib/$HTSLIB_VERSION"
+        else
+            echo "hts-python for pypy is already installed" >> /dev/stderr
         fi
-
-        # Needed for CFFI
-        module switch "htslib/$HTSLIB_VERSION_FOR_HTS_PYTHON"
-
-        C_INCLUDE_PATH="$HTSLIB_INCLUDE_PATH" PYTHONPATH="$sitePackageDir" \
-          "$PYPY_OR_PYTHON_BINARY" setup.py build
-        C_INCLUDE_PATH="$HTSLIB_INCLUDE_PATH" PYTHONPATH="$sitePackageDir" \
-          "$PYPY_OR_PYTHON_BINARY" setup.py install --prefix="$PYPY_LOCAL_LIBPATH"
-
-        popd
-        unset C_INCLUDE_PATH
-        module switch "htslib/$HTSLIB_VERSION"
-    else
-        echo "hts for pypy is already installed" >> /dev/stderr
-    fi
-    unlock "$LOCK"
+        unlock "$LOCK"
+        # Delete the trap
+        trap - ERR
+    )
 }
 
 pypyCopySam() {
