@@ -45,8 +45,8 @@
         <cvalue name='REFERENCE_GENOME' value="${referenceGenome_hg19_chr}" type="string"/>
 
         <!--## Databases -->
-        <cvalue name='hg19DatabasesDirectory' value="/icgc/ngs_share/assemblies/hg19_GRCh37_1000genomes/databases" type="path" />
-        <cvalue name="hg19DatabaseUCSCDirectory" value="/icgc/ngs_share/assemblies/hg19_GRCh37_1000genomes/databases/UCSC" type="path" />
+        <cvalue name='hg19DatabasesDirectory' value="/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/databases" type="path" />
+        <cvalue name="hg19DatabaseUCSCDirectory" value="/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/databases/UCSC" type="path" />
 
         <cvalue name="DBSNP" value="${hg19DatabasesDirectory}/dbSNP/dbSNP_147/00-All.SNV.vcf.gz" type="path"/>
         <cvalue name="DBSNP_COL" value="DBSNP" type="string"/>

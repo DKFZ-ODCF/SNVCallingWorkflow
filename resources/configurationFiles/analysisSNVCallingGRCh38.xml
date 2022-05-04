@@ -10,7 +10,7 @@
   <configurationvalues>
 
     <!--hg38 base directory-->
-    <cvalue name='hg38BaseDirectory' value='/icgc/ngs_share/assemblies/hg_GRCh38' type='path' />
+    <cvalue name='hg38BaseDirectory' value='/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg_GRCh38' type='path' />
 
     <!-- Reference genomes -->
     <cvalue name='REFERENCE_GENOME' value="${hg38BaseDirectory}/sequence/GRCh38_decoy_ebv_phiX_alt_hla_chr.fa" type="path"/>
