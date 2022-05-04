@@ -18,6 +18,16 @@
     <cvalue name="CHROM_SIZES_FILE" value="${hg38BaseDirectory}/stats/GRCh38_decoy_ebv_phiX_alt_hla_chr.fa.chrLenOnlyACGT_realChromosomes.tsv" type="path" />
     <cvalue name='CHROMOSOME_LENGTH_FILE' value='${hg38BaseDirectory}/stats/GRCh38_decoy_ebv_phiX_alt_hla_chr.fa.chrLength.tsv' type="path" />
 
+    <!--Chr indices for the calling-->
+    <cvalue name="CHROMOSOME_INDICES" value="( 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y HLA ALT )" type="bashArray" />
+    <cvalue name="CHROMOSOME_HLA_CONTIGS_FILE" value='${hg38BaseDirectory}/stats/GRCh38_decoy_ebv_phiX_alt_hla_chr.fa.HLA_contigs_list.txt' type="path" />
+    <cvalue name="CHROMOSOME_ALT_CONTIGS_FILE" value='${hg38BaseDirectory}/stats/GRCh38_decoy_ebv_phiX_alt_hla_chr.fa.ALT_contigs_list.txt' type="path" />
+
+    <!--BCFtools options fo the variant calling-->
+    <cvalue name='MPILEUP_OPTS' value='"-EI -q 30 -O u --ignore-RG --ff UNMAP,SECONDARY,QCFAIL,DUP,SUPPLEMENTARY -d 9999 -a AD -x"' type="string"/>
+    <cvalue name='MPILEUP_OPTS_ALT_HLA' value='"-A -EI -q 30 -O u --ignore-RG --ff UNMAP,SECONDARY,QCFAIL,DUP -d 9999 -a AD -x"' type="string"/>
+    <cvalue name='BCFTOOLS_OPTS' value='"-vc -p 2.0 --ploidy GRCh38"' type="string"/>
+
     <cvalue name='CHR_PREFIX' value='chr' type='string' />
     <cvalue name="disableAutoBAMHeaderAnalysis" value="true" type="boolean"/>
 

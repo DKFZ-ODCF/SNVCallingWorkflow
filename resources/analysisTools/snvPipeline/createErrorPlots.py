@@ -31,7 +31,7 @@ def calculateLogSize(size, max_val, base):
 	return math.log(((size/max_val)*(base-1.))+1., base)
 
 def calculateRootedSize(size, max_val):
-	if(float(size) != 0.0):
+	if(float(size) != 0.0 and float(max_val) != 0.0):
 		return np.sqrt(size/max_val)
 	else:
 		return 0.0

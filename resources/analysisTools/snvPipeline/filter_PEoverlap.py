@@ -210,7 +210,11 @@ def performAnalysis(args):
             count_nonREFnonALT = BoolCounter(REF, ALT) # " for nonREF and nonALT bases
 
             # To match pysam and mpileup counts, a reference file is added. Given the reference file, Pysam by default computes BAQ (compute_baq).
-            for pileupcolumn in samfile.pileup(chrom, (pos-1), pos, flag_filter=3844, redo_baq=True, ignore_overlaps=False, multiple_iterators=multiple_iterators):
+            if chrom.endswith('alt') or chrom.startswith('HLA'):
+                flag_filer_value = 1796
+            else:
+                flag_filer_value = 3844
+            for pileupcolumn in samfile.pileup(chrom, (pos-1), pos, flag_filter=flag_filer_value, redo_baq=True, ignore_overlaps=False, multiple_iterators=multiple_iterators):
                 if pileupcolumn.pos == (pos-1):
                     #print 'coverage at base %s = %s' % (pileupcolumn.pos , pileupcolumn.nsegments)
                     for pileupread in pileupcolumn.pileups:
