@@ -16,9 +16,6 @@ This assumes, `tbiLsfVirtualEnvDir` is accessible from all compute nodes. Furthe
 module load python/2.7.9
 virtualenv "$tbiLsfVirtualEnvDir"
 source "$tbiLsfVirtualEnvDir/bin/activate"
-# The order of installations may go wrong with Biopython before numpy, which results in an error.
-# Therefore:
-pip install numpy==1.11.3
 pip install -r "$pluginInstallationDir/resources/analysisTools/snvPipeline/environments/requirements.txt
 ```
 
