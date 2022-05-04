@@ -7,7 +7,12 @@ module load htslib/"${HTSLIB_VERSION:?HTSLIB_VERSION undefined}"
 module load perl/"${PERL_VERSION:?PERL_VERSION undefined}"
 module load bedtools/"${BEDTOOLS_VERSION:?BEDTOOLS_VERSION undefined}"
 
-source /odcf/cluster/virtualenvs/warsow/python_2.7.9_SNVCalling_1.2.166-1/bin/activate
+if [[ ! -x "$tbiLsfVirtualEnvDir" ]]; then
+  echo "Cannot access virtualenv directory: '$tbiLsfVirtualEnvDir'" >> /dev/stderr
+  exit 1
+fi
+
+source "$tbiLsfVirtualEnvDir/bin/activate"
 
 export BGZIP_BINARY=bgzip
 export TABIX_BINARY=tabix
