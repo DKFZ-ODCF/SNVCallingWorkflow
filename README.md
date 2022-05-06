@@ -74,7 +74,7 @@ Then, in your configuration files, you need to set the `tbiLsfVirtualEnvDir` var
 
 #### PyPy
 
-PyPy is an alternative Python interpreter. Some Python scripts in the workflow can use PyPy to achieve higher performance by employing a fork of [hts-python](https://github.com/eilslabs/hts-python). Currently, this is not implemented for the Conda environment. For most cases you therefore should set the `PYPY_OR_PYTHON_BINARY` variable to just `python` to use the Python binary from the Conda environment. You could set up a `resources/analysisTools/snvPipeline/environments/conda_snvAnnotation.sh` similar to the `tbi-lsf-cluster_snvAnnotation.sh` file in the same directory.
+> PyPy support is broken and deprecated (2.2.0).
 
 ### Reference data installation
 
@@ -163,7 +163,7 @@ The optional configuration JSON file defaults to the `convertToStdVCF.json` resi
   * minor: PyPy is deprecated. Configuration values related to it are (mostly) removed.
   * minor: Allow configuration of virtualenv in `tbi-lsf-cluster.sh`
   * Lifted readme from ReleaseBranch_1.2.166
-  * > Note: Again the Conda environment is broken and cannot get rebuild. It is not trivial to update it without updating everything.
+  * > Note: Again the Conda environment is broken and cannot get rebuild. 
 
 * 2.1.1
 

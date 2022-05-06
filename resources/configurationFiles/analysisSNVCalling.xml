@@ -24,7 +24,7 @@
 
         <!-- Using CPython or PyPy (deprecated) -->
         <cvalue name="PYPY_OR_PYTHON_BINARY" value="python" type="string"
-                description="PyPy is deprecated. Do not modify this, the feature is just not fully removed."/>
+                description="PyPy is deprecated. Do not modify this."/>
 
         <!-- Workflow configuration -->
         <cvalue name='mpileupOutputDirectory' value='mpileup' type="path"/>
