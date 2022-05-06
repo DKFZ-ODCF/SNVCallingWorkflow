@@ -30,7 +30,7 @@ set -ue
 export BGZIP_BINARY=bgzip
 export TABIX_BINARY=tabix
 export PERL_BINARY=perl
-export PYPY_OR_PYTHON_BINARY="${PYPY_OR_PYTHON_BINARY:-pypy-c}"
+export PYPY_OR_PYTHON_BINARY="${PYPY_OR_PYTHON_BINARY:-python}"
 export PYTHON_BINARY=python
 export RSCRIPT_BINARY=Rscript
 export INTERSECTBED_BINARY=intersectBed

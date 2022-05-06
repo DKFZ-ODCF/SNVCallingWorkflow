@@ -24,15 +24,7 @@
 
         <!-- Using CPython or PyPy (deprecated) -->
         <cvalue name="PYPY_OR_PYTHON_BINARY" value="python" type="string"
-                description="PyPy is deprecated. If you use a PyPy binary here, some scripts are interpreted with higher performance by PyPy and hts-python is used instead of pysam in the filter_PEoverlap.py script."/>
-        <cvalue name='HTSLIB_VERSION_FOR_HTS_PYTHON' value='1.2' type="string"
-                description="Only used if PYPY_OR_PYTHON_BINARY evaluates to a PyPy binary."/>
-        <cvalue name='PYPY_VERSION' value='5.8.0' type="string"/>
-        <cvalue name='GIT_VERSION' value='2.9.4' type="string"/>
-        <cvalue name="HTS_PYTHON_GIT_REPOSITORY" value="https://github.com/pjb7687/hts-python" type="string"
-                description="Git repository link with the hts-python version for PyPy. Try to avoid DoS on Github!"/>
-        <cvalue name="HTS_PYTHON_COMMIT" value="cd35d6f15221bb09c218d0f978c0b92c560fcdd6" type="string"
-                description="Specific Git commit of the PyPy-compatible hts-python to download from HTS_PYTHON_GIT_REPOSITORY."/>
+                description="PyPy is deprecated. Do not modify this, the feature is just not fully removed."/>
 
         <!-- Workflow configuration -->
         <cvalue name='mpileupOutputDirectory' value='mpileup' type="path"/>
