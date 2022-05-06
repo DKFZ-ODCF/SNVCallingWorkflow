@@ -153,9 +153,9 @@ The optional configuration JSON file defaults to the `convertToStdVCF.json` resi
 * 2.2.0
 
   * major: Update virtualenv
-    * Updated environment to matplotlib 1.5.3. Version 1.4.3 seems to be incompatible to numpy 1.11.3 (now).
+    * Updated environment to matplotlib 1.5.3. Version 1.4.3 seems to be incompatible to numpy 1.11.3 (now; `import matplotlib.pyplot` failed).
     * Used pysam 0.16.0.1 from the orginal 2.1.1 environment. This breaks the PyPy support (`copysam.py` is not yet adapted) but is necessary for the changes done for workflow version 2.1.1.
-    * Updated (again) to BioPython 1.71. This was lost in workflow version 2.1.1 but is necessary for some data that require `biopython.bgzf`.
+    * Updated to BioPython 1.71. This was lost in workflow version 2.1.1 but is necessary for some data `from bio import bgzf` is needed (`vcfparser.py`).
   * minor: Bugfix: The configuration value for `PYPY_OR_PYTHON_BINARY` was set to "python". The former value "pypy" is still appropriate for the Conda environment, but not for the `tbi-lsf-cluster.sh` configuration, which is much more used.
   * minor: Allow configuration of virtualenv in `tbi-lsf-cluster.sh`
   * minor: More robust installation of hts-python for PyPy by `tbi-lsf-cluster.sh`.
