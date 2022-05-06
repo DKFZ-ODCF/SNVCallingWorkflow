@@ -66,9 +66,6 @@ This assumes, `tbiLsfVirtualEnvDir` is installed centrally and accessible from a
 module load python/2.7.9
 virtualenv "$tbiLsfVirtualEnvDir"
 source "$tbiLsfVirtualEnvDir/bin/activate"
-# The order of installations may go wrong with Biopython before numpy, which results in an error.
-# Therefore:
-pip install numpy==1.11.3
 pip install -r "$pluginInstallationDir/resources/analysisTools/snvPipeline/environments/requirements.txt
 ```
 
@@ -155,14 +152,18 @@ The optional configuration JSON file defaults to the `convertToStdVCF.json` resi
 
 * 2.2.0
 
-  * minor: Bugfix: CPython variant was broken, because wrong venv was set up.
-  * minor: Bugfix: PyPy version was broken, because code working in CPython was not implemented for PyPy (`reference_file` in `filter_PEoverlap.py`)
-  * minor: Bugfix: The configuration value for `PYPY_OR_PYTHON_BINARY` was set to "pypy", which is appropriate for the Conda environment, but not for the `tbi-lsf-cluster.sh` configuration, which is much more used. Set the default to "pypy-c". Added a test in the environment script to check that the binary is really available.
+  * major: Update virtualenv
+    * Updated environment to matplotlib 1.5.3. Version 1.4.3 seems to be incompatible to numpy 1.11.3 (now).
+    * Used pysam 0.16.0.1 from the orginal 2.1.1 environment. This breaks the PyPy support (`copysam.py` is not yet adapted) but is necessary for the changes done for workflow version 2.1.1.
+    * Updated (again) to BioPython 1.71. This was lost in workflow version 2.1.1 but is necessary for some data that require `biopython.bgzf`.
+  * minor: Bugfix: The configuration value for `PYPY_OR_PYTHON_BINARY` was set to "python". The former value "pypy" is still appropriate for the Conda environment, but not for the `tbi-lsf-cluster.sh` configuration, which is much more used.
   * minor: Allow configuration of virtualenv in `tbi-lsf-cluster.sh`
-  * minor: More robust installation of hts-python by `tbi-lsf-cluster.sh`.
-    * Previously assumed 'nose' is installed for pypy. Now install "nose" needed for setup.py in pypy htslib installation in the home htslib directory.
-    * Better test and conditional code for nose, git clone, build/install of 
+  * minor: More robust installation of hts-python for PyPy by `tbi-lsf-cluster.sh`.
+    * Previously assumed 'nose' is installed for PyPy. Now install "nose" needed for setup.py in the hts-python installation in the home directory.
+    * Better test and conditional code for nose, git clone, build/install of hts-python
   * Lifted readme from ReleaseBranch_1.2.166
+  * > Note: Again the Conda environment is broken and cannot be rebuild. It is not trivial to update it without updating everything.
+  * > Note: Despite changes for PyPy it was decided to drop the PyPy support in the future.
 
 * 2.1.1
 
