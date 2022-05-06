@@ -8,6 +8,7 @@
 import sys
 import re
 import argparse
+from Bio import bgzf
 
 class BGZFType(argparse.FileType):
     def __call__(self, string):
@@ -23,7 +24,6 @@ class BGZFType(argparse.FileType):
         # all other arguments are used as file names
         try:
             if string[-3:] == ".gz":
-                from Bio import bgzf
                 if 'r' in self._mode:
                     return bgzf.BgzfReader(string, self._mode)
                 elif 'w' in self._mode or 'a' in self._mode:
