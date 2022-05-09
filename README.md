@@ -92,23 +92,23 @@ It performs four steps:
 
 ## Configuration Values
 
-|Switch                    |  Default     | Description
-|--------------------------|--------------|-----------------------------------------------|
-| bamfile_list             | empty        | Semicolon-separated list of BAM files, starting with the control's BAM. Each BAM file needs an index file with the same name as the BAM, but ".bai" suffixed |
-| sample_list              | empty        | Semicolon-separated list of sample names in the same order as `bamfile_list` |
-| possibleTumorSampleNamePrefixes | "( tumor )" | Bash-array of tumor sample name prefixes |
-| possibleControlSampleNamePrefixes | "( control )" | Bash-array of control sample name prefixes |
-| CHROMOSOME_INDICES | empty | Bash-array of chromosome names to which the analysis should be restricted |
-| CHROMOSOME_LENGTH_FILE  | empty | Headerless TSV file with chromosome name, chromosome size columns |
-| CHR_SUFFIX | "" | Suffix added to the chromosome names |
-| CHR_PREFIX | "" | Prefix added to the chromosome names |
-| extractSamplesFromOutputFiles | true | Refer to the documentation of the [COWorkflowBasePlugin](https://github.com/DKFZ-ODCF/COWorkflowsBasePlugin) for further information |
-| PYPY_OR_PYTHON_BINARY | pypy | The binary to use for a some of the Python scripts. For `filter_PEoverlap.py` using a PyPy binary here also triggers the use of [hts-python](https://github.com/pjb7687/hts-python) instead of pysam.|  
-| runSNVMetaCallingStep | false | Run a single job for snv calling instead of a job per chromosome. The meta job is optimized in regards to runtime and cpu / memory utilization. On the other hand it is a larger job which might be more difficult to schedule. |
-| runDeepAnnotation | true | Run the deep annotation step or stop the workflow before it. |
-| runFilter | true |Run the filter step or stop the workflow before it. |
-| runOnPancan | false | Run a special analysis type for pancancer type  projects. | 
-| NUMBER_OF_MISMATCHES_THRESHOLD | -1 | resources/analysisTools/snvPipeline/snvAnnotation.sh: Number of mismatches that are allowed per read in order to consider this read. |
+| Switch                            |  Default     | Description                                                                                                                                                                                                                     |
+|-----------------------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| bamfile_list                      | empty        | Semicolon-separated list of BAM files, starting with the control's BAM. Each BAM file needs an index file with the same name as the BAM, but ".bai" suffixed                                                                    |
+| sample_list                       | empty        | Semicolon-separated list of sample names in the same order as `bamfile_list`                                                                                                                                                    |
+| possibleTumorSampleNamePrefixes   | "( tumor )" | Bash-array of tumor sample name prefixes                                                                                                                                                                                        |
+| possibleControlSampleNamePrefixes | "( control )" | Bash-array of control sample name prefixes                                                                                                                                                                                      |
+| CHROMOSOME_INDICES                | empty | Bash-array of chromosome names to which the analysis should be restricted                                                                                                                                                       |
+| CHROMOSOME_LENGTH_FILE            | empty | Headerless TSV file with chromosome name, chromosome size columns                                                                                                                                                               |
+| CHR_SUFFIX                        | "" | Suffix added to the chromosome names                                                                                                                                                                                            |
+| CHR_PREFIX                        | "" | Prefix added to the chromosome names                                                                                                                                                                                            |
+| extractSamplesFromOutputFiles     | true | Refer to the documentation of the [COWorkflowBasePlugin](https://github.com/DKFZ-ODCF/COWorkflowsBasePlugin) for further information                                                                                            |
+| PYPY_OR_PYTHON_BINARY             | pypy | The binary to use for a some of the Python scripts. For `filter_PEoverlap.py` using a PyPy binary here also triggers the use of [hts-python](https://github.com/pjb7687/hts-python) instead of pysam.                           |
+| runSNVMetaCallingStep             | false | Run a single job for snv calling instead of a job per chromosome. The meta job is optimized in regards to runtime and cpu / memory utilization. On the other hand it is a larger job which might be more difficult to schedule. |
+| runDeepAnnotation                 | true | Run the deep annotation step or stop the workflow before it.                                                                                                                                                                    |
+| runFilter                         | true | Run the filter step or stop the workflow before it.                                                                                                                                                                             |
+| runOnPancan                       | false | Run a special analysis type for pancancer type projects. This will produce an additional VCF. |
+| NUMBER_OF_MISMATCHES_THRESHOLD    | -1 | resources/analysisTools/snvPipeline/snvAnnotation.sh: Number of mismatches that are allowed per read in order to consider this read.                                                                                            |
 
 Please have a look at the `resources/configurationFiles/analysisSNVCalling.xml` for a more complete list of parameters.
 
@@ -152,7 +152,7 @@ The optional configuration JSON file defaults to the `convertToStdVCF.json` resi
 
 * upcoming
 
-  * patch: Remove all code related to PyPy and hts-python
+  * patch: Remove all code related to PyPy and hts-python (including `copysam.py` and `PYPY_OR_PYTHON_BINARY`)
 
 * 2.2.0
 
