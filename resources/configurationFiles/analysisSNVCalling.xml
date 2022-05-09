@@ -98,6 +98,8 @@
 
         <cvalue name="CONFIDENCE_OPTS" value="-t 500" type="string"
                 description="max read depth in control (-t INT default 150 for genomes, set to 500 for exomes) can now be omitted to avoid depth dependent punishing by setting -c 0. It is also possible to get a justification for the confidence score by setting the -p 1 flag"/>
+        <cvalue name="runOnPancan" value="false" type="boolean"
+                description="Adds -o $pancanOut to CONFIDENCE_OPTS to generate an additional VCF. Needs BioPython > 1.70."/>
 
         <cvalue name="MIN_CONFIDENCE_SCORE" value="8" type="integer"/>
         <cvalue name="SNV_FILTER_OPTIONS" value="--ncRNA=1 --synonymous=0" type="string" description="Values used for the extraction of SNVs"/>
