@@ -33,6 +33,8 @@ Furthermore you need a number of tools and of course reference data, like a geno
 
 ### Tool installation
 
+#### Conda
+
 The workflow contains a description of a [Conda](https://conda.io/docs/) environment. A number of Conda packages from [BioConda](https://bioconda.github.io/index.html) are required. 
 
 First install the BioConda channels:
@@ -54,9 +56,25 @@ The name of the Conda environment is arbitrary but needs to be consistent with t
 
 Note that the Conda environment not exactly the same as the software stack used for the [Pancancer](https://dockstore.org/containers/quay.io/pancancer/pcawg-dkfz-workflow) project.
 
+###### VirtualEnv
+
+The virtual env does not provide a full software stack. This section is only relevant for the ODCF cluster and mostly for developers. In rare cases it may be necessary for other users to set the `tbiLsfVirtualEnvDir`.
+
+This assumes, `tbiLsfVirtualEnvDir` is installed centrally and accessible from all compute nodes. Furthermore, Python 2.7.9 in this example is assumed to be available via a module named "python/2.7.9".
+
+```bash
+module load python/2.7.9
+virtualenv "$tbiLsfVirtualEnvDir"
+source "$tbiLsfVirtualEnvDir/bin/activate"
+pip install -r "$pluginInstallationDir/resources/analysisTools/snvPipeline/environments/requirements.txt
+```
+
+Then, in your configuration files, you need to set the `tbiLsfVirtualEnvDir` variable.
+
+
 #### PyPy
 
-PyPy is an alternative Python interpreter. Some Python scripts in the workflow can use PyPy to achieve higher performance by employing a fork of [hts-python](https://github.com/eilslabs/hts-python). Currently, this is not implemented for the Conda environment. For most cases you therefore should set the `PYPY_OR_PYTHON_BINARY` variable to just `python` to use the Python binary from the Conda environment. You could set up a `resources/analysisTools/snvPipeline/environments/conda_snvAnnotation.sh` similar to the `tbi-lsf-cluster_snvAnnotation.sh` file in the same directory.  
+> PyPy support is broken and deprecated (2.2.0).
 
 ### Reference data installation
 
@@ -74,24 +92,25 @@ It performs four steps:
 
 ## Configuration Values
 
-|Switch                    |  Default     | Description
-|--------------------------|--------------|-----------------------------------------------|
-| bamfile_list             | empty        | Semicolon-separated list of BAM files, starting with the control's BAM. Each BAM file needs an index file with the same name as the BAM, but ".bai" suffixed |
-| sample_list              | empty        | Semicolon-separated list of sample names in the same order as `bamfile_list` |
-| possibleTumorSampleNamePrefixes | "( tumor )" | Bash-array of tumor sample name prefixes |
-| possibleControlSampleNamePrefixes | "( control )" | Bash-array of control sample name prefixes |
-| CHROMOSOME_INDICES | empty | Bash-array of chromosome names to which the analysis should be restricted |
-| CHROMOSOME_LENGTH_FILE  | empty | Headerless TSV file with chromosome name, chromosome size columns |
-| CHR_SUFFIX | "" | Suffix added to the chromosome names |
-| CHR_PREFIX | "" | Prefix added to the chromosome names |
-| extractSamplesFromOutputFiles | true | Refer to the documentation of the [COWorkflowBasePlugin](https://github.com/DKFZ-ODCF/COWorkflowsBasePlugin) for further information |
-| PYPY_OR_PYTHON_BINARY | pypy | The binary to use for a some of the Python scripts. For `filter_PEoverlap.py` using a PyPy binary here also triggers the use of [hts-python](https://github.com/pjb7687/hts-python) instead of pysam.|  
-| runSNVMetaCallingStep | false | Run a single job for snv calling instead of a job per chromosome. The meta job is optimized in regards to runtime and cpu / memory utilization. On the other hand it is a larger job which might be more difficult to schedule. |
-| runDeepAnnotation | true | Run the deep annotation step or stop the workflow before it. |
-| runFilter | true |Run the filter step or stop the workflow before it. |
-| runOnPancan | false | Run a special analysis type for pancancer type  projects. | 
-| NUMBER_OF_MISMATCHES_THRESHOLD | -1 | resources/analysisTools/snvPipeline/snvAnnotation.sh: Number of mismatches that are allowed per read in order to consider this read. |
+| Switch                            | Default       | Description                                                                                                                                                                                                                     |
+|-----------------------------------|---------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| bamfile_list                      | empty         | Semicolon-separated list of BAM files, starting with the control's BAM. Each BAM file needs an index file with the same name as the BAM, but ".bai" suffixed                                                                    |
+| sample_list                       | empty         | Semicolon-separated list of sample names in the same order as `bamfile_list`                                                                                                                                                    |
+| possibleTumorSampleNamePrefixes   | "( tumor )"   | Bash-array of tumor sample name prefixes                                                                                                                                                                                        |
+| possibleControlSampleNamePrefixes | "( control )" | Bash-array of control sample name prefixes                                                                                                                                                                                      |
+| CHROMOSOME_INDICES                | empty         | Bash-array of chromosome names to which the analysis should be restricted                                                                                                                                                       |
+| CHROMOSOME_LENGTH_FILE            | empty         | Headerless TSV file with chromosome name, chromosome size columns                                                                                                                                                               |
+| CHR_SUFFIX                        | ""            | Suffix added to the chromosome names                                                                                                                                                                                            |
+| CHR_PREFIX                        | ""            | Prefix added to the chromosome names                                                                                                                                                                                            |
+| extractSamplesFromOutputFiles     | true          | Refer to the documentation of the [COWorkflowBasePlugin](https://github.com/DKFZ-ODCF/COWorkflowsBasePlugin) for further information                                                                                            |
+| PYPY_OR_PYTHON_BINARY             | python        | Leave this set to "python". Some of the Python scripts used to work with PyPy (e.g. `filter_PEoverlap.py` that also uses [hts-python](https://github.com/pjb7687/hts-python) instead of pysam), but this is deprecated.         |
+| runSNVMetaCallingStep             | false         | Run a single job for snv calling instead of a job per chromosome. The meta job is optimized in regards to runtime and cpu / memory utilization. On the other hand it is a larger job which might be more difficult to schedule. |
+| runDeepAnnotation                 | true          | Run the deep annotation step or stop the workflow before it.                                                                                                                                                                    |
+| runFilter                         | true          | Run the filter step or stop the workflow before it.                                                                                                                                                                             |
+| runOnPancan                       | false         | Run a special analysis type for pancancer type projects. This will produce an additional VCF.                                                                                                                                   |
+| NUMBER_OF_MISMATCHES_THRESHOLD    | -1            | resources/analysisTools/snvPipeline/snvAnnotation.sh: Number of mismatches that are allowed per read in order to consider this read.                                                                                            |
 
+Please have a look at the `resources/configurationFiles/analysisSNVCalling.xml` for a more complete list of parameters.
 
 ## Example Call
 
@@ -115,7 +134,7 @@ roddy.sh run projectConfigurationName@analysisName patientId \
 In coding regions, the expected proportion of synonymous mutations compared to the total number of mutations should be low. By contrast, a high proportion of synonymous mutations suggests cross-species contamination. Any value above 0.5 (i.e. at least 50% of mutations are synonymous) is indicating a contamination. A value below 0.35 is considered to be OK. Values in the range of 0.35-0.5 are unclear. 
 
 
-### VCF Conversion Script
+### VCF Conversion Script (branch: ReleaseBranch_1.2.166)
 
 The [convertToStdVCF.py](./blob/master/resources/analysisTools/snvPipeline/convertToStdVCF.py) may be helpful to convert the VCFs of the workflow to standard 4.2-conform VCFs.
 
@@ -131,9 +150,20 @@ The optional configuration JSON file defaults to the `convertToStdVCF.json` resi
 
 ## Changelog
 
+* upcoming
+
+  * patch: Remove all code related to PyPy and hts-python (including `copysam.py` and `PYPY_OR_PYTHON_BINARY`)
+
 * 2.2.0
 
-  * minor: Added `vcfConvertToStd.py`; slightly modified from code by @juleskers and Sophia Stahl
+  * minor: Update virtualenv
+    * Updated environment to matplotlib 1.5.3. Version 1.4.3 seems to be incompatible to numpy 1.11.3 (now; `import matplotlib.pyplot` failed).
+    * Used pysam 0.16.0.1 from the orginal 2.1.1 environment. This breaks the PyPy support (`copysam.py` is not yet adapted) but is necessary for the changes done for workflow version 2.1.1.
+    * Updated to BioPython 1.71. This was lost in workflow version 2.1.1 but is necessary for some data `from bio import bgzf` is needed (`vcfparser.py`).
+  * minor: PyPy is deprecated. Configuration values related to it are (mostly) removed.
+  * minor: Allow configuration of virtualenv in `tbi-lsf-cluster.sh`
+  * Lifted readme from ReleaseBranch_1.2.166
+  * > Note: Again the Conda environment is broken and cannot get rebuild. 
 
 * 2.1.1
 
