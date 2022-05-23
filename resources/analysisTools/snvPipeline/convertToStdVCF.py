@@ -4,16 +4,18 @@
 #
 # Distributed under the MIT License (https://opensource.org/licenses/MIT).
 #
-# Authors: Jules Kerssemakers, Sophia Stahl
+# Authors: Jules Kerssemakers, Sophia Stahl, Philip Kensche
 #
-import os
-
-import json
-import sys
+from __future__ import print_function
 
 import gzip
+import json
+import os
+import sys
+import textwrap
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
-# Import tool for converting DKFZ vcf files to vcf files conforming to the specifications of the
+# Import tool for converting DKFZ VCF files to vcf files conforming to the specifications of the
 # standard VCF version:
 vcf_version = 'VCFv4.2'
 
@@ -96,7 +98,7 @@ def infer_vcf_column_indices(file_object):
     Returns a dictionary indices["HEADER"]=index of each column-heading, indices are zero-based,
     so indices[CHROM]===0. This reads the first couple of lines of the file. To do so it `seek()`s
     to the beginning of the file. The filepointer is returned to its starting location afterwards.
-    If no header line was found before the first data line (first line without '#'), an empyt
+    If no header line was found before the first data line (first line without '#'), an empty
     dictionary is returned.
 
     :param file_object: The vcf file to read the header from.
@@ -158,10 +160,16 @@ def write_metadata_definitions(keys_to_write, category, output_vcf_object, meta_
             # If we have defined a 'better' name for this field, use that instead
             key = key_info.get("new_info_id", key)
 
-            output_vcf_object.write(
-                "##{CATEGORY}=<ID={id},Number={number},Type={type},Description=\"{description}\">\n".format(
-                    CATEGORY=category, id=key, **key_info)
-            )
+            if category == "INFO" or category == "FORMAT":
+                output_vcf_object.write(
+                    "##{category}=<ID={id},Number={number},Type={type},Description=\"{description}\">\n".format(
+                        category=category, id=key, **key_info)
+                ),
+            elif category == "FILTER":
+                output_vcf_object.write(
+                    "##{category}=<ID={id},Description=\"{description}\">\n".format(
+                        category=category, id=key, **key_info)
+                )
     except KeyError:
         raise KeyError("Meta-information incomplete for '%s' in meta_information.py" % key)
 
@@ -188,7 +196,7 @@ def update_keys_used(line, col_indices, keys_used):
     FORMAT_keys = line_as_list[col_indices["FORMAT"]].split(":")
     keys_used["FORMAT"].update(FORMAT_keys)
 
-    FILTER_keys = line_as_list[col_indices["FILTER"]].split(",")
+    FILTER_keys = line_as_list[col_indices["FILTER"]].split(";")
     keys_used["FILTER"].update(FILTER_keys)
 
 
@@ -246,7 +254,10 @@ def extract_freestanding_columns_into_dict(line_original, col_indices, meta_info
 
     cols_as_INFO_dict = {}
     for column_name in columns_to_extract:
-        old_column_contents = line_original[col_indices[column_name]]
+        try:
+            old_column_contents = line_original[col_indices[column_name]]
+        except KeyError as e:
+            raise RuntimeError("Is this a DKFZ VCF? Avoid the `_raw.vcf.gz`")
 
         new_INFO_id = meta_information["INFO"][column_name]["new_info_id"]
         cols_as_INFO_dict[new_INFO_id] = old_column_contents
@@ -336,7 +347,7 @@ def convert(input_filename, output_filename, sample_id, meta_information):
 
     with open_maybe_compressed_file(output_filename, 'w') as output_file:
         # Write Meta-information lines
-        output_file.write('##fileformat=%s\n' %(vcf_version))  # Required as first line in the file
+        output_file.write('##fileformat=%s\n' % vcf_version)  # Required as first line in the file
 
         # First pass through input file, check which tags/keys occur so that we may write our
         # meta-information block
@@ -361,6 +372,10 @@ def convert(input_filename, output_filename, sample_id, meta_information):
         # convert all data lines
         with open_maybe_compressed_file(input_filename, 'r') as input_file:
             for line in input_file:
+
+                # copy reference info
+                if line.startswith("##referenc"):
+                    output_file.write(line)
 
                 # copy contig info
                 if line.startswith("##contig"):
@@ -402,23 +417,35 @@ def convert(input_filename, output_filename, sample_id, meta_information):
                     output_file.write("\t".join(new_line)+"\n")
 
 
-if __name__ == '__main__':
-    if 4 <= len(sys.argv) <= 5:
-        input_file = sys.argv[1]
-        output_file = sys.argv[2]
-        sample_id = sys.argv[3]
+def parse_options(argv):
+    parser = ArgumentParser(description=textwrap.dedent("""
+    The VCFs produced by the SNVCallingWorkflow are not standard conform in that some values are not added as additional columns after a single variant column. By contrast, in the standard format, additional columns should only be used to show variants occurring in additional samples.
 
-        if len(sys.argv) == 5:
-            meta_info_file = sys.argv[4]
-        else:
-            meta_info_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                          "convertToStdVCF.json")
-
-        print(" ".join(["Converting", input_file, "into", output_file,
-                        "for", sample_id, "using", meta_info_file]))
-        meta_information = read_meta_information(meta_info_file)
-        convert(input_file, output_file, sample_id, meta_information)
-
+    This script can be used to convert the DKFZ VCFs to standard VCFs (version 4.2).
+    """),
+                            formatter_class=ArgumentDefaultsHelpFormatter)
+    parser.add_argument("-i", "--input", dest="input_file", required=True, type=str,
+                        help="Input DKFZ-formatted VCF file")
+    parser.add_argument("-s", "--sample-id", dest="sample_id", required=True, type=str,
+                        help="Name to use for the sample column in the output VCF")
+    parser.add_argument("-o", "--output", dest="output_file", default="/dev/stdout",
+                        required=False, type=str,
+                        help="Output standard 4.2 VCF file")
+    parser.add_argument("-c", "--config", dest="config_file", required=False, type=str,
+                        default=os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                             "convertToStdVCF.json"),
+                        help="Configuration JSON file")
+    if len(argv) == 1:
+        parser.print_help(file=sys.stderr)
+        sys.exit(1)
     else:
-        print("USAGE: convertToStdVCF.py input-file output-file sample-id [meta-info.json]")
-        sys.exit(10)
+        return parser.parse_args(argv[1:])
+
+
+if __name__ == '__main__':
+    args = parse_options(sys.argv)
+    print(" ".join(["Converting", args.input_file, "into", args.output_file,
+                    "for", args.sample_id, "using", args.config_file]),
+          file=sys.stderr)
+    meta_information = read_meta_information(args.config_file)
+    convert(args.input_file, args.output_file, args.sample_id, meta_information)

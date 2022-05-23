@@ -136,9 +136,12 @@ In coding regions, the expected proportion of synonymous mutations compared to t
 
 ### VCF Conversion Script (branch: ReleaseBranch_1.2.166)
 
-The [convertToStdVCF.py](./blob/master/resources/analysisTools/snvPipeline/convertToStdVCF.py) may be helpful to convert the VCFs of the workflow to standard 4.2-conform VCFs.
+The [convertToStdVCF.py](./blob/master/resources/analysisTools/snvPipeline/convertToStdVCF.py) may be helpful to convert the VCFs produced by this workflow into standard 4.2-conform VCFs.
 
-  * Not all columns of the DKFZ VCF are currently migrated into the standard-conform VCF.
+There are, however, few caveats you should be aware of:
+
+  * This is basically rescued old code that never has been extensively tested for 100% conformance in all cases. We advise you check the resulting VCFs with a [VCF validator](https://github.com/EBIvariation/vcf-validator).
+  * Not all columns of the DKFZ VCF are currently migrated into the standard-conform VCF. Some columns may be lost.
   * The VCF must only contain a single sample column.
   * Only uncompressed VCFs are processed and the input must not be a stream/pipe, because the script does two passes over the input.
 
