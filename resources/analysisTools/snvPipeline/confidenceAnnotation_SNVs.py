@@ -311,39 +311,38 @@ def main(args):
                 reasons += "bias_filter_round2_SEQ(-3)"
                 filterfield["BI"] = 1
 
-        # 2) annotations of regions that cause problems: some classes of repeats from RepeatMasker track,
-        # segmental duplications, (cf. Reumers et al. 2012, Nature Biotech 30:61), external blacklists, mapability
-        # simple repeats and low complexity (not the same as homopolymer, but similar enough);
-        # some satellites are not annotated in blacklist ...
-        if any(word in help["REPEAT_MASKER"] for word in ["Simple_repeat", "Low_", "Satellite", ]):
-            is_repeat = True
-            confidence -= 2
-            reasons += "Simple_repeat(-2)"
-            filterfield["RE"] = 1
-        # other repeat elements to penalize at least a bit
-        elif help["REPEAT_MASKER_VALID"]:
-            confidence -= 1
-            reasons += "Other_repeat(-1)"
-            filterfield["RE"] = 1
-
-        # simple tandem repeats most often coincide with other bad features - do not penalize twice
-        if help["SIMPLE_TANDEMREPEATS_VALID"]:
-            is_STR = 1
-            if not is_repeat:
-                confidence -= 2
-                reasons += "Tandem_repeat(-2)"
-                filterfield["RE"] = 1
-
-        # Segmental Duplications are less effective than homopolymers, short tandem repeats and microsatellites,
-        # do not penality twice
-        if help["ANNOVAR_SEGDUP_COL_VALID"] and not (is_repeat or is_STR):
-            confidence -= 2 # bad region
-            is_weird = True
-            reasons += "Segmental_dup(-2)"
-            filterfield["RE"] = 1
-
         # Only for hg19 reference genome
         if args.refgenome[0] == "hs37d5":
+            # 2) annotations of regions that cause problems: some classes of repeats from RepeatMasker track,
+            # segmental duplications, (cf. Reumers et al. 2012, Nature Biotech 30:61), external blacklists, mapability
+            # simple repeats and low complexity (not the same as homopolymer, but similar enough);
+            # some satellites are not annotated in blacklist ...
+            if any(word in help["REPEAT_MASKER"] for word in ["Simple_repeat", "Low_", "Satellite", ]):
+                is_repeat = True
+                confidence -= 2
+                reasons += "Simple_repeat(-2)"
+                filterfield["RE"] = 1
+            # other repeat elements to penalize at least a bit
+            elif help["REPEAT_MASKER_VALID"]:
+                confidence -= 1
+                reasons += "Other_repeat(-1)"
+                filterfield["RE"] = 1
+
+            # simple tandem repeats most often coincide with other bad features - do not penalize twice
+            if help["SIMPLE_TANDEMREPEATS_VALID"]:
+                is_STR = 1
+                if not is_repeat:
+                    confidence -= 2
+                    reasons += "Tandem_repeat(-2)"
+                    filterfield["RE"] = 1
+
+            # Segmental Duplications are less effective than homopolymers, short tandem repeats and microsatellites,
+            # do not penality twice
+            if help["ANNOVAR_SEGDUP_COL_VALID"] and not (is_repeat or is_STR):
+                confidence -= 2 # bad region
+                is_weird = True
+                reasons += "Segmental_dup(-2)"
+                filterfield["RE"] = 1
 
             # Duke excluded and ENCODE DAC blacklist, only consider if not already annotated as suspicious repeat
             if help["DUKE_EXCLUDED_VALID"] or help["DAC_BLACKLIST_VALID"]:
@@ -360,44 +359,44 @@ def main(args):
                 reasons += "Hiseqdepth(-3)"
                 filterfield["HSDEPTH"] = 1
 
-        # Mapability is 1 for unique regions, 0.5 for regions appearing twice, 0.33... 3times, ...
-        # Everything with really high number of occurences is artefacts
-        # does not always correlate with the above regions
-        # is overestimating badness bc. of _single_ end read simulations
-        if help["MAPABILITY"] == ".":
-            # in very rare cases (CEN), there is no mapability => ".", which is not numeric but interpreted as 0
-            confidence -= 5
-            reasons += "Not_mappable(-5)"
-            filterfield["MAP"] = 1
-        else:
-            reduce = 0
-            mapability = min(map(float, help["MAPABILITY"].split("&")))
-            if mapability < 0.5:
-                # 0.5 does not seem to be that bad: region appears another time in
-                # the genome and we have paired end data!
-                confidence -= 1
-                reduce += 1
-
-                is_weird = True # something _is_ weird already there and known SNPs might be artefacts
-
-                if mapability < 0.4: # 3-4 times appearing region is worse but still not too bad
-                    confidence -= 1
-                    reduce += 1
-
-                if mapability < 0.25: # > 4 times appearing region
-                    confidence -= 1
-                    reduce += 1
-
-                if mapability < 0.1: # > 5 times is bad
-                    confidence -= 2
-                    reduce += 2
-
-                if mapability < 0.05: # these regions are clearly very bad (Lego stacks)
-                    confidence -= 3
-                    reduce += 3
-
+            # Mapability is 1 for unique regions, 0.5 for regions appearing twice, 0.33... 3times, ...
+            # Everything with really high number of occurences is artefacts
+            # does not always correlate with the above regions
+            # is overestimating badness bc. of _single_ end read simulations
+            if help["MAPABILITY"] == ".":
+                # in very rare cases (CEN), there is no mapability => ".", which is not numeric but interpreted as 0
+                confidence -= 5
+                reasons += "Not_mappable(-5)"
                 filterfield["MAP"] = 1
-                reasons += "Low_mappability(%s=>-%d)"%(help["MAPABILITY"], reduce)
+            else:
+                reduce = 0
+                mapability = min(map(float, help["MAPABILITY"].split("&")))
+                if mapability < 0.5:
+                    # 0.5 does not seem to be that bad: region appears another time in
+                    # the genome and we have paired end data!
+                    confidence -= 1
+                    reduce += 1
+
+                    is_weird = True # something _is_ weird already there and known SNPs might be artefacts
+
+                    if mapability < 0.4: # 3-4 times appearing region is worse but still not too bad
+                        confidence -= 1
+                        reduce += 1
+
+                    if mapability < 0.25: # > 4 times appearing region
+                        confidence -= 1
+                        reduce += 1
+
+                    if mapability < 0.1: # > 5 times is bad
+                        confidence -= 2
+                        reduce += 2
+
+                    if mapability < 0.05: # these regions are clearly very bad (Lego stacks)
+                        confidence -= 3
+                        reduce += 3
+
+                    filterfield["MAP"] = 1
+                    reasons += "Low_mappability(%s=>-%d)"%(help["MAPABILITY"], reduce)
 
         # if others have found the SNP already, it may be interesting despite low score
         # - but only if it's not a weird region.
