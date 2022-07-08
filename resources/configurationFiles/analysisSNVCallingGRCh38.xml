@@ -20,8 +20,8 @@
 
     <!--Chr indices for the calling-->
     <cvalue name="CHROMOSOME_INDICES" value="( 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y HLA ALT )" type="bashArray" />
-    <cvalue name="CHROMOSOME_HLA_CONTIGS_FILE" value='${hg38BaseDirectory}/stats/GRCh38_decoy_ebv_phiX_alt_hla_chr.fa.HLA_contigs_list.txt' type="path" />
-    <cvalue name="CHROMOSOME_ALT_CONTIGS_FILE" value='${hg38BaseDirectory}/stats/GRCh38_decoy_ebv_phiX_alt_hla_chr.fa.ALT_contigs_list.txt' type="path" />
+    <cvalue name="CHROMOSOME_HLA_CONTIGS_FILE" value='${hg38BaseDirectory}/stats/GRCh38_decoy_ebv_phiX_alt_hla_chr.fa.HLA_contigs.bed' type="path" />
+    <cvalue name="CHROMOSOME_ALT_CONTIGS_FILE" value='${hg38BaseDirectory}/stats/GRCh38_decoy_ebv_phiX_alt_hla_chr.fa.ALT_contigs.bed' type="path" />
 
     <!--BCFtools options fo the variant calling-->
     <cvalue name='MPILEUP_OPTS' value='"-EI -q 30 -O u --ignore-RG --ff UNMAP,SECONDARY,QCFAIL,DUP,SUPPLEMENTARY -d 9999 -a AD -x"' type="string"/>
@@ -59,7 +59,7 @@
 
     <!--SNV reliability bundle-->
     <configurationValueBundle name='PIPE_CONFIG:SNV_RELIABILITY'>
-     	<cvalue name='MAPABILITY' value='${hg38DatabasesDirectory}/mappability/GRCh38_Mappability_Align_100mer.bedGraph.gz' type="path"/>
+     	<cvalue name='MAPABILITY' value='${hg38BaseDirectory}/stats/mappability_m2e2/GRCh38_Mappability_Align_100mer_m2e2.ALT_HLA.bedGraph.gz' type="path"/>
      	<cvalue name='SIMPLE_TANDEMREPEATS' value='${hg38DatabaseUCSCDirectory}/simple_tandem_repeats/2019-08-15_SimpleTandemRepeats_Human_hg38.sorted_plain.bed.gz:4' type="path"/>
      	<cvalue name='REPEAT_MASKER' value='${hg38DatabaseUCSCDirectory}/repeatMasker/2019-08-14_RepeatMasker_Human_hg38.sorted_plain.bed.gz' type="path"/>
     </configurationValueBundle>
