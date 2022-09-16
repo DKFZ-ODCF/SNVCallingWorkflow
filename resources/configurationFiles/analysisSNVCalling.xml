@@ -127,6 +127,8 @@
         <cvalue name="MEDIAN_FILTER_THRESHOLD" value='20' type="integer" description="SNVs with median of alternative base qualities below this threshold will be removed in the rerun filter step. Value of -1 means no filtering."/>
         <cvalue name="RERUN_SUFFIX" value="_filteredAltMedian${MEDIAN_FILTER_THRESHOLD}" type="string"/>
 
+        <!--CHROMSOME indices for plotting to ignore HLA and ALT contigs-->
+        <cvalue name="CHROMOSOME_INDICES_PLOTTING" value="( 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y )" type="bashArray" />
 
         <configurationValueBundle name='PIPE_CONFIG:SNV_RELIABILITY'>
             <cvalue name='MAPABILITY' value='${hg19DatabaseUCSCDirectory}/wgEncodeCrgMapabilityAlign100mer_chr.bedGraph.gz' type="path"/>
