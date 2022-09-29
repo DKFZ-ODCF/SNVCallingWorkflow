@@ -196,6 +196,7 @@ The optional configuration JSON file defaults to the `convertToStdVCF.json` resi
 * 1.2.166-3 (ReleaseBranch_1.2.166)
 
   * Long-term support version.
+  * Note that this version depends on the legacy [COWorkflows](https://github.com/DKFZ-ODCF/COWorkflows) plugin.
 
 * 1.2.166-3
 
