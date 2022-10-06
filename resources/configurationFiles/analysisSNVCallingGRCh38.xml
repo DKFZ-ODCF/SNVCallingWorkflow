@@ -48,10 +48,10 @@
     <cvalue name="LOCALCONTROL_WES" value="${hg38DatabasesDirectory}/LocalControls/ExclusionList_2019_liftover/MPsnvs_PLindels/GRCh38_ExclusionList_2019_H021_MP_PL_WES.SNVs.AFgt1.vcf.gz" type="path" />
     <cvalue name="LOCALCONTROL_WES_COL" value="LocalControlAF_WES" type="string"/>
 
-    <cvalue name='ANNOVAR_BINARY' value='${hg38DatabasesDirectory}/ANNOVAR/annovar_April2018/annotate_variation.pl' type='path'/>
+    <cvalue name='ANNOVAR_BINARY' value='${hg38DatabasesDirectory}/ANNOVAR/annovar_Sept2022/annotate_variation.pl' type='path'/>
     <cvalue name='ANNOVAR_BUILDVER' value='hg38' type='string'/>
-    <cvalue name='ANNOVAR_DBPATH' value='${hg38DatabasesDirectory}/ANNOVAR/annovar_April2018/humandb/' type='path'/>
-    <cvalue name='ANNOVAR_DBTYPE' value="'-dbtype wgEncodeGencodeCompV31'" type='string'/>
+    <cvalue name='ANNOVAR_DBPATH' value='${hg38DatabasesDirectory}/ANNOVAR/annovar_Sept2022/humandb/' type='path'/>
+    <cvalue name='ANNOVAR_DBTYPE' value="'-dbtype wgEncodeGencodeCompV39'" type='string'/>
 
     <!--Reference annotations during confidene annotation-->
     <cvalue name="CONFIDENCE_OPTS" value="-t 500 --refgenome GRCh38 ftp://ftp.sanger.ac.uk/pub/cancer/dockstore/human/GRCh38_hla_decoy_ebv/core_ref_GRCh38_hla_decoy_ebv.tar.gz" type="string"
