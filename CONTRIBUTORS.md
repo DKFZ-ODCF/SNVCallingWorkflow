@@ -12,9 +12,11 @@ The following people and institutions have a copyright in parts or the whole of 
 - Copyright © 2012-2018  Natalie Jäger
 - Copyright © 2012-2018  Lea Jopp-Saile
 - Copyright © 2012-2018  Philip Reiner Kensche
+- Copyright © 2012-2018  Jules Kerssemakers
 - Copyright © 2012-2018  Nagarajan Paramasivam
 - Copyright © 2012-2018  Jeongbin Park
 - Copyright © 2012-2018  Matthias Schlesner
+- Copyright © 2012-2018  Sophia Stahl
 - Copyright © 2012-2018  Sebastian Uhrig
 - Copyright © 2012-2018  Gregor Warsow
 - Copyright © 2012-2018  Johannes Werner
