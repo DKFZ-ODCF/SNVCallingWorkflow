@@ -43,7 +43,7 @@
     <cvalue name="GNOMAD_WES_ALL_SNV" value= "${hg38DatabasesDirectory}/gnomAD/v2.1.1/exomes_liftover_grch38/gnomad.exomes.r2.1.1.sites.liftover_grch38.SNV.vcf.gz" type="path"/>
     <cvalue name="GNOMAD_WGS_COL" value="GNOMAD_GENOMES" type="string"/>
     <cvalue name="GNOMAD_WGS_ALL_SNV" value= "${hg38DatabasesDirectory}/gnomAD/v3/genomes/gnomad.genomes.r3.0.sites.SNV.vcf.gz" type="path"/>
-    <cvalue name="LOCALCONTROL_WGS" value="${hg38DatabasesDirectory}/LocalControls/ExclusionList_2019_liftover/MPsnvs_PLindels/GRCh38_ExclusionList_2019_HIPO-PCAWG_MP_PL_WGS.SNVs.AFgt1.vcf.gz" type="path" />
+    <cvalue name="LOCALCONTROL_WGS" value="${hg38DatabasesDirectory}/LocalControls/ExclusionList_2022/MPsnvs_PLindels/hg38_medullo_bcftools_mpileup_dev_hg38_alt_calling_AF0.05.vcf.gz" type="path" />
     <cvalue name="LOCALCONTROL_WGS_COL" value="LocalControlAF_WGS" type="string"/>
     <cvalue name="LOCALCONTROL_WES" value="${hg38DatabasesDirectory}/LocalControls/ExclusionList_2019_liftover/MPsnvs_PLindels/GRCh38_ExclusionList_2019_H021_MP_PL_WES.SNVs.AFgt1.vcf.gz" type="path" />
     <cvalue name="LOCALCONTROL_WES_COL" value="LocalControlAF_WES" type="string"/>
