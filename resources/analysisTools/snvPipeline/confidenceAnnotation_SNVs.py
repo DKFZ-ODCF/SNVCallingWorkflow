@@ -409,7 +409,7 @@ def main(args):
         if(args.refgenome[0] == 'GRCh38' or args.skipREMAP):
             if(inGnomAD_WES or inGnomAD_WGS or inLocalControl_WGS):
                 reasons += 'commonSNP_or_technicalArtifact(-3)'
-                classification = "SNP_support_germline"
+                #classification = "SNP_support_germline"
                 confidence -= 3
                 filterfield["FREQ"] = 1
 
