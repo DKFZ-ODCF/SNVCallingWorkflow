@@ -83,6 +83,7 @@ def main(args):
                   '##FILTER=<ID=YALT,Description="Variant on Y chromosome with low allele frequency">\n' \
                   '##FILTER=<ID=VAF,Description="Variant allele frequency in tumor < ' + str(args.newpun) + ' times allele frequency in control">\n' \
                   '##FILTER=<ID=BI,Description="Bias towards a PCR strand or sequencing strand">\n' \
+                  '##FILTER=<ID=FREQ,Description="High frequency in GnomAD(>0.1%) or in local control database (>0.05%)">\n' \
                   '##SAMPLE=<ID=CONTROL,SampleName=control_' + args.pid + ',Individual=' + args.pid + ',Description="Control">\n' \
                   '##SAMPLE=<ID=TUMOR,SampleName=tumor_'+args.pid+',Individual='+args.pid+',Description="Tumor">\n'\
                   '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t'
@@ -119,12 +120,12 @@ def main(args):
 
             variable_headers = { "ANNOVAR_SEGDUP_COL": "^SEGDUP$", "KGENOMES_COL": "^1K_GENOMES$", "DBSNP_COL": "^DBSNP$", }
 
-            if args.no_control:
+            if args.no_control or args.refgenome[0] == 'GRCh38' or args.skipREMAP:
                 variable_headers["GNOMAD_EXOMES_COL"] = "^GNOMAD_EXOMES$"
                 variable_headers["GNOMAD_GENOMES_COL"] = "^GNOMAD_GENOMES$"
                 variable_headers["LOCALCONTROL_WGS_COL"] = "^LocalControlAF_WGS$"
                 variable_headers["LOCALCONTROL_WES_COL"] = "^LocalControlAF_WES$"
-            else:
+            if not args.no_control:
                 fixed_headers += [ "^INFO_control", "^ANNOTATION_control$", ]
 
             header_indices = get_header_indices(headers, args.configfile, fixed_headers, variable_headers)
@@ -201,13 +202,15 @@ def main(args):
         is_weird = False # coindicende with known artefact-producing regions
         if args.no_control:
             classification = "somatic" # start with default somatic
+        else:
+            # for potential re-classification (e.g. low coverage in control and in dbSNP => probably germline)
+            classification = help["ANNOTATION_control"] # start with original classification
+
+        if args.no_control or args.refgenome[0] == 'GRCh38' or args.skipREMAP:
             inGnomAD_WES = False
             inGnomAD_WGS = False
             inLocalControl_WES = False
             inLocalControl_WGS = False
-        else:
-            # for potential re-classification (e.g. low coverage in control and in dbSNP => probably germline)
-            classification = help["ANNOTATION_control"] # start with original classification
 
         ### For pancancer
         # genotype tumor as originally from mpileup
@@ -244,26 +247,27 @@ def main(args):
             if "COMMON=1" in help["DBSNP_COL"]:
                 is_commonSNP = True
 
-        if args.no_control:
+        if args.no_control or args.refgenome[0] == 'GRCh38' or args.skipREMAP:
             if indbSNP and is_commonSNP and not is_clinic:
-                reasons += "dbSNP(NoControl)"
+                #reasons += "dbSNP(NoControl)"
+                pass
             if help["GNOMAD_EXOMES_COL_VALID"] and any(af > args.gnomAD_WES_maxMAF for af in map(float, extract_info(help["GNOMAD_EXOMES_COL"], "AF").split(','))):
                 inGnomAD_WES = True
                 infofield["gnomAD_Exomes"] = "gnomAD_Exomes"
-                reasons += "gnomAD_Exomes(NoControl)"
+                #reasons += "gnomAD_Exomes(NoControl)"
             if help["GNOMAD_GENOMES_COL_VALID"] and any(af > args.gnomAD_WGS_maxMAF for af in map(float, extract_info(help["GNOMAD_GENOMES_COL"], "AF").split(','))):
                 inGnomAD_WGS = True
                 infofield["gnomAD_Genomes"] = "gnomAD_Genomes"
-                reasons += "gnomAD_Genomes(NoControl)"
+                #reasons += "gnomAD_Genomes(NoControl)"
 
             if help["LOCALCONTROL_WGS_COL_VALID"] and any(af > args.localControl_WGS_maxMAF for af in map(float, extract_info(help["LOCALCONTROL_WGS_COL"], "AF").split(','))):
                 inLocalControl_WGS = True
                 infofield["LocalControl_WGS"] = "LocalControl_WGS"
-                reasons += "LocalControl_WGS(NoControl)"
+                #reasons += "LocalControl_WGS(NoControl)"
             if help["LOCALCONTROL_WES_COL_VALID"] and any(af > args.localControl_WES_maxMAF for af in map(float, extract_info(help["LOCALCONTROL_WES_COL"], "AF").split(','))):
                 inLocalControl_WES = True
                 infofield["LocalControl_WES"] = "LocalControl_WES"
-                reasons += "LocalControl_WES(NoControl)"
+                #reasons += "LocalControl_WES(NoControl)"
 
 
         # Punish for biases round 1
@@ -312,7 +316,7 @@ def main(args):
                 filterfield["BI"] = 1
 
         # Only for hg19 reference genome
-        if args.refgenome[0] == "hs37d5":
+        if args.refgenome[0] == "hs37d5" and not args.skipREMAP:
             # 2) annotations of regions that cause problems: some classes of repeats from RepeatMasker track,
             # segmental duplications, (cf. Reumers et al. 2012, Nature Biotech 30:61), external blacklists, mapability
             # simple repeats and low complexity (not the same as homopolymer, but similar enough);
@@ -397,6 +401,17 @@ def main(args):
 
                     filterfield["MAP"] = 1
                     reasons += "Low_mappability(%s=>-%d)"%(help["MAPABILITY"], reduce)
+        # Nov 2022: If the variant is present in the gnomAD or local control WGS
+        # the confidence are reduced and thrown out. This is implemented for hg38 and could be
+        # used with skipREMAP option for hg19.
+        # inLocalControl_WES: Needs to be generated from a new hg38 dataset
+        filterfield["FREQ"] = 0
+        if(args.refgenome[0] == 'GRCh38' or args.skipREMAP):
+            if(inGnomAD_WES or inGnomAD_WGS or inLocalControl_WGS):
+                reasons += 'commonSNP_or_technicalArtifact(-3)'
+                classification = "SNP_support_germline"
+                confidence -= 3
+                filterfield["FREQ"] = 1
 
         # if others have found the SNP already, it may be interesting despite low score
         # - but only if it's not a weird region.
@@ -590,7 +605,9 @@ def main(args):
                         reasons += "Germline_ALT<0.3(-2)"
                         filterfield["FRC"] = 1
                 if in1KG or (indbSNP and not (is_precious or is_clinic)): # but this supports again - number of reads may be low!
-                    classification += "_SNP_support"
+                    if filterfield['FREQ'] == 0:
+                        classification += "_SNP_support"
+
                 if depthC <= 10: # very probably germline due to skewed distribution at low coverage
                     classification += "_lowCov"	# => can end up as "germline_SNP_support_lowCov"
 
@@ -684,7 +701,7 @@ def main(args):
             filters_line = [] if entries[6] == "" else entries[6].split(';')
             if args.pancanout is not None:
                 filters_pancan = []
-            for filter in ("RE","BL","DP","SB","TAC","dbSNP","DB","HSDEPTH","MAP","SBAF","FRQ","TAR","UNCLEAR","DPHIGH","DPLOWC","1PS","ALTC","ALTCFR","FRC","YALT","VAF","BI"):
+            for filter in ("RE","BL","DP","SB","TAC","dbSNP","DB","HSDEPTH","MAP","SBAF","FRQ","TAR","UNCLEAR","DPHIGH","DPLOWC","1PS","ALTC","ALTCFR","FRC","YALT","VAF","BI", "FREQ"):
                 if filterfield.get(filter, 0) == 1:
                     if args.pancanout is not None:
                         filters_pancan.append(filter)
@@ -801,6 +818,7 @@ if __name__ == "__main__":
     parser.add_argument("-x", "--runexome", dest="runexome", action="store_true", default=False,
                         help="Run on exome, will turn off the high control coverage punishment " \
                              "and the PCR bias filter.")
+    parser.add_argument('--skipREMAP', dest='skipREMAP', action='store_true', default=False)
     parser.add_argument("--gnomAD_WGS_maxMAF", dest="gnomAD_WGS_maxMAF", help="Max gnomAD WGS MAF", default=0.001, type=float)
     parser.add_argument("--gnomAD_WES_maxMAF", dest="gnomAD_WES_maxMAF", help="Max gnomAD WES MAF", default=0.001, type=float)
     parser.add_argument("--localControl_WGS_maxMAF", dest="localControl_WGS_maxMAF", help="Max local control WGS MAF", default=0.01, type=float)
