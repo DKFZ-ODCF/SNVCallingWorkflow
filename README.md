@@ -131,6 +131,17 @@ The optional configuration JSON file defaults to the `convertToStdVCF.json` resi
 
 ## Changelog
 
+* 3.0.0
+  * Major
+    * Support for hg38/GRCh38 reference genome and variant calling from ALT and HLA contigs.
+  * Minor
+    * For hg38: Removing mappability and repeat elements' annotations from penalty calculations.
+    * skipREMAP: Option to remove repeat elements and mappability from confidence annotations in hg19.
+    * Removing EVS And ExAC AF from the annotations and no-control workflow filtering
+    * Support for variant calling from CRAM files
+    * Bug fix: Removing "quote" around the raw filter option `<RAW_SNV_FILTER_OPTIONS>`
+    * Update `COWorkflowsBasePlugin` to `1.4.2`
+
 * 2.2.0
 
   * minor: Added `vcfConvertToStd.py`; slightly modified from code by @juleskers and Sophia Stahl
