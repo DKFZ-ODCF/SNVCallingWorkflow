@@ -80,7 +80,12 @@ while(!eof($FH)){
 			$DBSBP = $col{"DBSNP"};
 			$KG = $col{"1K_GENOMES"};
 			$CONFIDENCE = $col{"CONFIDENCE"};
-			$CLASSIFICATION = $col{"RECLASSIFICATION"};
+
+			if ($col{"ANNOTATION_control"} > 0) {
+				$CLASSIFICATION = $col{"ANNOTATION_control"};
+			} else {
+				$CLASSIFICATION = $col{"RECLASSIFICATION"};
+			}
 		}
 	}
 	else{
