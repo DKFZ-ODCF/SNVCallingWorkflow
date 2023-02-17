@@ -1,6 +1,6 @@
 # DKFZ SNVCalling Workflow
 
-An SNV calling workflow developed in the Applied Bioinformatics and Theoretical Bioinformatics groups at the DKFZ. An earlier version (pre Github) of this workflow was used in the [Pancancer](https://dockstore.org/containers/quay.io/pancancer/pcawg-dkfz-workflow) project.
+An SNV calling workflow developed in the Applied Bioinformatics and Theoretical Bioinformatics groups at the DKFZ. An earlier version (pre Github) of this workflow was used in the [Pancancer](https://dockstore.org/containers/quay.io/pancancer/pcawg-dkfz-workflow) project. The workflow is only suited for human data (hg37/hg19; some later versions also hg38), because of the big role annotations play in this workflow.
 
 > <table><tr><td><a href="https://www.denbi.de/"><img src="docs/images/denbi.png" alt="de.NBI logo" width="300" align="left"></a></td><td><strong>Your opinion matters!</strong> The development of this workflow is supported by the <a href="https://www.denbi.de/">German Network for Bioinformatic Infrastructure (de.NBI)</a>. By completing <a href="https://www.surveymonkey.de/r/denbi-service?sc=hd-hub&tool=SNVCallingWorkflow">this very short (30-60 seconds) survey</a> you support our efforts to improve this tool.</td></tr></table>
 
