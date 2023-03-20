@@ -408,9 +408,9 @@ def main(args):
         filterfield["FREQ"] = 0
         if(args.refgenome[0] == 'GRCh38' or args.skipREMAP):
             if(inGnomAD_WES or inGnomAD_WGS or inLocalControl_WGS):
-                reasons += 'commonSNP_or_technicalArtifact(-3)'
+                #reasons += 'commonSNP_or_technicalArtifact(-3)'
                 #classification = "SNP_support_germline"
-                confidence -= 3
+                #confidence -= 3
                 filterfield["FREQ"] = 1
 
         # if others have found the SNP already, it may be interesting despite low score
