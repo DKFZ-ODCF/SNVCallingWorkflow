@@ -653,7 +653,7 @@ def main(args):
 
         #To make sure that changes in the raw filter do not influence the final result we punish them with -3
         # TODO: JB: Why we use the second decimal of orignal value here?
-        if not args.runlowmaf and ((float(entries[5]) < 3 and (float("%.2f"%fr_var_tum) < 0.05 or (tvf + tvr < 5))) or (float(entries[5]) < 20 and ((tvf == 0 or tvr == 0) and (tvf + tvr <= 3)))):
+        if not args.runlowmaf and ((float(entries[5]) < 3 and (float("%.2f"%fr_var_tum) < 0.03 or (tvf + tvr < 3))) or (float(entries[5]) < 20 and ((tvf == 0 or tvr == 0) and (tvf + tvr <= 3)))):
             confidence -= 3
             reasons += "raw_filter_punishment(-3)"
             filterfield["FRQ"] = 1
