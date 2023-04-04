@@ -46,6 +46,9 @@ runOnPancan                 false   Run a special analysis type for pancancer ty
 
 * Version update to 1.2.166
 
+* Version update to 1.2.166-1001
+  - Adding WGS and WES local control annotations
+
 * Version update to 1.0.166
 
 * Version update to 1.0.164

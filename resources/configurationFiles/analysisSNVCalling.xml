@@ -33,6 +33,10 @@
         <cvalue name="DBSNP_COL" value="DBSNP" type="string"/>
         <cvalue name="KGENOME" value="${hg19DatabasesDirectory}/1000genomes/ALL.wgs.phase1_integrated_calls.20101123.snps_chr.vcf.gz" type="path"/>
         <cvalue name="KGENOMES_COL" value="1K_GENOMES" type="string"/>
+        <cvalue name="LOCALCONTROL_WGS" value="${hg19DatabasesDirectory}/LocalControls/ExclusionList_2019/MPsnvs_PLindels/ExclusionList_2019_HIPO-PCAWG_MP_PL_WGS.SNVs.AFgt1.vcf.gz" type="path" />
+        <cvalue name="LOCALCONTROL_WGS_COL" value="LocalControlAF_WGS" type="string"/>
+        <cvalue name="LOCALCONTROL_WES" value="${hg19DatabasesDirectory}/LocalControls/ExclusionList_2019/MPsnvs_PLindels/ExclusionList_2019_H021_MP_PL_WES.SNVs.AFgt1.vcf.gz" type="path" />
+        <cvalue name="LOCALCONTROL_WES_COL" value="LocalControlAF_WES" type="string"/>
         <cvalue name='ANNOVAR_BINARY' value='${sharedFilesBaseDirectory}/annovar/annovar_Nov2014/annotate_variation.pl' type='path'/>
         <cvalue name='ANNOVAR_BUILDVER' value='hg19' type='string'/>
         <cvalue name='ANNOVAR_DBPATH' value='${sharedFilesBaseDirectory}/annovar/annovar_Nov2014/humandb/' type='path'/>
