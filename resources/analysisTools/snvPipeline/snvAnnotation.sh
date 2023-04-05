@@ -70,8 +70,6 @@ declare -r filenameControlMedian=${outputDirectory}/`basename ${filenameSNVVCF} 
 zcat ${FILENAME_VCF_IN} | perl ${TOOL_MEDIAN} - ${filenameControlMedian} |
 perl ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b "${DBSNP}" --columnName=${DBSNP_COL} --reportMatchType  --bAdditionalColumn=2 | \
 perl ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b "${KGENOME}" --columnName=${KGENOMES_COL}  --reportMatchType --bAdditionalColumn=2 | \
-perl ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b "${LOCALCONTROL_WGS}" --columnName "${LOCALCONTROL_WGS_COL}" --bFileType vcf --reportMatchType | \
-perl ${TOOL_ANNOTATE_VCF_FILE} --tabix_bin=${TABIX_BINARY} -a - -b "${LOCALCONTROL_WES}" --columnName "${LOCALCONTROL_WES_COL}" --bFileType vcf --reportMatchType | \
 tee ${filenameSNVVCFTemp} | \
 perl ${TOOL_VCF_TO_ANNOVAR} ${CHR_PREFIX} ${CHR_SUFFIX} | tee ${filenameSNVForAnnovarBedTemp} > /dev/null
 
