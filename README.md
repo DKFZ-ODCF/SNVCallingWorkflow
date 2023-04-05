@@ -34,6 +34,10 @@ runOnPancan                 false   Run a special analysis type for pancancer ty
 
 ## Changelist
 
+* Version update to 1.2.166-5
+
+  * Adding local control annotations via the deepAnnotation pipe
+
 * Version update to 1.2.166-4
 
   * introduced variable `tbiLsfVirtualEnvDir` to configure the path to the virtual env used in the `tbi-lsf-cluster.sh` environment setup script.
