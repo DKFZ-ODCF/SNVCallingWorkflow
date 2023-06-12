@@ -114,6 +114,8 @@ Please have a look at the `resources/configurationFiles/analysisSNVCalling.xml` 
 
 ## Example Call
 
+For hg19,
+
 ```bash
 roddy.sh run projectConfigurationName@analysisName patientId \
   --useconfig=/path/to/your/applicationProperties.ini \
@@ -121,6 +123,22 @@ roddy.sh run projectConfigurationName@analysisName patientId \
   --useiodir=/input/directory,/output/directory/snv \
   --usePluginVersion=SNVCallingWorkflow:1.3.2 \
   --cvalues="bamfile_list:/path/to/your/control.bam;/path/to/your/tumor.bam,sample_list:normal;tumor,possibleTumorSampleNamePrefixes:tumor,possibleControlSampleNamePrefixes:normal,REFERENCE_GENOME:/reference/data/hs37d5_PhiX.fa,CHROMOSOME_LENGTH_FILE:/reference/data/hs37d5_PhiX.chromSizes,extractSamplesFromOutputFiles:false"
+```
+
+For hg38, add the following workflow configs to the `projectConfigs`
+
+```xml
+  <availableAnalyses>
+    <analysis id="snvCalling" configuration="snvCallingAnalysisGRCh38" useplugin="SNVCallingWorkflow:3.0.0"/>
+  </availableAnalyses>
+```
+
+```bash
+roddy.sh run projectConfigurationName@analysisName patientId \
+  --useconfig=/path/to/your/applicationProperties.ini \
+  --configurationDirectories=/path/to/your/projectConfigs \
+  --useiodir=/input/directory,/output/directory/snv \
+  --cvalues="bamfile_list:/path/to/your/control.bam;/path/to/your/tumor.bam,sample_list:normal;tumor,possibleTumorSampleNamePrefixes:tumor,possibleControlSampleNamePrefixes:normal,REFERENCE_GENOME:/reference/data/GRCh38_decoy_ALT_HLA_PhiX.fa,CHROMOSOME_LENGTH_FILE:/reference/data/GRCh38_decoy_ALT_HLA_PhiX.chromSizes,extractSamplesFromOutputFiles:false"
 ```
 
 ### No Control
