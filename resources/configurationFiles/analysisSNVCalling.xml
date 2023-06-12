@@ -8,8 +8,11 @@
                cleanupScript="cleanupScript">
     <configurationvalues>
 
+        <!-- The following options are only relevant for the ODCF cluster at the DKFZ -->
         <cvalue name='workflowEnvironmentScript' value="workflowEnvironment_tbiLsf" type='string'/>
         <cvalue name='snvAnnotationEnvironmentScript' value="snvAnnotationEnvironment_tbiLsf" type="string"/>
+        <cvalue name='tbiLsfVirtualEnvDir' value="/omics/groups/OE0246/shared/paramasi/compute_env/python_2.7.9_SNVCalling_pysam_0.16.0.1" type="path"
+                description="The path on the execution hosts to the virtualenv used in the tbi-lsf-cluster."/>
 
         <cvalue name='RSCRIPT_VERSION' value='3.3.1' type="string"/>
         <cvalue name='PERL_VERSION' value='5.20.2' type="string"/>
@@ -18,19 +21,12 @@
         <cvalue name='PYTHON_VERSION' value='2.7.9' type="string"/>
         <cvalue name='BEDTOOLS_VERSION' value='2.16.2' type="string"/>
         <cvalue name='HTSLIB_VERSION' value='1.9' type="string"/>
-        <cvalue name='HTSLIB_VERSION_FOR_HTS_PYTHON' value='1.2' type="string"
-                description="Only used if PYPY_OR_PYTHON_BINARY evaluates to a PyPy binary."/>
-        <cvalue name='PYPY_VERSION' value='5.8.0' type="string"/>
-        <cvalue name='GIT_VERSION' value='2.9.4' type="string"/>
 
-        <cvalue name="PYPY_OR_PYTHON_BINARY" value="pypy" type="string"
-                description="If you use a PyPy binary here, some scripts are interpreted with higher performance by PyPy and hts-python is used instead of pysam in the filter_PEoverlap.py script."/>
-        <cvalue name="HTS_PYTHON_GIT_REPOSITORY" value="https://github.com/pjb7687/hts-python" type="string"
-                description="Git repository link with the hts-python version for PyPy. Try to avoid DoS on Github!"/>
-        <cvalue name="HTS_PYTHON_COMMIT" value="cd35d6f15221bb09c218d0f978c0b92c560fcdd6" type="string"
-                description="Specific Git commit of the PyPy-compatible hts-python to download from HTS_PYTHON_GIT_REPOSITORY."/>
-        <cvalue name="usePypy" value='true' type="boolean" />
+        <!-- Using CPython or PyPy (deprecated) -->
+        <cvalue name="PYPY_OR_PYTHON_BINARY" value="python" type="string"
+                description="PyPy is deprecated. Do not modify this."/>
 
+        <!-- Workflow configuration -->
         <cvalue name='mpileupOutputDirectory' value='mpileup' type="path"/>
         <cvalue name='MPILEUP_OPTS' value='"-EI -q 30 -O u --ignore-RG --ff UNMAP,SECONDARY,QCFAIL,DUP,SUPPLEMENTARY -d 9999 -a AD -x"' type="string"/>
         <cvalue name='BCFTOOLS_OPTS' value='"-vc -p 2.0"' type="string"/>
@@ -95,7 +91,9 @@
         <!--#### END EXTRA FILTERING -->
 
         <cvalue name="CONFIDENCE_OPTS" value="-t 500" type="string"
-                description="max read depth in control (-t INT default 150 for genomes, set to 500 for exomes) can now be ommited to avoid depth dependent punishing by setting -c 0. It is also possible to get a justification for the confidence score by setting the -p 1 flag"/>
+                description="max read depth in control (-t INT default 150 for genomes, set to 500 for exomes) can now be omitted to avoid depth dependent punishing by setting -c 0. It is also possible to get a justification for the confidence score by setting the -p 1 flag"/>
+        <cvalue name="runOnPancan" value="false" type="boolean"
+                description="Adds -o $pancanOut to CONFIDENCE_OPTS to generate an additional VCF."/>
 
         <cvalue name="MIN_CONFIDENCE_SCORE" value="8" type="integer"/>
         <cvalue name="SNV_FILTER_OPTIONS" value="--ncRNA=1 --synonymous=0" type="string" description="Values used for the extraction of SNVs"/>
@@ -166,8 +164,6 @@
             <cvalue name='ENCODE_TFBS' value='${hg19DatabaseUCSCDirectory}/Sept2013/UCSC_27Sept2013_wgEncodeRegTfbsClusteredV3.bed.gz' type="path"/>
         </configurationValueBundle>
         <!--#>PIPE_CONFIG-->
-        
-        <cvalue name='DKFZ_LSF_VIRTUAL_SNV_ENV' value='/omics/groups/OE0246/shared/paramasi/compute_env/python_2.7.9_SNVCalling_pysam_0.16.0.1/bin/activate' type='path'>
 
     </configurationvalues>
     <processingTools>

@@ -18,14 +18,19 @@ module load perl/"${PERL_VERSION:?PERL_VERSION undefined}"
 module load bedtools/"${BEDTOOLS_VERSION:?BEDTOOLS_VERSION undefined}"
 module load pypy/"${PYPY_VERSION:?PYPY_VERSION undefined}"
 
+if [[ ! -x "$tbiLsfVirtualEnvDir" ]]; then
+  echo "Cannot access virtualenv directory: '$tbiLsfVirtualEnvDir'" >> /dev/stderr
+  exit 1
+fi
+
 set +ue
-source "${DKFZ_LSF_VIRTUAL_SNV_ENV}
+source "$tbiLsfVirtualEnvDir/bin/activate"
 set -ue
 
 export BGZIP_BINARY=bgzip
 export TABIX_BINARY=tabix
 export PERL_BINARY=perl
-export PYPY_OR_PYTHON_BINARY="${PYPY_OR_PYTHON_BINARY:-pypy-c}"
+export PYPY_OR_PYTHON_BINARY="${PYPY_OR_PYTHON_BINARY:-python}"
 export PYTHON_BINARY=python
 export RSCRIPT_BINARY=Rscript
 export INTERSECTBED_BINARY=intersectBed
