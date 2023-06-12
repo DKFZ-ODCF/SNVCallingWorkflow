@@ -9,31 +9,26 @@
 
   <configurationvalues>
 
-    <!--hg38 base directory-->
-    <cvalue name='hg38BaseDirectory' value='/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg_GRCh38' type='path' />
+    <cvalue name='hg38BaseDirectory' value='/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg_GRCh38' type='path' description="hg38 base directory"/>
 
-    <!-- Reference genomes -->
-    <cvalue name='REFERENCE_GENOME' value="${hg38BaseDirectory}/sequence/GRCh38_decoy_ebv_alt_hla_phiX.fa" type="path"/>
+    <cvalue name='REFERENCE_GENOME' value="${hg38BaseDirectory}/sequence/GRCh38_decoy_ebv_alt_hla_phiX.fa" type="path" description="Reference genomes"/>
     <cvalue name='INDEX_PREFIX' value="${hg38BaseDirectory}/indexes/bwa/bwa07_GRCh38_decoy_ebv_phiX_alt_hla_chr/GRCh38_decoy_ebv_alt_hla_phiX.fa" type="path"/>
     <cvalue name="CHROM_SIZES_FILE" value="${hg38BaseDirectory}/stats/GRCh38_decoy_ebv_alt_hla_phiX.fa.chrLenOnlyACGT_realChromosomes.tsv" type="path" />
     <cvalue name='CHROMOSOME_LENGTH_FILE' value='${hg38BaseDirectory}/stats/GRCh38_decoy_ebv_alt_hla_phiX.fa.chrLength.tsv' type="path" />
 
-    <!--Chr indices for the calling-->
-    <cvalue name="CHROMOSOME_INDICES" value="( 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y HLA ALT )" type="bashArray" />
-    <cvalue name="CHROMOSOME_HLA_CONTIGS_FILE" value='${hg38BaseDirectory}/stats/GRCh38_decoy_ebv_alt_hla_phiX.fa.HLA_contigs.bed' type="path" />
-    <cvalue name="CHROMOSOME_ALT_CONTIGS_FILE" value='${hg38BaseDirectory}/stats/GRCh38_decoy_ebv_alt_hla_phiX.fa.ALT_contigs.bed' type="path" />
+    <cvalue name="CHROMOSOME_INDICES" value="( 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y HLA ALT )" type="bashArray" description="Chr indices for the calling"/>
+    <cvalue name="CHROMOSOME_HLA_CONTIGS_FILE" value='${hg38BaseDirectory}/stats/GRCh38_decoy_ebv_alt_hla_phiX.fa.HLA_contigs.bed' type="path" description="HLA contig list"/>
+    <cvalue name="CHROMOSOME_ALT_CONTIGS_FILE" value='${hg38BaseDirectory}/stats/GRCh38_decoy_ebv_alt_hla_phiX.fa.ALT_contigs.bed' type="path" description="ALT contig list"/>
 
-    <!--BCFtools options fo the variant calling-->
-    <cvalue name='MPILEUP_OPTS' value='"-EI -q 30 -O u --ignore-RG --ff UNMAP,SECONDARY,QCFAIL,DUP,SUPPLEMENTARY -d 9999 -a AD -x"' type="string"/>
-    <cvalue name='MPILEUP_OPTS_ALT_HLA' value='"-A -EI -q 30 -O u --ignore-RG --ff UNMAP,SECONDARY,QCFAIL,DUP -d 9999 -a AD -x"' type="string"/>
-    <cvalue name='BCFTOOLS_OPTS' value='"-vc -p 2.0 --ploidy GRCh38"' type="string"/>
+    <cvalue name='MPILEUP_OPTS' value='"-EI -q 30 -O u --ignore-RG --ff UNMAP,SECONDARY,QCFAIL,DUP,SUPPLEMENTARY -d 9999 -a AD -x"' type="string" description="Mpileup options for primary chrs"/>
+    <cvalue name='MPILEUP_OPTS_ALT_HLA' value='"-A -EI -q 30 -O u --ignore-RG --ff UNMAP,SECONDARY,QCFAIL,DUP -d 9999 -a AD -x"' type="string" description="Mpileup options for ALT/HLA contigs"/>
+    <cvalue name='BCFTOOLS_OPTS' value='"-vc -p 2.0 --ploidy GRCh38"' type="string" description="BCFtools call options for GRCh38/hg38" />
 
     <cvalue name='CHR_PREFIX' value='chr' type='string' />
     <cvalue name="disableAutoBAMHeaderAnalysis" value="true" type="boolean"/>
 
-    <!--## Databases -->
-    <cvalue name='hg38DatabasesDirectory' value="${hg38BaseDirectory}/databases" type='path' />
-    <cvalue name='hg38DatabaseUCSCDirectory' value="${hg38DatabasesDirectory}/UCSC" type='path' />
+    <cvalue name='hg38DatabasesDirectory' value="${hg38BaseDirectory}/databases" type='path' description="hg38-based annotations database directory"/>
+    <cvalue name='hg38DatabaseUCSCDirectory' value="${hg38DatabasesDirectory}/UCSC" type='path' description="hg38-based UCSC annotation directory"/>
 
     <cvalue name="DBSNP" value="${hg38DatabasesDirectory}/dbSNP/dbSNP_151_GRCh38.p7/00-All_v151_GRCh38.SNV.vcf.gz" type="path"/>
     <cvalue name="DBSNP_COL" value="DBSNP" type="string"/>
@@ -53,7 +48,6 @@
     <cvalue name='ANNOVAR_DBPATH' value='${hg38DatabasesDirectory}/ANNOVAR/annovar_Sept2022/humandb/' type='path'/>
     <cvalue name='ANNOVAR_DBTYPE' value="'-dbtype wgEncodeGencodeCompV39'" type='string'/>
 
-    <!--Reference annotations during confidene annotation-->
     <cvalue name="CONFIDENCE_OPTS" value="-t 500 --refgenome GRCh38 ftp://ftp.sanger.ac.uk/pub/cancer/dockstore/human/GRCh38_hla_decoy_ebv/core_ref_GRCh38_hla_decoy_ebv.tar.gz" type="string"
             description="max read depth in control (-t INT default 150 for genomes, set to 500 for exomes) can now be ommited to avoid depth dependent punishing by setting -c 0. It is also possible to get a justification for the confidence score by setting the -p 1 flag"/>
 

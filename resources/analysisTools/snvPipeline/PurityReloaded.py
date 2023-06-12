@@ -251,7 +251,7 @@ def parseVcf(file,num):
 	while (l!= ""):
 		t=l.split('\t')
 		if (t[0][0] != "#") and isValid(t):
-			# Skiping the non-primary assembly variants from purity calculations
+			# Skipping the non-primary assembly variants from purity calculations
 			if t[0].startswith('HLA') or t[0].endswith('_alt'):
 				l=vcf.readline()
 				continue

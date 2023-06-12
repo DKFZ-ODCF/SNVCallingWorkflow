@@ -200,7 +200,7 @@ def calculateErrorMatrix(vcfFilename, referenceFilename, errorType):
 			if ',' in split_line[header.index("ALT")]: continue
 
 			# 21.02.2023 NP: Excluded SNVs with 'N' before or after "," in context
-			if 'N,' in split_line[header.index("SEQUENCE_CONTEXT")] or ',N' in split_line[header.index("SEQUENCE_CONTEXT")]:
+			if {'N,', ',N'}.intersection(split_line[header.index("SEQUENCE_CONTEXT")]):
 				continue
 
 			chrom = split_line[header.index("CHROM")]

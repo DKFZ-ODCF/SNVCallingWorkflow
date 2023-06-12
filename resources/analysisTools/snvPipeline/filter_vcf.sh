@@ -24,7 +24,7 @@ getRefGenomeAndChrPrefixFromHeader ${TUMOR_BAMFILE_FULLPATH_BP} # Sets CHR_PREFI
 ALIGNMENT_FOLDER=`dirname ${TUMOR_BAMFILE_FULLPATH_BP}`
 
 # bugfix: ensure to interpret CHROMOSOME_INDICES as array - otherwise TOOL_INTERMUTATION_DISTANCE_COORD_COLOR will fail...
-declare -a CHROMOSOME_INDICES="${CHROMOSOME_INDICES_PLOTTING}"
+declare -a CHROMOSOME_INDICES="${CHROMOSOME_INDICES_PLOTTING:-${CHROMOSOME_INDICES}}"
 numberOfChromosomes=${CHROMOSOME_INDICES[@]}
 outputFilenamePrefix=${mpileupDirectory}/${SNVFILE_PREFIX}${PID}
 outputFilenamePrefix_original=${outputFilenamePrefix}
