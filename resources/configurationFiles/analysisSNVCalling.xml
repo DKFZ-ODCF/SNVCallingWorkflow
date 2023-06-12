@@ -166,6 +166,8 @@
             <cvalue name='ENCODE_TFBS' value='${hg19DatabaseUCSCDirectory}/Sept2013/UCSC_27Sept2013_wgEncodeRegTfbsClusteredV3.bed.gz' type="path"/>
         </configurationValueBundle>
         <!--#>PIPE_CONFIG-->
+        
+        <cvalue name='DKFZ_LSF_VIRTUAL_SNV_ENV' value='/omics/groups/OE0246/shared/paramasi/compute_env/python_2.7.9_SNVCalling_pysam_0.16.0.1/bin/activate' type='path'>
 
     </configurationvalues>
     <processingTools>
