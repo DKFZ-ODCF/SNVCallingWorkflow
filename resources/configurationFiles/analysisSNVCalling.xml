@@ -11,7 +11,7 @@
         <!-- The following options are only relevant for the ODCF cluster at the DKFZ -->
         <cvalue name='workflowEnvironmentScript' value="workflowEnvironment_tbiLsf" type='string'/>
         <cvalue name='snvAnnotationEnvironmentScript' value="snvAnnotationEnvironment_tbiLsf" type="string"/>
-        <cvalue name='tbiLsfVirtualEnvDir' value="/omics/groups/OE0246/shared/paramasi/compute_env/python_2.7.9_SNVCalling_pysam_0.16.0.1" type="path"
+        <cvalue name='tbiLsfVirtualEnvDir' value="" type="path"
                 description="The path on the execution hosts to the virtualenv used in the tbi-lsf-cluster."/>
 
         <cvalue name='RSCRIPT_VERSION' value='3.3.1' type="string"/>
