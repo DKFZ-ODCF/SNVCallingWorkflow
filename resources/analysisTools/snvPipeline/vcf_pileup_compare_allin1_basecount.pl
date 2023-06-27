@@ -136,6 +136,9 @@ if (defined $makeheader && $makeheader ne "no")
 my $ccoord = -1; # make sure that ccoord in first iteration is smaller than tcoord
 my $tcoord = 0;
 
+my $current_c_chr = "";
+my $current_t_chr = "";
+
 # one file is longer than the other, nevermind which
 #(if we did pileup for only the tumor SNV positions, control will be shorter; otherwise longer)
 TUMORFILE_LOOP: while ($lineT=<T>)
@@ -150,7 +153,9 @@ TUMORFILE_LOOP: while ($lineT=<T>)
 	chomp $lineT;
 	@tum = split (/\s+/, $lineT);
 	$tcoord = $tum[1];	# start coordinate
-	if ($tcoord < $ccoord)	# no matching control line => tumor position not covered in control (never true in 1st iteration)
+	$current_t_chr = $tum[0];
+
+	if ($tcoord < $ccoord && $current_t_chr eq $current_c_chr)	# no matching control line => tumor position not covered in control (never true in 1st iteration)
 	{
 		$missingC++;
 		# print the tumor line with according "flag"
@@ -158,7 +163,7 @@ TUMORFILE_LOOP: while ($lineT=<T>)
 		print $lineT, "\tDP=0;DP5=0,0,0,0,0;DP5all=0,0,0,0,0;ACGTNacgtnHQ=0,0,0,0,0,0,0,0,0,0;ACGTNacgtn=0,0,0,0,0,0,0,0,0,0;VAF=0;TSR=0\t$notcovered\n";
 		next;	# read next line from tumor
 	}
-	if ($tcoord == $ccoord)	# matching pair found!
+	if ($tcoord == $ccoord && $current_t_chr eq $current_c_chr)	# matching pair found!
 	{
 		$match++;
 		chomp $lineC;
@@ -176,15 +181,16 @@ TUMORFILE_LOOP: while ($lineT=<T>)
 		$ctrC++;
 		# split lines
 		@ctrl = split (/\s+/, $lineC);
+		$current_c_chr = $ctrl[0];
 		$ccoord = $ctrl[1];
-		if ($tcoord == $ccoord)	# matching pair found!
+		if ($tcoord == $ccoord && $current_t_chr eq $current_c_chr)	# matching pair found!
 		{
 			$match++;
 			# do the evaluation in a subroutine
 			evaluate_pos();
 			next TUMORFILE_LOOP; # and read next line from tumor
 		}
-		if ($tcoord < $ccoord)	# new ccoord is higher than tcoord =>  tumor position not covered in control (should never be the case!)
+		if ($tcoord < $ccoord && $current_t_chr eq $current_c_chr)	# new ccoord is higher than tcoord =>  tumor position not covered in control (should never be the case!)
 		{
 			$missingC++;
 			print $lineT, "\tDP=0;DP5=0,0,0,0,0;DP5all=0,0,0,0,0;ACGTNacgtnHQ=0,0,0,0,0,0,0,0,0,0;ACGTNacgtn=0,0,0,0,0,0,0,0,0,0;VAF=0;TSR=0\t$notcovered\n";

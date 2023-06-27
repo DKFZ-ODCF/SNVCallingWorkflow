@@ -31,7 +31,7 @@ def calculateLogSize(size, max_val, base):
 	return math.log(((size/max_val)*(base-1.))+1., base)
 
 def calculateRootedSize(size, max_val):
-	if(float(size) != 0.0):
+	if(float(size) != 0.0 and float(max_val) != 0.0):
 		return np.sqrt(size/max_val)
 	else:
 		return 0.0
@@ -198,6 +198,10 @@ def calculateErrorMatrix(vcfFilename, referenceFilename, errorType):
 
 			# 23.05.2016 JB: Excluded multiallelic SNVs
 			if ',' in split_line[header.index("ALT")]: continue
+
+			# 21.02.2023 NP: Excluded SNVs with 'N' before or after "," in context
+			if {'N,', ',N'}.intersection(split_line[header.index("SEQUENCE_CONTEXT")]):
+				continue
 
 			chrom = split_line[header.index("CHROM")]
 			pos = int(split_line[header.index("POS")])

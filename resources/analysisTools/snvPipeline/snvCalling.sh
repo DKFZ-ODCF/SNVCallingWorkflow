@@ -30,7 +30,12 @@ getRefGenomeAndChrPrefixFromHeader ${TUMOR_BAMFILE_FULLPATH_BP} # Sets CHR_PREFI
 chr=""
 if [[ -n "$PARM_CHR_INDEX" ]]
 then
-    chr=${CHR_PREFIX}${PARM_CHR_INDEX}${CHR_SUFFIX}
+    if [[ "$PARM_CHR_INDEX" == "ALT" || "$PARM_CHR_INDEX" == "HLA" ]]
+    then
+        chr=${PARM_CHR_INDEX}
+    else
+        chr=${CHR_PREFIX}${PARM_CHR_INDEX}${CHR_SUFFIX}
+    fi
 else
     chr=${CHR_PREFIX}${CHROMOSOME_INDICES[$((RODDY_JOBARRAYINDEX-1))]}${CHR_SUFFIX}
     # File names can contain X and Y. The pattern contains RODDY_JOBARRAYINDEX so this has to be changed temporary as the value is always numeric!
@@ -66,8 +71,23 @@ filenameMPileupError="${MPILEUP_SUBDIR}/${MPILEUPOUT_PREFIX}${PID}.${chr}.error"
 
 FILENAME_VCF_SNVS_TEMP=${FILENAME_VCF_SNVS}.tmp
 
-#[[ ! -f $filenameMPileupTemp ]] && 
-${BCFTOOLS_BINARY} mpileup ${MPILEUP_OPTS} -r ${chr} -f ${REFERENCE_GENOME} $tumorbamfullpath | ${BCFTOOLS_BINARY} call ${BCFTOOLS_OPTS} > $filenameMPileupTemp
+## For variant calling from ALT and HLA region in the GRCh38 genome
+# The *_CONTIGS_FILE contains the list of the contigs names
+MPILEUP_REGION_OPTION=""
+if [[ "$chr" == "HLA" ]]
+then
+    MPILEUP_REGION_OPTION="-R ${CHROMOSOME_HLA_CONTIGS_FILE}"
+    MPILEUP_OPTS=$MPILEUP_OPTS_ALT_HLA
+elif [[ "$chr" == "ALT" ]]
+then
+    MPILEUP_REGION_OPTION="-R ${CHROMOSOME_ALT_CONTIGS_FILE}"
+    MPILEUP_OPTS=$MPILEUP_OPTS_ALT_HLA
+else
+    MPILEUP_REGION_OPTION="-r ${chr}"
+fi
+
+#[[ ! -f $filenameMPileupTemp ]] &&
+${BCFTOOLS_BINARY} mpileup ${MPILEUP_OPTS} ${MPILEUP_REGION_OPTION} -f ${REFERENCE_GENOME} $tumorbamfullpath | ${BCFTOOLS_BINARY} call ${BCFTOOLS_OPTS} > $filenameMPileupTemp
 
 if [[ "$?" != 0 ]]
 then
@@ -86,7 +106,7 @@ firstLineVCF=`cat $filenameMPileupTemp | grep -v "^#" | head -n1`
 if [[ -n "$firstLineVCF" ]]; then
     # filter out mutations with strand bias next to the motif GGnnGG (or CCnnCC if snv is on reverse strand)
     ${PERL_BINARY} "$TOOL_SEQ_CONTEXT_ANNOTATOR" "$FASTAFROMBED_BINARY" "$filenameMPileupTemp" "$REFERENCE_GENOME" 10 "$TOOLS_DIR" | \
-        ${PYTHON_BINARY} "$TOOL_RAW_SNV_FILTER" --outf="$snvOut" "$RAW_SNV_FILTER_OPTIONS" # --inf=$MPILEUP_SUBDIR/forStrandBiasFilter.${chr}.bed
+        ${PYTHON_BINARY} "$TOOL_RAW_SNV_FILTER" --outf="$snvOut" ${RAW_SNV_FILTER_OPTIONS} # --inf=$MPILEUP_SUBDIR/forStrandBiasFilter.${chr}.bed
 
     if [[ "$?" == 0 ]]
     then
@@ -103,7 +123,7 @@ if [[ -n "$firstLineVCF" ]]; then
             mkfifo $NP_MPILEUP
 
             # if there is a germline BAM, first look up these positions in the control file by just piling up the bases, this is NO SNV calling
-            ${SAMTOOLS_BINARY} mpileup ${MPILEUPCONTROL_OPTS} -r ${chr} -l ${filenameMPileupOut} -f ${REFERENCE_GENOME} ${CONTROL_BAMFILE_FULLPATH_BP} > ${NP_MPILEUP} &
+            ${SAMTOOLS_BINARY} mpileup ${MPILEUPCONTROL_OPTS} -l ${filenameMPileupOut} -f ${REFERENCE_GENOME} ${CONTROL_BAMFILE_FULLPATH_BP} > ${NP_MPILEUP} &
             ${PERL_BINARY} ${TOOL_VCF_PILEUP_COMPARE} ${filenameMPileupOut} $NP_MPILEUP "Header" > ${FILENAME_VCF_SNVS_TEMP}
 
             rm $NP_MPILEUP

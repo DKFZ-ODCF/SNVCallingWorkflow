@@ -35,25 +35,23 @@
         <cvalue name='SNVFILE_PREFIX' value='snvs_' type="string"/>
         <!--<cvalue name='analysisMethodNameOnInput' value='whole_genome_analysis' type='string' />-->
         <cvalue name="RAW_SNV_FILTER_OPTIONS" value='" --minVac=3 --minVaf=0.03 --minVacPS=2"' type="string"/>
+
+
+    	<!-- Reference genomes -->
         <cvalue name='REFERENCE_GENOME' value="${referenceGenome_hg19_chr}" type="string"/>
 
         <!--## Databases -->
-        <cvalue name='sharedFilesBaseDirectory' value="/omics/odcf/reference_data/legacy/ngs_share/" type="path"/>
-        <cvalue name='hg19DatabasesDirectory' value="${sharedFilesBaseDirectory}/assemblies/hg19_GRCh37_1000genomes/databases" type="path"/>
+        <cvalue name='hg19DatabasesDirectory' value="/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/databases" type="path" />
+        <cvalue name="hg19DatabaseUCSCDirectory" value="/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/databases/UCSC" type="path" />
+
         <cvalue name="DBSNP" value="${hg19DatabasesDirectory}/dbSNP/dbSNP_147/00-All.SNV.vcf.gz" type="path"/>
         <cvalue name="DBSNP_COL" value="DBSNP" type="string"/>
         <cvalue name="KGENOME" value="${hg19DatabasesDirectory}/1000genomes/ALL.wgs.phase1_integrated_calls.20101123.snps_chr.vcf.gz" type="path"/>
         <cvalue name="KGENOMES_COL" value="1K_GENOMES" type="string"/>
-        <cvalue name="ExAC" value="${hg19DatabasesDirectory}/ExAC/ExAC_nonTCGA.r0.3.1.sites.vep.vcf.gz" type="path" />
-        <cvalue name="ExAC_COL" value="ExAC" type="string"/>
-        <cvalue name="EVS" value="${hg19DatabasesDirectory}/EVS/ESP6500SI-V2-SSA137.updatedProteinHgvs.ALL.snps_indels.vcf.gz" type="path" />
-        <cvalue name="EVS_COL" value="EVS" type="string"/>
         <cvalue name="GNOMAD_WES_COL" value="GNOMAD_EXOMES" type="string"/>
         <cvalue name="GNOMAD_WES_ALL_SNV" value= "${hg19DatabasesDirectory}/gnomAD/gnomad_v2.1/gnomad.exomes.r2.1.sites.SNV.vcf.gz" type="path"/>
         <cvalue name="GNOMAD_WGS_COL" value="GNOMAD_GENOMES" type="string"/>
         <cvalue name="GNOMAD_WGS_ALL_SNV" value= "${hg19DatabasesDirectory}/gnomAD/gnomad_v2.1/gnomad.genomes.r2.1.sites.SNV.vcf.gz" type="path"/>
-
-
         <cvalue name="LOCALCONTROL_WGS" value="${hg19DatabasesDirectory}/LocalControls/ExclusionList_2019/MPsnvs_PLindels/ExclusionList_2019_HIPO-PCAWG_MP_PL_WGS.SNVs.AFgt1.vcf.gz" type="path" />
         <cvalue name="LOCALCONTROL_WGS_COL" value="LocalControlAF_WGS" type="string"/>
         <cvalue name="LOCALCONTROL_WES" value="${hg19DatabasesDirectory}/LocalControls/ExclusionList_2019/MPsnvs_PLindels/ExclusionList_2019_H021_MP_PL_WES.SNVs.AFgt1.vcf.gz" type="path" />
@@ -76,8 +74,6 @@
         <!--#### EXTRA FILTERING -->
         <!--#### BELOW VALUES WILL BE NEGLECTED WHEN isNoControlWorkflow IS SET TO FALSE -->
             <!--## Filter switch -->
-            <cvalue name="FILTER_ExAC" value="${isNoControlWorkflow}" type="boolean" />
-            <cvalue name="FILTER_EVS" value="${isNoControlWorkflow}" type="boolean" />
             <cvalue name="FILTER_GNOMAD_EXOMES" value="${isNoControlWorkflow}" type="boolean"/>
             <cvalue name="FILTER_GNOMAD_GENOMES" value="${isNoControlWorkflow}" type="boolean"/>
             <cvalue name="FILTER_1KGENOMES" value="${isNoControlWorkflow}" type="boolean" />
@@ -87,13 +83,11 @@
 
             <!--## Filter criteria -->
             <!--## The rows with corresponding values larger than below criteria will be filtered out. -->
-            <cvalue name="CRIT_ExAC_maxMAF" value="1.0" type="string" />
-            <cvalue name="CRIT_EVS_maxMAF" value="1.0" type="string" />
             <cvalue name="CRIT_GNOMAD_EXOMES_maxMAF" value="0.001" type="float"/>
             <cvalue name="CRIT_GNOMAD_GENOMES_maxMAF" value="0.001" type="float"/>
             <cvalue name="CRIT_1KGENOMES_maxMAF" value="0.01" type="string" />
             <cvalue name="CRIT_RECURRENCE" value="7" type="string" />
-            <cvalue name="CRIT_LOCALCONTROL_maxMAF" value="0.01" type="string" />
+            <cvalue name="CRIT_LOCALCONTROL_maxMAF" value="0.05" type="string" />
         <!--#### END EXTRA FILTERING -->
 
         <cvalue name="CONFIDENCE_OPTS" value="-t 500" type="string"
@@ -131,6 +125,8 @@
         <cvalue name="MEDIAN_FILTER_THRESHOLD" value='20' type="integer" description="SNVs with median of alternative base qualities below this threshold will be removed in the rerun filter step. Value of -1 means no filtering."/>
         <cvalue name="RERUN_SUFFIX" value="_filteredAltMedian${MEDIAN_FILTER_THRESHOLD}" type="string"/>
 
+        <!--CHROMSOME indices for plotting to ignore HLA and ALT contigs-->
+        <cvalue name="CHROMOSOME_INDICES_PLOTTING" value="( 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y )" type="bashArray" />
 
         <configurationValueBundle name='PIPE_CONFIG:SNV_RELIABILITY'>
             <cvalue name='MAPABILITY' value='${hg19DatabaseUCSCDirectory}/wgEncodeCrgMapabilityAlign100mer_chr.bedGraph.gz' type="path"/>
@@ -206,8 +202,8 @@
         </tool>
         <tool name="snvCallingNoControl" value="snvCalling.sh" basepath="snvPipeline">
             <resourcesets>
-                <rset size="s" memory="1" cores="1" nodes="1" walltime="1"/>
-                <rset size="m" memory="1" cores="1" nodes="1" walltime="4"/>
+                <rset size="s" memory="1" cores="1" nodes="1" walltime="6"/>
+                <rset size="m" memory="1" cores="1" nodes="1" walltime="12"/>
                 <rset size="l" memory="1" cores="1" nodes="1" walltime="24"/>
                 <rset size="xl" memory="4" cores="1" nodes="1" walltime="48"/>
             </resourcesets>
@@ -233,10 +229,10 @@
         <tool name="snvAnnotation" value="snvAnnotation.sh" basepath="snvPipeline">
             <resourcesets>
                 <rset size="t" memory="1" cores="1" nodes="1" walltime="1" queue="devel"/>
-                <rset size="s" memory="3" cores="2" nodes="1" walltime="4"/>
-                <rset size="m" memory="5" cores="3" nodes="1" walltime="6"/>
-                <rset size="l" memory="5" cores="3" nodes="1" walltime="10"/>
-                <rset size="xl" memory="6" cores="3" nodes="1" walltime="48"/>
+                <rset size="s" memory="3" cores="2" nodes="1" walltime="6"/>
+                <rset size="m" memory="5" cores="3" nodes="1" walltime="12"/>
+                <rset size="l" memory="7" cores="3" nodes="1" walltime="24"/>
+                <rset size="xl" memory="9" cores="3" nodes="1" walltime="48"/>
             </resourcesets>
             <input type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_VCF_IN"/>
             <input type="file" typeof="de.dkfz.b080.co.files.TumorBamFile" scriptparameter="TUMOR_BAMFILE_FULLPATH_BP"/>
@@ -249,10 +245,10 @@
         <tool name="snvDeepAnnotation" value="vcf_pipeAnnotator.sh" basepath="tools">
             <resourcesets>
                 <rset size="t" memory="1" cores="1" nodes="1" walltime="1" queue="devel"/>
-                <rset size="s" memory="1" cores="3" nodes="1" walltime="1"/>
-                <rset size="m" memory="1" cores="3" nodes="1" walltime="2"/>
-                <rset size="l" memory="1" cores="3" nodes="1" walltime="3"/>
-                <rset size="xl" memory="4" cores="3" nodes="1" walltime="4"/>
+                <rset size="s" memory="1" cores="3" nodes="1" walltime="4"/>
+                <rset size="m" memory="1" cores="3" nodes="1" walltime="8"/>
+                <rset size="l" memory="2" cores="3" nodes="1" walltime="12"/>
+                <rset size="xl" memory="4" cores="3" nodes="1" walltime="24"/>
             </resourcesets>
             <input type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_VCF"/>
             <output type="filegroup" typeof="de.dkfz.b080.co.files.VCFFileWithCheckpointFile">
@@ -265,7 +261,7 @@
                 <rset size="t" memory="1" cores="1" nodes="1" walltime="1" queue="devel"/>
                 <rset size="s" memory="1" cores="1" nodes="1" walltime="1"/>
                 <rset size="m" memory="1" cores="1" nodes="1" walltime="2"/>
-                <rset size="l" memory="1" cores="1" nodes="1" walltime="4"/>
+                <rset size="l" memory="2" cores="1" nodes="1" walltime="4"/>
                 <rset size="xl" memory="4" cores="1" nodes="1" walltime="8"/>
             </resourcesets>
             <input type="file" typeof="de.dkfz.b080.co.files.SNVAnnotationFile" scriptparameter="FILENAME_VCF"/>

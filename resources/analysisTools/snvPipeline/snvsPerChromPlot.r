@@ -48,6 +48,7 @@ dat$chromosome <- factor(dat$chromosome, levels = paste0("chr",c(seq(1,22),"X","
 
 
 chromLength = read.table(file = opt$chromLengthFile, header = F)
+chromLength$V1 = gsub("chr", "", chromLength$V1)
 rownames(chromLength) = paste0("chr",chromLength$V1)
 chromLength = chromLength[,2, drop= F]
 chromLengthMB = round(chromLength/1000000)

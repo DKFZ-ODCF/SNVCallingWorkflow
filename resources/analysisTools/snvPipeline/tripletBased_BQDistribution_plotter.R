@@ -474,7 +474,7 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet,
                 molten.alt$nBases=transitionSubset[molten.alt$sample,"nBQ.alt"]
                 molten.alt[,ReadPositionsQuantile_ColName] = sapply(transitionSubset[molten.alt$sample,"RP_string.alt"], function(positionsString) {
                   positions = as.integer(unlist(strsplit(positionsString, ",")))
-                  return (round(quantile(positions, ReadPositionQuantile)))
+                  return (round(quantile(positions, ReadPositionQuantile, na.rm = TRUE)))
                 })                
                 # molten.altReadPos = melt(baseScores.alt.counts.normalized.cumul, id.vars = "sample")
                 if  (whatToPlot == "BQD_sampleIndividual_ColoredByChromosome") {

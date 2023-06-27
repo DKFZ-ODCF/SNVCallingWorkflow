@@ -1,6 +1,6 @@
 # DKFZ SNVCalling Workflow
 
-An SNV calling workflow developed in the Applied Bioinformatics and Theoretical Bioinformatics groups at the DKFZ. An earlier version (pre Github) of this workflow was used in the [Pancancer](https://dockstore.org/containers/quay.io/pancancer/pcawg-dkfz-workflow) project. The workflow is only suited for human data (hg37/hg19; some later versions also hg38), because of the big role annotations play in this workflow.
+An SNV calling workflow developed in the Applied Bioinformatics and Theoretical Bioinformatics groups at the DKFZ. An earlier version (pre Github) of this workflow was used in the [Pancancer](https://dockstore.org/containers/quay.io/pancancer/pcawg-dkfz-workflow) project. The workflow is only suited for human data (hg37/GRCh37/hg19; and also for hg38/GRCh38), because of the big role annotations play in this workflow.
 
 > <table><tr><td><a href="https://www.denbi.de/"><img src="docs/images/denbi.png" alt="de.NBI logo" width="300" align="left"></a></td><td><strong>Your opinion matters!</strong> The development of this workflow is supported by the <a href="https://www.denbi.de/">German Network for Bioinformatic Infrastructure (de.NBI)</a>. By completing <a href="https://www.surveymonkey.de/r/denbi-service?sc=hd-hub&tool=SNVCallingWorkflow">this very short (30-60 seconds) survey</a> you support our efforts to improve this tool.</td></tr></table>
 
@@ -114,6 +114,8 @@ Please have a look at the `resources/configurationFiles/analysisSNVCalling.xml` 
 
 ## Example Call
 
+For hg19,
+
 ```bash
 roddy.sh run projectConfigurationName@analysisName patientId \
   --useconfig=/path/to/your/applicationProperties.ini \
@@ -121,6 +123,22 @@ roddy.sh run projectConfigurationName@analysisName patientId \
   --useiodir=/input/directory,/output/directory/snv \
   --usePluginVersion=SNVCallingWorkflow:1.3.2 \
   --cvalues="bamfile_list:/path/to/your/control.bam;/path/to/your/tumor.bam,sample_list:normal;tumor,possibleTumorSampleNamePrefixes:tumor,possibleControlSampleNamePrefixes:normal,REFERENCE_GENOME:/reference/data/hs37d5_PhiX.fa,CHROMOSOME_LENGTH_FILE:/reference/data/hs37d5_PhiX.chromSizes,extractSamplesFromOutputFiles:false"
+```
+
+For hg38, add the following workflow configs to the `projectConfigs`
+
+```xml
+  <availableAnalyses>
+    <analysis id="snvCalling" configuration="snvCallingAnalysisGRCh38" useplugin="SNVCallingWorkflow:3.0.0"/>
+  </availableAnalyses>
+```
+
+```bash
+roddy.sh run projectConfigurationName@analysisName patientId \
+  --useconfig=/path/to/your/applicationProperties.ini \
+  --configurationDirectories=/path/to/your/projectConfigs \
+  --useiodir=/input/directory,/output/directory/snv \
+  --cvalues="bamfile_list:/path/to/your/control.bam;/path/to/your/tumor.bam,sample_list:normal;tumor,possibleTumorSampleNamePrefixes:tumor,possibleControlSampleNamePrefixes:normal,REFERENCE_GENOME:/reference/data/GRCh38_decoy_ALT_HLA_PhiX.fa,CHROMOSOME_LENGTH_FILE:/reference/data/GRCh38_decoy_ALT_HLA_PhiX.chromSizes,extractSamplesFromOutputFiles:false"
 ```
 
 ### No Control
@@ -156,6 +174,20 @@ The optional configuration JSON file defaults to the `convertToStdVCF.json` resi
 * upcoming
 
   * patch: Remove all code related to PyPy and hts-python (including `copysam.py` and `PYPY_OR_PYTHON_BINARY`)
+
+
+* 3.0.0
+
+  * Major
+    * Support for hg38/GRCh38 reference genome and variant calling from ALT and HLA contigs.
+  * Minor
+    * For hg38: Removing mappability and repeat elements' annotations from penalty calculations.
+    * skipREMAP: Option to remove repeat elements and mappability from confidence annotations in hg19.
+    * Removing EVS And ExAC AF from the annotations and no-control workflow filtering
+    * Support for variant calling from CRAM files
+    * Bug fix: Removing "quote" around the raw filter option `<RAW_SNV_FILTER_OPTIONS>`
+    * Update `COWorkflowsBasePlugin` to `1.4.2`
+
 
 * 2.2.0
 

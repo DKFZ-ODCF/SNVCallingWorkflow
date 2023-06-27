@@ -90,7 +90,7 @@ def decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, D
         if remove_is_reverse:
             if DP4ar > 0: DP4ar -= 1
         else:
-            if DP4af > 0: DP4af -= 1   
+            if DP4af > 0: DP4af -= 1
     return(DP4rf, DP4rr, DP4af, DP4ar)
 
 class BoolCounter:
@@ -128,17 +128,19 @@ def performAnalysis(args):
     #vcfInFile = open(args.inf, "r")
     #outFile = open(args.outf, "w")
 
-    # Reference file for BAQ_recalcuation and local realignment
-    reference_file = pysam.Fastafile(args.refFileName)
+    # Reference file for CRAM files
+    reference_file = args.refFileName
 
     mode = "r"
     multiple_iterators = False
-    # Setting pysam read mode based on the file extension
     if args.alignmentFile.split(".")[-1] == "bam":
         mode += "b"
+        samfile = pysam.Samfile(args.alignmentFile, mode)
     elif args.alignmentFile.split(".")[-1] == "cram":
         mode += "c"
-    samfile = pysam.Samfile(args.alignmentFile, mode)  # This should work for BAM file only (with random access).
+        samfile = pysam.Samfile(args.alignmentFile, mode, reference_filename = reference_file)
+    else:
+        raise "Unknown file alignment suffix '%s'. Need 'bam' or 'cram'" % args.alignmentFile.split(".")[-1]
 
     if args.altPosF != '':
         ALT_basePositions_file = args.altPosF
@@ -177,7 +179,7 @@ def performAnalysis(args):
         REF_baseQualities=[]
         ALT_baseQualities=[]
 
-        # how to treat multiallelic SNVs? Skipped in this current version...                
+        # how to treat multiallelic SNVs? Skipped in this current version...
         if ((args.no_control and int(parsed_line["CONFIDENCE"]) > 7 and "somatic" in parsed_line["RECLASSIFICATION"]) or (not args.no_control and "somatic" in parsed_line["ANNOTATION_control"])) and len(parsed_line["ALT"]) == 1:
             # DP=13;AF1=0.5;AC1=1;DP4=2,3,3,4;MQ=37;FQ=75;PV4=1,1,1,1
             info_values = parsed_line["INFO"].split(';')
@@ -187,14 +189,14 @@ def performAnalysis(args):
                     DP4 = map(int, info_value[4:].split(','))
                     DP4rf, DP4rr, DP4af, DP4ar = DP4
                     DP4_original = re.sub('DP4', 'DP4original', info_value) # Keeping a backup of original DP4
-                    DP4_original_alt = DP4af + DP4ar                    
+                    DP4_original_alt = DP4af + DP4ar
                     break
 
             chrom=parsed_line["CHROM"]
             pos=int(parsed_line["POS"])
             REF=parsed_line["REF"]
             ALT=parsed_line["ALT"]
-            
+
             readNameHash={}
             readMateHash={} # Hash to store read and mate starting positions for duplicate marking
             readMateHash_qnameLocation={} # Hash to store the location of gname in the above hash list
@@ -202,22 +204,26 @@ def performAnalysis(args):
 
             ACGTNacgtn1 = [0]*10
             ACGTNacgtn2 = [0]*10
-            count_PE = BoolCounter(REF, ALT) # Starting the counter for the forward and reverse reads removed due to PE overlap detection  
+            count_PE = BoolCounter(REF, ALT) # Starting the counter for the forward and reverse reads removed due to PE overlap detection
             count_supple = BoolCounter(REF, ALT) # "" for supplementary reads, since flag_filter is added, entire supplementary detection can be removed in future versions
-            count_mismatch = BoolCounter(REF, ALT) # " for mismatch report 
-            count_nonREFnonALT = BoolCounter(REF, ALT) # " to count the non-ref and non-alt base at POS
+            count_mismatch = BoolCounter(REF, ALT) # " for mismatch report
+            count_nonREFnonALT = BoolCounter(REF, ALT) # " for nonREF and nonALT bases
 
             # To match pysam and mpileup counts, a reference file is added. Given the reference file, Pysam by default computes BAQ (compute_baq).
-            for pileupcolumn in samfile.pileup(chrom, (pos-1), pos, flag_filter=3844, redo_baq=True, ignore_overlaps=False, multiple_iterators=multiple_iterators):
-                if pileupcolumn.pos == (pos-1):                	
-                    #print 'coverage at base %s = %s' % (pileupcolumn.pos , pileupcolumn.nsegments)                    
-                    for pileupread in pileupcolumn.pileups:                    	
-                        if pileupread.is_del:                            
-                            # 31 May 2016 JB: deletion at the pileup position                            
-                            continue                        
+            if chrom.endswith('alt') or chrom.startswith('HLA'):
+                flag_filer_value = 1796
+            else:
+                flag_filer_value = 3844
+            for pileupcolumn in samfile.pileup(chrom, (pos-1), pos, flag_filter=flag_filer_value, redo_baq=True, ignore_overlaps=False, multiple_iterators=multiple_iterators):
+                if pileupcolumn.pos == (pos-1):
+                    #print 'coverage at base %s = %s' % (pileupcolumn.pos , pileupcolumn.nsegments)
+                    for pileupread in pileupcolumn.pileups:
+                        if pileupread.is_del:
+                            # 31 May 2016 JB: deletion at the pileup position
+                            continue
                         baseScore = transformQualStr(pileupread.alignment.qual[pileupread.query_position])[0]
                         readpos = pileupread.query_position
-                        if pileupread.alignment.seq[pileupread.query_position].lower()  == ALT.lower():                            
+                        if pileupread.alignment.seq[pileupread.query_position].lower()  == ALT.lower():
                             if args.altBQF != '':
                                 ALT_baseQualities.append(baseScore)
                             if args.altPosF != '':
@@ -237,7 +243,7 @@ def performAnalysis(args):
                         if pileupread.alignment.mapq >= args.mapq:
                             # http://wwwfgu.anat.ox.ac.uk/~andreas/documentation/samtools/api.html   USE qqual
                             try:
-                                if transformQualStr(pileupread.alignment.qual[pileupread.query_position])[0] >= args.baseq:                                    
+                                if transformQualStr(pileupread.alignment.qual[pileupread.query_position])[0] >= args.baseq:
                                     # check if we consider this read as a proper read in terms of number of mismatches
                                     if args.allowedNumberOfMismatches > -1:
                                         numberOfMismatches = None
@@ -246,14 +252,14 @@ def performAnalysis(args):
                                                 numberOfMismatches = tag[1]
                                                 break 
                                             else:
-                                                continue                                    
-                                        
+                                                continue
+
                                         if numberOfMismatches is not None:
                                             if numberOfMismatches > args.allowedNumberOfMismatches:
                                                 remove_base = pileupread.alignment.seq[pileupread.query_position]
                                                 remove_is_reverse = pileupread.alignment.is_reverse
                                                 count_mismatch.update(remove_base)
-                                                (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)                                         
+                                                (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)
                                                 # after decreasing the respective DP4 value, go directly to the next read
                                                 # without remembering the current read
                                                 # This will lead to an unknown read name when the paired read occurs at the same
@@ -261,10 +267,10 @@ def performAnalysis(args):
                                                 # have to decrease DP4 values again, when the read partner occurs at the same SNV.
                                                 # We also do not increase ANCGTNacgtn for the discarded read.
                                                 continue 
-                                                                            
+
                                     # Check if pileupread.alignment is proper pair
                                     if(pileupread.alignment.is_proper_pair):
-                                        # count to ACGTNacgtn list                                        
+                                        # count to ACGTNacgtn list
                                         is_reverse = pileupread.alignment.is_reverse
                                         is_read1 = pileupread.alignment.is_read1
                                         base = pileupread.alignment.seq[pileupread.query_position].lower()
@@ -276,7 +282,6 @@ def performAnalysis(args):
  
                                         #if transformQualStr(pileupread.alignment.qual[pileupread.query_position])[0] >= args.baseq:        # DEBUG July 23 2012: BROAD BAM problem due to pileupread.alignment.qqual being shorter sometimes than pileupread.alignment.qual
                                         if(pileupread.alignment.query_name in readNameHash):
-                                            #print pileupread.alignment.query_name
                                             old_qual = readNameHash[pileupread.alignment.query_name][0]
                                             old_base = readNameHash[pileupread.alignment.query_name][1]
                                             old_is_reverse = readNameHash[pileupread.alignment.query_name][2]
@@ -302,9 +307,10 @@ def performAnalysis(args):
                                                 remove_base = current_base
                                                 remove_is_reverse = current_is_reverse
                                                 remove_old = False
-                                            
+
                                             count_PE.update(remove_base)
-                                            (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)                                                                                        
+                                            (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)
+
                                             # If current base is better, then removing the information about old mate
                                             # If current base is not good, then do nothing
                                             if remove_old:
@@ -331,17 +337,17 @@ def performAnalysis(args):
                                             	readMateHash[read_mate_tuple] = []
                                             	readMateHash[read_mate_tuple].append(read_mate_tuple_value)
 
-                                            readMateHash_qnameLocation[pileupread.alignment.query_name] = len(readMateHash[read_mate_tuple]) - 1 # Location of the last pushed element in the array                                            
+                                            readMateHash_qnameLocation[pileupread.alignment.query_name] = len(readMateHash[read_mate_tuple]) - 1 # Location of the last pushed element in the array
 
                             except IndexError:
                                 "soft-clipped or trimmed base, not part of the high-qual alignemnt anyways, skip"
 
                             if transformQualStr(pileupread.alignment.qual[pileupread.query_position])[0] >= args.baseq:
-                            
+
                                 if pileupread.alignment.seq[pileupread.query_position] == ALT:
-                                    ALTcount += 1                                
+                                    ALTcount += 1
                                 # samtools mpileup sometimes counts bases as variants which are neither REF nor ALT
-                                if (pileupread.alignment.seq[pileupread.query_position] != REF) and (pileupread.alignment.seq[pileupread.query_position] != ALT):                                    
+                                if (pileupread.alignment.seq[pileupread.query_position] != REF) and (pileupread.alignment.seq[pileupread.query_position] != ALT):
                                     if pileupread.alignment.is_reverse:                                    	
                                         nonREFnonALTrev += 1
                                         #if DP4ar > 0: DP4ar -= 1
@@ -382,13 +388,12 @@ def performAnalysis(args):
 
             # Calculating duplicates based on read-mate pair's start positions (chr id and start location)
             count_duplicate = BoolCounter(REF, ALT)
-
             for key in readMateHash:
-            	value_length = len(readMateHash[key])            	            	
-            	if value_length > 0:            		
+            	value_length = len(readMateHash[key])
+            	if value_length > 0:
             	    sorted_values = sorted(readMateHash[key], key=lambda x: x[0]) # Sorted based on base quality
                     sorted_values = sorted_values[:-1] # removing the read with highest quality, so it will be retained for count
-                    for value in sorted_values:        # Removing everthing else                            
+                    for value in sorted_values:        # Removing everthing else
                         qual_value, decreaseInfo = value
                         remove_base = decreaseInfo[0]
                         remove_is_reverse = decreaseInfo[1]
@@ -396,7 +401,7 @@ def performAnalysis(args):
                         count_duplicate.update(remove_base)
                         (DP4rf, DP4rr, DP4af, DP4ar) = decreaseDP4(remove_base, remove_is_reverse, REF, ALT, DP4rf, DP4rr, DP4af, DP4ar)
 
-            if (DP4[2] + DP4[3]) > ALTcount:    # that the ALTcount is larger  happens often due to BAQ during samtools mpileup which doesn't change the base qual in the BAM file, but decreases base qual during calling                
+            if (DP4[2] + DP4[3]) > ALTcount:    # that the ALTcount is larger  happens often due to BAQ during samtools mpileup which doesn't change the base qual in the BAM file, but decreases base qual during calling
                 if DP4af >= nonREFnonALTfwd: DP4af -= nonREFnonALTfwd
 
                 if DP4ar >= nonREFnonALTrev: DP4ar -= nonREFnonALTrev
@@ -414,14 +419,14 @@ def performAnalysis(args):
             ACGTNacgtn1_string = "ACGTNacgtnPLUS="+",".join([str(i) for i in ACGTNacgtn1])
             ACGTNacgtn2_string = "ACGTNacgtnMINUS="+",".join([str(i) for i in ACGTNacgtn2])
 
-            info_values[DP4_idx] = "DP4=" + str(DP4rf)+ "," + str(DP4rr)+ "," + str(DP4af)+ "," + str(DP4ar)            
+            info_values[DP4_idx] = "DP4=" + str(DP4rf)+ "," + str(DP4rr)+ "," + str(DP4af)+ "," + str(DP4ar)
             info_values.append(ACGTNacgtn1_string)
             info_values.append(ACGTNacgtn2_string)
             info_values.append(DP4_original)
-            info_values.append(supple_dup_str)            
+            info_values.append(supple_dup_str)
 
             entries[header_indices["INFO"]] = ';'.join(info_values)
-            
+
             sys.stdout.write('\t'.join(entries) + '\n')
         else:
             sys.stdout.write(line)   # write germline and somatic-multiallelic SNVs as is
@@ -446,7 +451,7 @@ def performAnalysis(args):
 
     #vcfInFile.close()
     #outFile.close()
-    
+
 if __name__ == '__main__':
     #print "Starting program...\n" 
     import argparse
