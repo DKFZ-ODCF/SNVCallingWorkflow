@@ -45,6 +45,7 @@ ${TOOL_ANNOTATE_VEP} ${FILENAME_VCF} ${FILENAME_VCF}.tmp
 [[ "$?" != 0 ]] && echo "There was a non-zero exit code in VEP annotation" && exit 8
 
 # Overwrite the original VCF file with the VEP annotated one
+# NOTE: If there is an error here, one has to rerun the Annotation and DeepAnnotation steps
 mv ${FILENAME_VCF}.tmp ${FILENAME_VCF} && ${TABIX_BINARY} -f -p vcf ${FILENAME_VCF}
 [[ "$?" != 0 ]] && echo "There was a non-zero exit code in VEP annotation" && exit 9
 

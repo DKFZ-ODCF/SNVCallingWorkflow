@@ -38,7 +38,7 @@ def parse_vep_annotations():
             if line.startswith("##INFO=<ID=CSQ"):
                 vep_format = parse_vep_format(line)
             if line.startswith("#CHROM"):
-                line = line + "\tVEP_Gene_Consequence_HGVSc\n"
+                line = line + "\tVEP_Gene_Consequence_HGVSc"
             # write to STDOUT
             sys.stdout.write("{0}\n".format(line))
         else:
