@@ -40,6 +40,7 @@ filenameSeqContextTab=${outputFilenamePrefix}_snvs_with_context_conf_${MIN_CONFI
 filenameMAFconfPlot=${outputFilenamePrefix}_MAF_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf
 filenameSnvDiagnosticsPlot=${outputFilenamePrefix}_allSNVdiagnosticsPlots.pdf
 
+########################################## VEP annotation #######################################
 ## Run VEP on the somatic high confidence SNVs
 ${TOOL_ANNOTATE_VEP} ${FILENAME_VCF} ${FILENAME_VCF}.tmp
 [[ "$?" != 0 ]] && echo "There was a non-zero exit code in VEP annotation" && exit 8
@@ -49,6 +50,7 @@ ${TOOL_ANNOTATE_VEP} ${FILENAME_VCF} ${FILENAME_VCF}.tmp
 mv ${FILENAME_VCF}.tmp ${FILENAME_VCF} && ${TABIX_BINARY} -f -p vcf ${FILENAME_VCF}
 [[ "$?" != 0 ]] && echo "There was a non-zero exit code in VEP annotation" && exit 9
 
+########################################## Filter ###############################################
 ${PERL_BINARY} ${TOOL_SNV_EXTRACTOR} --infile=${FILENAME_VCF} --minconf=${MIN_CONFIDENCE_SCORE} --pid=${outputFilenamePrefix} --bgzip=${BGZIP_BINARY} --tabix=${TABIX_BINARY} ${SNV_FILTER_OPTIONS}
 [[ "$?" != 0 ]] && echo "There was a non-zero exit code in the somatic file and dbSNP counting pipe" && exit 1
 

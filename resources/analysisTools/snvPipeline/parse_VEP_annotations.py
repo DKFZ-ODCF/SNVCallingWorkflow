@@ -38,7 +38,7 @@ def parse_vep_annotations():
             if line.startswith("##INFO=<ID=CSQ"):
                 vep_format = parse_vep_format(line)
             if line.startswith("#CHROM"):
-                line = line + "\tVEP_Gene_Consequence_HGVSc"
+                line = line + "\tVEP_TRANSCRIPTS"
             # write to STDOUT
             sys.stdout.write("{0}\n".format(line))
         else:
@@ -89,17 +89,33 @@ def parse_gene_consequence_hgvsc(info, vep_format, gene_consequence_hgvsc_ds):
                 j = j.split("|")
                 gene_name = j[vep_format["SYMBOL"]]
                 consequence = j[vep_format["Consequence"]]
-                hgvsc = j[vep_format["HGVSc"]]
+                transcript = j[vep_format["Feature"]]
+                hgvsc = j[vep_format["HGVSc"]].split(":")[1] if j[vep_format["HGVSc"]] != "" else ""
+                hgvsp = j[vep_format["HGVSp"]].split(":")[1] if j[vep_format["HGVSp"]] != "" else ""
+                exon = j[vep_format["EXON"]].split("/")[0] if j[vep_format["EXON"]] != "" else ""
+                intron = j[vep_format["INTRON"]].split("/")[0] if j[vep_format["INTRON"]] != "" else ""
+
+                if exon != "" and intron == "":
+                    gene_part = "exon" + exon
+                elif intron != "" and exon == "":
+                    gene_part = "intron" + intron
+                else:
+                    gene_part = "exon" + exon + "-intron" + intron
+
                 biotype = j[vep_format["BIOTYPE"]]
                 impact = j[vep_format["IMPACT"]]
+
+                # Format transcript information with exon number, HGVSc, and HGVSp
+                tran_exon_hgvsc_p = "{0}:{1}:{2}:{3}".format(transcript, gene_part, hgvsc, hgvsp)
+
                 if biotype == "protein_coding" and impact in ["HIGH", "MODERATE"]:
                     if gene_name in gene_consequence_hgvsc_ds:
                         if consequence in gene_consequence_hgvsc_ds[gene_name]:
-                            gene_consequence_hgvsc_ds[gene_name][consequence].append(hgvsc)
+                            gene_consequence_hgvsc_ds[gene_name][consequence].append(tran_exon_hgvsc_p)
                         else:
-                            gene_consequence_hgvsc_ds[gene_name][consequence] = [hgvsc]
+                            gene_consequence_hgvsc_ds[gene_name][consequence] = [tran_exon_hgvsc_p]
                     else:
-                        gene_consequence_hgvsc_ds[gene_name] = {consequence: [hgvsc]}
+                        gene_consequence_hgvsc_ds[gene_name] = {consequence: [tran_exon_hgvsc_p]}
     return gene_consequence_hgvsc_ds
 
 def format_transcript_info(line, gene_consequence_hgvsc_ds):
